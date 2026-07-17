@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academia v2 - Organiza tu vida académica</title>
+  <meta name="description" content="Organiza tus materias, tareas, calificaciones y notas en un solo lugar.">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    header {
+      text-align: center;
+      padding: 4rem 0;
+      color: white;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .subtitle {
+      font-size: 1.5rem;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+    }
+    .cta-button {
+      display: inline-block;
+      background: white;
+      color: #667eea;
+      padding: 1rem 2rem;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      padding: 4rem 0;
+    }
+    .feature-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .feature-card h3 {
+      color: #667eea;
+      margin-bottom: 1rem;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: white;
+      opacity: 0.8;
+    }
+    footer a {
+      color: white;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Academia v2</h1>
+      <p class="subtitle">Organiza tu vida académica de forma simple y eficiente</p>
+      <a href="/auth" class="cta-button">Comenzar ahora</a>
+    </header>
+
+    <div class="features">
+      <div class="feature-card">
+        <h3>📚 Materias</h3>
+        <p>Organiza tus materias con horarios, catedráticos y toda la información importante en un solo lugar.</p>
+      </div>
+      <div class="feature-card">
+        <h3>✅ Tareas</h3>
+        <p>Nunca olvides una entrega. Gestiona tus tareas con prioridades, fechas límite y recordatorios.</p>
+      </div>
+      <div class="feature-card">
+        <h3>📊 Calificaciones</h3>
+        <p>Calcula tu promedio, proyecta tus notas y sabe exactamente cuánto falta para aprobar cada materia.</p>
+      </div>
+      <div class="feature-card">
+        <h3>📝 Notas</h3>
+        <p>Toma notas organizadas por materias, con soporte para texto, imágenes y dibujos.</p>
+      </div>
+      <div class="feature-card">
+        <h3>🎯 Temas del curso</h3>
+        <p>Seguimiento de temas por parcial, con sistema de repaso espaciado basado en dificultad.</p>
+      </div>
+      <div class="feature-card">
+        <h3>⏱️ Pomodoro</h3>
+        <p>Técnica Pomodoro integrada para mejorar tu productividad con sesiones de estudio enfocadas.</p>
+      </div>
+    </div>
+
+    <footer>
+      <p><a href="/terms">Términos de uso</a> · <a href="/privacy">Política de privacidad</a></p>
+      <p style="margin-top: 1rem;">© 2024 Academia v2</p>
+    </footer>
+  </div>
+</body>
+</html>

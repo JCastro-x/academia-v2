@@ -1,0 +1,28 @@
+import { create } from 'zustand'
+
+export const useUIStore = create((set) => ({
+  // Modal state
+  isModalOpen: false,
+  modalContent: null,
+  openModal: (content) => set({ isModalOpen: true, modalContent: content }),
+  closeModal: () => set({ isModalOpen: false, modalContent: null }),
+  
+  // Sidebar state
+  isSidebarCollapsed: false,
+  toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+  setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
+  
+  // Toast state
+  toasts: [],
+  addToast: (toast) => set((state) => ({
+    toasts: [...state.toasts, { ...toast, id: Date.now() }]
+  })),
+  removeToast: (id) => set((state) => ({
+    toasts: state.toasts.filter((t) => t.id !== id)
+  })),
+  
+  // Sound state
+  isMuted: false,
+  toggleMute: () => set((state) => ({ isMuted: !state.isMuted })),
+  setMuted: (muted) => set({ isMuted: muted }),
+}))

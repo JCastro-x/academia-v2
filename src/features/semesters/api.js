@@ -1,0 +1,98 @@
+import { supabase } from '../../lib/supabase.js'
+
+export const semestersQueryKeys = {
+  all: ['semesters'],
+  active: () => ['semesters', 'active'],
+  byId: (id) => ['semesters', id],
+}
+
+export const getSemesters = async () => {
+  const { data, error } = await supabase
+    .from('semesters')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .order('updated_at', { ascending: false })
+  
+  if (error) throw error
+  return data
+}
+
+export const getActiveSemester = async () => {
+  const { data, error } = await supabase
+    .from('semesters')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .eq('activo', true)
+    .single()
+  
+  if (error) throw error
+  return data
+}
+
+export const getSemesterById = async (id) => {
+  const { data, error } = await supabase
+    .from('semesters')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .eq('id', id)
+    .single()
+  
+  if (error) throw error
+  return data
+}
+
+export const createSemester = async (semester) => {
+  const { data, error } = await supabase
+    .from('semesters')
+    .insert({
+      nombre: semester.nombre,
+      promedio_objetivo: semester.promedio_objetivo,
+      nota_minima: semester.nota_minima,
+      promedio_previo: semester.promedio_previo,
+      creditos_previos: semester.creditos_previos,
+    })
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .single()
+  
+  if (error) throw error
+  return data
+}
+
+export const updateSemester = async (id, updates) => {
+  const { data, error } = await supabase
+    .from('semesters')
+    .update(updates)
+    .eq('id', id)
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .single()
+  
+  if (error) throw error
+  return data
+}
+
+export const deleteSemester = async (id) => {
+  const { error } = await supabase
+    .from('semesters')
+    .delete()
+    .eq('id', id)
+  
+  if (error) throw error
+}
+
+export const setActiveSemester = async (id) => {
+  // First, deactivate all semesters
+  const { error: deactivateError } = await supabase
+    .from('semesters')
+    .update({ activo: false })
+    .neq('id', id)
+  
+  if (deactivateError) throw deactivateError
+  
+  // Then activate the selected one
+  const { data, error } = await supabase
+    .from('semesters')
+    .update({ activo: true })
+    .eq('id', id)
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .single()
+  
+  if (error) throw error
+  return data
+}
