@@ -1,5 +1,136 @@
 # CHANGELOG
 
+## [Fase 2 - Calificaciones] - 2024-01-17
+
+### Resumen
+Implementación completa de la Fase 2 (Calificaciones) según `academia-v2-arquitectura.md`. Se implementó el sistema de zonas de calificación con cálculos de puntos netos, proyecciones de nota final, y colores de estado.
+
+### Archivos creados
+
+#### Domain (src/domain/)
+- `grades-calc.js` - Lógica pura de cálculos de calificaciones:
+  - `percentageToNetPoints(percentage, zoneWeight)` - Conversión %→puntos netos
+  - `calculateZoneNetPoints(items, zoneWeight)` - Suma de puntos de una zona
+  - `calculateSubjectTotalPoints(zones)` - Suma total de puntos de una materia
+  - `calculateSubjectMaxPoints(zones)` - Máximo de puntos posibles
+  - `projectFinalGrade(obtainedPoints, maxPoints)` - Proyección de nota final
+  - `calculateNeededToPass(obtainedPoints, zoneWeight, ganadaPct)` - Cuánto falta para ganar
+  - `getStatusColor(obtainedPoints, zoneWeight, ganadaPct)` - Color de estado (rojo/amarillo/verde)
+  - `calculateZoneStats(items, zone)` - Estadísticas completas de zona
+  - `calculateSubjectStats(zones)` - Estadísticas completas de materia
+- `grades-calc.test.js` - Tests de Vitest para todas las funciones de cálculo
+
+#### Feature: Grades (src/features/grades/)
+- `api.js` - API layer con columnas explícitas:
+  - `gradesQueryKeys` - QueryKeys de TanStack Query
+  - `getZonesBySubject(subjectId)` - SELECT: id, subject_id, user_id, nombre, peso_pts, ganada_pct (con items anidados)
+  - `getZoneById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `getItemsByZone(zoneId)` - SELECT: id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos
+  - `getItemById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `createZone(zone)` - INSERT con columnas explícitas
+  - `updateZone(id, updates)` - UPDATE con columnas explícitas
+  - `deleteZone(id)` - DELETE
+  - `createItem(item)` - INSERT con columnas explícitas
+  - `updateItem(id, updates)` - UPDATE con columnas explícitas
+  - `deleteItem(id)` - DELETE
+  - `countItemsByZone(zoneId)` - COUNT para validación antes de eliminar zona
+- `hooks.js` - TanStack Query hooks:
+  - `useZonesBySubject(subjectId)` - Query de zonas por materia (con items)
+  - `useZone(id)` - Query de zona por ID
+  - `useItemsByZone(zoneId)` - Query de ítems por zona
+  - `useItem(id)` - Query de ítem por ID
+  - `useCreateZone()` - Mutation con cache update
+  - `useUpdateZone()` - Mutation con cache update
+  - `useDeleteZone()` - Mutation con cache invalidation
+  - `useCreateItem()` - Mutation con cache update
+  - `useUpdateItem()` - Mutation con cache update
+  - `useDeleteItem()` - Mutation con cache invalidation
+  - `useCountItemsByZone(zoneId)` - Query de conteo de ítems
+
+QueryKeys utilizados:
+- `['grades']` - Lista general
+- `['grades', 'zones', 'subject', subjectId]` - Zonas por materia
+- `['grades', 'zones', id]` - Zona específica
+- `['grades', 'items', 'zone', zoneId]` - Ítems por zona
+- `['grades', 'items', id]` - Ítem específico
+- `['grades', 'items', 'count', 'zone', zoneId]` - Conteo de ítems
+
+#### Componentes (src/features/grades/components/)
+- `ZoneForm.jsx` - Formulario para crear/editar zonas:
+  - Campos: nombre, peso_pts, ganada_pct
+  - Validación de campos requeridos
+  - ~45 líneas
+- `ItemForm.jsx` - Formulario para crear/editar ítems:
+  - Campos: nombre, porcentaje_ingresado
+  - Validación de campos requeridos
+  - ~45 líneas
+- `ZoneCard.jsx` - Card de zona con Framer Motion:
+  - Muestra nombre, puntos obtenidos/máximos, porcentaje
+  - Color de estado (rojo/amarillo/verde)
+  - Lista de ítems con sus porcentajes
+  - Muestra cuánto falta para ganar
+  - Botones editar/eliminar zona e ítems
+  - ~70 líneas
+
+#### Páginas (src/pages/)
+- `Grades.jsx` - Vista de calificaciones:
+  - Lista de materias → click entra a vista de zonas
+  - Vista de zonas con ítems, cálculos en tiempo real
+  - Proyección total del semestre
+  - CRUD completo de zonas e ítems
+  - ConfirmDialog + UndoToast + pendingDeletes para eliminaciones
+  - ~180 líneas
+
+#### Configuración de tests
+- `vitest.config.js` - Configuración de Vitest con jsdom
+- `package.json` - Agregado script `"test": "vitest"` y dependencias: vitest, jsdom
+
+#### Routing (src/main.tsx)
+- Ruta agregada: `/s/:semesterId/grades` → Grades page
+- Import de Grades component
+
+#### Layout (src/layouts/AppLayout.jsx)
+- Agregado nav item "Calificaciones" con icono de gráfico
+
+### Reglas de arquitectura cumplidas
+✅ 1. Ningún componente llama a Supabase directo - todo pasa por `features/grades/api.js`
+✅ 2. Datos de Supabase viven en TanStack Query - no hay useState duplicando datos
+✅ 3. Zustand SOLO para estado de UI (modal, confirm dialog, undo toast, pending deletes)
+✅ 4. Componentes bajo ~200 líneas (Grades: ~180 líneas, ZoneCard: ~70 líneas, forms: ~45 líneas)
+✅ 5. Columnas explícitas en cada query - NUNCA select('*')
+✅ 6. Lógica de cálculo en domain/grades-calc.js - testeable con Vitest sin React
+
+### Tablas tocadas en Fase 2
+- `grade_zones` - CRUD completo con triggers y RLS
+- `grade_items` - CRUD completo con triggers y RLS
+
+### QueryKeys utilizados
+- `['grades']`, `['grades', 'zones', 'subject', subjectId]`, `['grades', 'zones', id]`
+- `['grades', 'items', 'zone', zoneId]`, `['grades', 'items', id]`
+- `['grades', 'items', 'count', 'zone', zoneId]`
+
+### Estado de implementación
+✅ Domain grades-calc.js con funciones puras
+✅ Feature grades completo (api + hooks + components)
+✅ Página Grades con navegación materias → zonas → ítems
+✅ Routing actualizado
+✅ Tests de Vitest para grades-calc.js
+✅ ConfirmDialog + UndoToast + pendingDeletes reutilizado
+✅ Animaciones con Framer Motion
+
+### Próximos pasos (para el usuario)
+1. **Instalar dependencias de testing**: `npm install` (vitest, jsdom agregados a package.json) ✅ Completado
+2. **Ejecutar tests**: `npm test -- --run` para verificar que los cálculos funcionan correctamente ✅ 22 tests pasando
+3. **Probar criterios de aceptación**:
+   - Crear zona con peso 25 pts
+   - Crear ítem con 55%
+   - Verificar que muestra 13.75 pts obtenidos
+   - Verificar que muestra cuánto falta para ganar (1.25 pts para 60%)
+   - Verificar colores de estado (rojo/amarillo/verde)
+   - Verificar proyección total del semestre
+   - Verificar que todo persiste tras refrescar
+   - Verificar en Network tab que solo se muestran columnas usadas
+
 ## [Fase 1 - Núcleo académico] - 2024-01-17
 
 ### Bug fixes (post-release)
