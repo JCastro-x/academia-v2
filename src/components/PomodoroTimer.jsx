@@ -31,10 +31,6 @@ export default function PomodoroTimer() {
 
   // Timer logic usando timestamp-based approach (no setInterval tick a tick)
   useEffect(() => {
-    console.log('interval effect running', {
-      isRunning: pomodoroState.isRunning,
-      startedAt: pomodoroState.startedAt,
-    });
     if (pomodoroState.isRunning && pomodoroState.startedAt) {
       intervalRef.current = setInterval(() => {
         const elapsed = Math.floor((Date.now() - pomodoroState.startedAt) / 1000);
