@@ -33,7 +33,7 @@ export default function Schedule() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Mi Horario</h1>
 
-      <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+      <div className="bg-white rounded-lg shadow-md overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
         <table className="w-full min-w-[800px]">
           <thead>
             <tr className="bg-gray-50">
@@ -74,7 +74,7 @@ export default function Schedule() {
         </table>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         <h2 className="text-lg font-semibold mb-4">Detalle de Materias</h2>
         <div className="space-y-4">
           {subjects?.map(subject => (

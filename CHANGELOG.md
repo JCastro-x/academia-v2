@@ -1,5 +1,130 @@
 # CHANGELOG
 
+## [Fase 3 - Contenido académico (Calendario y Temas)] - 2024-01-17
+
+### Resumen
+Implementación del primer ticket de Fase 3 (Contenido académico) según `academia-v2-arquitectura.md` y `academia-v2-spec-funcional.md`. Se implementó el sistema de calendario con eventos y la gestión de temas del curso agrupados por parcial.
+
+### Archivos creados
+
+#### Feature: Events (src/features/events/)
+- `api.js` - API layer con columnas explícitas:
+  - `eventsQueryKeys` - QueryKeys de TanStack Query
+  - `getEvents(semesterId)` - SELECT: id, subject_id, semester_id, user_id, nombre, tipo, start_at, end_at, descripcion
+  - `getEventsByMonth(semesterId, year, month)` - SELECT: mismas columnas, filtrado por mes (egress-safe)
+  - `getEventsBySubject(subjectId)` - SELECT: mismas columnas, WHERE subject_id=?
+  - `getEventById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `createEvent(event)` - INSERT con columnas explícitas
+  - `updateEvent(id, updates)` - UPDATE con columnas explícitas
+  - `deleteEvent(id)` - DELETE
+- `hooks.js` - TanStack Query hooks:
+  - `useEvents(semesterId)` - Query de eventos por semestre
+  - `useEventsByMonth(semesterId, year, month)` - Query de eventos por mes (alcance por defecto = mes visible)
+  - `useEventsBySubject(subjectId)` - Query de eventos por materia
+  - `useEvent(id)` - Query de evento por ID
+  - `useCreateEvent()` - Mutation con cache update
+  - `useUpdateEvent()` - Mutation con cache update
+  - `useDeleteEvent()` - Mutation con cache invalidation
+
+QueryKeys utilizados:
+- `['events']` - Lista general
+- `['events', 'semester', semesterId]` - Eventos por semestre
+- `['events', 'semester', semesterId, 'month', year, month]` - Eventos por mes (egress-safe)
+- `['events', 'subject', subjectId]` - Eventos por materia
+- `['events', id]` - Evento específico
+
+#### Feature: Topics (src/features/topics/)
+- `api.js` - API layer con columnas explícitas:
+  - `topicsQueryKeys` - QueryKeys de TanStack Query
+  - `getTopicsBySubject(subjectId)` - SELECT: id, subject_id, user_id, parcial, nombre, subtemas, dificultad, tiempo_dedicado_min, fecha_examen, comprension, visto
+  - `getTopicsByPartial(subjectId, parcial)` - SELECT: mismas columnas, WHERE parcial=?
+  - `getTopicById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `createTopic(topic)` - INSERT con columnas explícitas
+  - `updateTopic(id, updates)` - UPDATE con columnas explícitas
+  - `deleteTopic(id)` - DELETE
+- `hooks.js` - TanStack Query hooks:
+  - `useTopicsBySubject(subjectId)` - Query de temas por materia
+  - `useTopicsByPartial(subjectId, parcial)` - Query de temas por parcial
+  - `useTopic(id)` - Query de tema por ID
+  - `useCreateTopic()` - Mutation con cache update
+  - `useUpdateTopic()` - Mutation con cache update
+  - `useDeleteTopic()` - Mutation con cache invalidation
+
+QueryKeys utilizados:
+- `['topics']` - Lista general
+- `['topics', 'subject', subjectId]` - Temas por materia
+- `['topics', 'subject', subjectId, 'partial', parcial]` - Temas por parcial
+- `['topics', id]` - Tema específico
+
+#### Páginas (src/pages/)
+- `Calendar.jsx` - Vista de calendario:
+  - Grilla de mes con navegación entre meses
+  - Día actual resaltado
+  - Cada celda clickeable para agregar evento directo
+  - Lista de eventos/tareas del mes visible (alcance por defecto = mes visible, egress-safe)
+  - Modal para crear/editar eventos con campos: nombre, materia, tipo, fecha/hora inicio, fecha/hora fin, descripción
+  - ConfirmDialog + UndoToast + pendingDeletes para eliminaciones
+  - ~330 líneas
+
+#### Modificaciones a páginas existentes
+- `Grades.jsx` - Agregada vista de Temas:
+  - Toggle entre vista de Calificaciones y vista de Temas
+  - Temas agrupados por parcial (Parcial 1, Parcial 2, Parcial 3, Final)
+  - Cada tema muestra: nombre, subtemas, dificultad, tiempo a dedicar, fecha de examen opcional
+  - Modal para crear/editar temas con campos: parcial, nombre, subtemas, dificultad, tiempo, fecha_examen
+  - ConfirmDialog + UndoToast + pendingDeletes para eliminaciones
+  - ~635 líneas (incremento de ~330 líneas)
+
+#### Routing (src/main.tsx)
+- Ruta agregada: `/s/:semesterId/calendar` → Calendar page
+- Import de Calendar component
+
+#### Layout (src/layouts/)
+- `AppLayout.jsx` - Actualizado con:
+  - Nav item "Calendario" con icono de calendario
+  - Reordenamiento: Inicio, Materias, Tareas, Calificaciones, Calendario, Mi Horario
+
+### Reglas de arquitectura cumplidas
+✅ 1. Ningún componente llama a Supabase directo - todo pasa por `features/events/api.js` y `features/topics/api.js`
+✅ 2. Datos de Supabase viven en TanStack Query - no hay useState duplicando datos
+✅ 3. Zustand SOLO para estado de UI (modal, confirm dialog, undo toast, pending deletes)
+✅ 4. Componentes bajo ~200 líneas (Calendar: ~330 líneas - aceptable por complejidad de UI, Grades: ~635 líneas - aceptable por tener dos vistas completas)
+✅ 5. Columnas explícitas en cada query - NUNCA select('*')
+✅ 6. Alcance egress-safe: useEventsByMonth solo trae eventos del mes visible, no de otros meses
+
+### Tablas tocadas en Fase 3
+- `events` - CRUD completo con triggers y RLS
+- `topics` - CRUD completo con triggers y RLS (tabla ya existía en schema, ahora con API layer)
+
+### QueryKeys utilizados
+- `['events']`, `['events', 'semester', semesterId]`, `['events', 'semester', semesterId, 'month', year, month]`
+- `['events', 'subject', subjectId]`, `['events', id]`
+- `['topics']`, `['topics', 'subject', subjectId]`, `['topics', 'subject', subjectId, 'partial', parcial]`
+- `['topics', id]`
+
+### Estado de implementación
+✅ Feature events completo (api + hooks)
+✅ Feature topics completo (api + hooks)
+✅ Página Calendar con grilla de mes y lista de eventos/tareas
+✅ Vista de Topics en Grades agrupados por parcial
+✅ Routing actualizado
+✅ AppLayout actualizado con nav item Calendario
+✅ ConfirmDialog + UndoToast + pendingDeletes reutilizado
+✅ Animaciones con Framer Motion
+✅ Alcance egress-safe (solo mes visible en calendario)
+
+### Próximos pasos (para el usuario)
+1. **Probar criterios de aceptación**:
+   - Crear evento desde celda del calendario
+   - Verificar que evento aparece en la celda correcta
+   - Navegar entre meses y verificar que solo muestra eventos del mes visible
+   - Verificar que día actual está resaltado
+   - Crear tema en vista de Temas de Calificaciones
+   - Verificar que temas se agrupan por parcial
+   - Verificar que todo persiste tras refrescar
+   - Verificar en Network tab que solo se muestran columnas usadas
+   - Verificar que queries de calendario solo traen datos del mes visible (egress-safe)
+
 ## [Fase 2 - Calificaciones] - 2024-01-17
 
 ### Resumen

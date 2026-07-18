@@ -109,18 +109,18 @@ export default function Tasks() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Tareas</h1>
         <button
           onClick={() => { setEditingTask(null); openModal('task') }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full sm:w-auto"
         >
           + Nueva tarea
         </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-4 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <input
             type="text"
             placeholder="Buscar tareas..."
@@ -186,14 +186,14 @@ export default function Tasks() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
             onClick={closeModal}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md"
+              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold mb-4">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
