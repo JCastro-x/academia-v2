@@ -1,0 +1,72 @@
+import { motion, AnimatePresence } from 'framer-motion'
+import { useUIStore } from '../stores/ui.store.js'
+
+export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject }) {
+  const { isModalOpen, modalContent, openModal, closeModal } = useUIStore()
+
+  const options = [
+    { id: 'task', label: 'Nueva Tarea', icon: '📝', enabled: true, action: () => openModal('task') },
+    { id: 'event', label: 'Nuevo Evento', icon: '📅', enabled: false, action: () => {} },
+    { id: 'topic', label: 'Nuevo Tema', icon: '📖', enabled: false, action: () => {} },
+    { id: 'class', label: 'Nueva Clase', icon: '🎓', enabled: true, action: () => openModal('subject') },
+  ]
+
+  return (
+    <>
+      <button
+        onClick={() => openModal('quickadd')}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 flex items-center justify-center text-2xl z-40"
+      >
+        +
+      </button>
+
+      <AnimatePresence>
+        {isModalOpen && modalContent === 'quickadd' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-end justify-center z-50"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ y: 100 }}
+              animate={{ y: 0 }}
+              exit={{ y: 100 }}
+              className="bg-white rounded-t-2xl p-6 w-full max-w-md"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4">Agregar rápido</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {options.map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      closeModal()
+                      option.action()
+                    }}
+                    disabled={!option.enabled}
+                    className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-colors ${
+                      option.enabled
+                        ? 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
+                        : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <span className="text-3xl">{option.icon}</span>
+                    <span className="text-sm font-medium">{option.label}</span>
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={closeModal}
+                className="w-full mt-4 py-3 text-gray-600 hover:text-gray-800"
+              >
+                Cancelar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}

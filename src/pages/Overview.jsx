@@ -1,17 +1,170 @@
 import { useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSemester } from '../features/semesters/hooks.js'
+import { useSubjects, useCreateSubject } from '../features/subjects/hooks.js'
+import { usePendingTasks, useCreateTask, useToggleTaskDone, useDeleteTask } from '../features/tasks/hooks.js'
+import { useUIStore } from '../stores/ui.store.js'
+import TaskList from '../components/TaskList.jsx'
+import TaskForm from '../components/TaskForm.jsx'
+import SubjectForm from '../components/SubjectForm.jsx'
+import QuickAdd from '../components/QuickAdd.jsx'
 
 export default function Overview() {
   const { semesterId } = useParams()
   const { data: semester, isLoading, error } = useSemester(semesterId)
+  const { data: subjects } = useSubjects(semesterId)
+  const { data: pendingTasks } = usePendingTasks(semesterId)
+  const createTask = useCreateTask()
+  const toggleTaskDone = useToggleTaskDone()
+  const deleteTask = useDeleteTask()
+  const createSubject = useCreateSubject()
+  const { isModalOpen, modalContent, openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
+  const [editingTask, setEditingTask] = useState(null)
+  const [showEvents, setShowEvents] = useState(false)
+
+  const handleCreateTask = async (taskData) => {
+    try {
+      await createTask.mutateAsync(taskData)
+      closeModal()
+    } catch (error) {
+      console.error('Error creating task:', error)
+    }
+  }
+
+  const handleCreateSubject = async (subjectData) => {
+    try {
+      await createSubject.mutateAsync(subjectData)
+      closeModal()
+    } catch (error) {
+      console.error('Error creating subject:', error)
+    }
+  }
+
+  const handleToggleDone = async (id, done) => {
+    try {
+      await toggleTaskDone.mutateAsync({ id, done })
+    } catch (error) {
+      console.error('Error toggling task:', error)
+    }
+  }
+
+  const handleDeleteTask = (task) => {
+    openConfirmDialog({
+      title: 'Eliminar tarea',
+      message: `¿Estás seguro de eliminar "${task.titulo}"?`,
+      confirmText: 'Eliminar',
+      onConfirm: () => {
+        const pendingDeleteId = Date.now()
+        addPendingDelete({ type: 'task', itemId: task.id, pendingId: pendingDeleteId })
+        showUndoToast({
+          message: `Tarea "${task.titulo}" eliminada`,
+          onTimeout: async () => {
+            try {
+              await deleteTask.mutateAsync(task.id)
+              removePendingDelete(pendingDeleteId)
+            } catch (error) {
+              console.error('Error deleting task:', error)
+              removePendingDelete(pendingDeleteId)
+            }
+          },
+          onUndo: () => {
+            removePendingDelete(pendingDeleteId)
+          }
+        })
+      }
+    })
+  }
 
   if (isLoading) return <div>Cargando...</div>
   if (error) return <div>Error: {error.message}</div>
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">{semester?.nombre || 'Semestre'}</h1>
-      <p className="text-gray-600">Vista de resumen del semestre</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold mb-2">{semester?.nombre || 'Semestre'}</h1>
+        <p className="text-gray-600">Resumen del semestre</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Tareas pendientes</h2>
+          <label className="flex items-center gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={showEvents}
+              onChange={(e) => setShowEvents(e.target.checked)}
+              className="rounded"
+            />
+            Mostrar eventos
+          </label>
+        </div>
+        <TaskList
+          tasks={pendingTasks?.filter(t => !t.done && !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)) || []}
+          subjects={subjects}
+          onToggleDone={handleToggleDone}
+          onEdit={(task) => { setEditingTask(task); openModal('task') }}
+          onDelete={handleDeleteTask}
+        />
+      </div>
+
+      <QuickAdd semesterId={semesterId} subjects={subjects} />
+
+      <AnimatePresence>
+        {isModalOpen && modalContent === 'task' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg p-6 w-full max-w-md"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
+              <TaskForm
+                semesterId={semesterId}
+                subjects={subjects}
+                initialData={editingTask}
+                onSubmit={handleCreateTask}
+                onCancel={() => { setEditingTask(null); closeModal() }}
+                isPending={createTask.isPending}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+
+        {isModalOpen && modalContent === 'subject' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4">Nueva materia</h3>
+              <SubjectForm
+                semesterId={semesterId}
+                onSubmit={handleCreateSubject}
+                onCancel={closeModal}
+                isPending={createSubject.isPending}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

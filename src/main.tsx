@@ -9,6 +9,9 @@ import Auth from './pages/Auth.jsx'
 import AuthCallback from './pages/AuthCallback.jsx'
 import Overview from './pages/Overview.jsx'
 import CreateFirstSemester from './pages/CreateFirstSemester.jsx'
+import Subjects from './pages/Subjects.jsx'
+import Tasks from './pages/Tasks.jsx'
+import Schedule from './pages/Schedule.jsx'
 import './styles/index.css'
 
 function ProtectedRoute({ children }) {
@@ -71,6 +74,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             }
           >
             <Route index element={<Overview />} />
+            <Route path="subjects" element={<Subjects />} />
+            <Route path="tasks" element={<Tasks />} />
+            <Route path="schedule" element={<Schedule />} />
           </Route>
           
           {/* Fallback */}

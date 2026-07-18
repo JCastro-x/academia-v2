@@ -1,5 +1,213 @@
 # CHANGELOG
 
+## [Fase 1 - Núcleo académico] - 2024-01-17
+
+### Bug fixes (post-release)
+- **Bug 1: Foreign key constraint al eliminar materia con tareas**
+  - Agregado `countTasksBySubject()` en `features/tasks/api.js`
+  - `Subjects.jsx` ahora verifica tareas asociadas antes de permitir delete
+  - Si hay tareas, muestra modal informativo con mensaje claro y botón "Entendido"
+  - `ConfirmDialog.jsx` actualizado con modo `infoOnly` para mensajes sin acción destructiva
+
+- **Bug 2: UndoToast visible tras error en delete**
+  - `UndoToast.jsx` ahora tiene try/catch en `onTimeout`
+  - Si falla, oculta el toast y muestra error simple vía `addToast`
+  - Evita que el toast se quede visible indefinidamente
+
+- **Bug 3: Doble click crea registros duplicados**
+  - `SubjectForm.jsx` y `TaskForm.jsx` ahora aceptan prop `isPending`
+  - Todos los inputs y botones deshabilitados mientras mutation está pending
+  - Botón submit muestra "Guardando..." durante pending
+  - Aplicado en `Subjects.jsx`, `Tasks.jsx` y `Overview.jsx`
+
+- **Bug 4: React warning sobre setState durante render en UndoToast**
+  - `UndoToast.jsx` movió `handleUndo` a `useCallback` con dependencias correctas
+  - Eliminado warning de React sobre setState durante render
+
+- **Bug 5: Items visibles durante ventana de gracia de undo**
+  - Agregado `pendingDeletes` state en `ui.store.js` (array de items pendientes de delete)
+  - `Tasks.jsx` filtra tareas con `pendingDeletes` para ocultar items inmediatamente
+  - `Overview.jsx` filtra tareas con `pendingDeletes` en panel de tareas pendientes
+  - `Subjects.jsx` filtra materias con `pendingDeletes`
+  - Al confirmar delete, item se agrega a `pendingDeletes` y desaparece visualmente
+  - Si usuario hace click en "Deshacer", item se remueve de `pendingDeletes` y reaparece
+  - Si timeout termina sin deshacer, se ejecuta delete real y se remueve de `pendingDeletes`
+
+### Resumen
+Implementación completa de la Fase 1 según `academia-v2-arquitectura.md`. Se implementaron features de semesters, subjects y tasks con sus capas completas (api + hooks + components), páginas de Overview, Materias, Tareas y Mi Horario, y el componente QuickAdd.
+
+### Archivos creados
+
+#### Feature: Subjects (src/features/subjects/)
+- `api.js` - API layer con columnas explícitas:
+  - `subjectsQueryKeys` - QueryKeys de TanStack Query
+  - `getSubjects(semesterId)` - SELECT: id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, updated_at
+  - `getSubjectById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `createSubject(subject)` - INSERT con columnas explícitas
+  - `updateSubject(id, updates)` - UPDATE con columnas explícitas
+  - `deleteSubject(id)` - DELETE
+- `hooks.js` - TanStack Query hooks:
+  - `useSubjects(semesterId)` - Query de materias por semestre
+  - `useSubject(id)` - Query de materia por ID
+  - `useCreateSubject()` - Mutation con cache update
+  - `useUpdateSubject()` - Mutation con cache update
+  - `useDeleteSubject()` - Mutation con cache invalidation
+
+QueryKeys utilizados:
+- `['subjects']` - Lista de materias
+- `['subjects', 'semester', semesterId]` - Materias por semestre
+- `['subjects', id]` - Materia específica
+
+#### Feature: Tasks (src/features/tasks/)
+- `api.js` - API layer con columnas explícitas:
+  - `tasksQueryKeys` - QueryKeys de TanStack Query
+  - `getTasks(semesterId)` - SELECT: id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, updated_at
+  - `getPendingTasks(semesterId)` - SELECT: mismas columnas, WHERE done=false
+  - `getTasksBySubject(subjectId)` - SELECT: mismas columnas, WHERE subject_id=?
+  - `getTaskById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `createTask(task)` - INSERT con columnas explícitas
+  - `updateTask(id, updates)` - UPDATE con columnas explícitas
+  - `toggleTaskDone(id, done)` - UPDATE solo de done
+  - `deleteTask(id)` - DELETE
+  - `deleteCompletedTasks(semesterId)` - DELETE WHERE done=true
+- `hooks.js` - TanStack Query hooks:
+  - `useTasks(semesterId)` - Query de todas las tareas
+  - `usePendingTasks(semesterId)` - Query de tareas pendientes
+  - `useTasksBySubject(subjectId)` - Query de tareas por materia
+  - `useTask(id)` - Query de tarea por ID
+  - `useCreateTask()` - Mutation con cache update
+  - `useUpdateTask()` - Mutation con cache update
+  - `useToggleTaskDone()` - Mutation con cache update
+  - `useDeleteTask()` - Mutation con cache invalidation
+  - `useDeleteCompletedTasks()` - Mutation con cache invalidation
+
+QueryKeys utilizados:
+- `['tasks']` - Lista de tareas
+- `['tasks', 'semester', semesterId]` - Tareas por semestre
+- `['tasks', 'subject', subjectId]` - Tareas por materia
+- `['tasks', id]` - Tarea específica
+- `['tasks', 'pending', semesterId]` - Tareas pendientes
+
+#### Componentes (src/components/)
+- `SubjectForm.jsx` - Formulario para crear/editar materias:
+  - Campos: nombre, código, catedratico, seccion, creditos, color, icono
+  - Validación de campos requeridos
+  - ~80 líneas
+- `SubjectCard.jsx` - Card de materia con Framer Motion:
+  - Muestra nombre, código, catedratico, seccion, creditos, color, icono
+  - Badge de lab si aplica (detectado de horario)
+  - Botones editar/eliminar
+  - ~45 líneas
+- `TaskForm.jsx` - Formulario para crear/editar tareas:
+  - Campos: titulo, materia, prioridad, fecha de entrega
+  - Selección de materia desde lista
+  - ~60 líneas
+- `TaskCard.jsx` - Card de tarea con Framer Motion:
+  - Muestra titulo, materia, prioridad, fecha
+  - Toggle de done con checkbox
+  - Indicador de vencida (rojo)
+  - Botones editar/eliminar
+  - ~60 líneas
+- `TaskList.jsx` - Lista de tareas:
+  - Renderiza TaskCard para cada tarea
+  - Manejo de estado vacío
+  - ~25 líneas
+- `QuickAdd.jsx` - Botón flotante + modal con 4 opciones:
+  - Nueva Tarea (habilitado)
+  - Nuevo Evento (deshabilitado - Fase 2)
+  - Nuevo Tema (deshabilitado - Fase 3)
+  - Nueva Clase (habilitado)
+  - Animaciones con Framer Motion
+  - ~55 líneas
+- `ConfirmDialog.jsx` - Modal de confirmación genérico:
+  - Reemplaza window.confirm() nativo
+  - Configurable: title, message, confirmText, onConfirm
+  - Animaciones con Framer Motion
+  - Estado en Zustand (ui.store.js)
+  - ~40 líneas
+- `UndoToast.jsx` - Toast con botón Deshacer:
+  - Ventana de gracia de 5 segundos
+  - Contador regresivo visible
+  - onTimeout: ejecuta delete real
+  - onUndo: cancela delete (TODO: implementar restauración)
+  - Animaciones con Framer Motion
+  - Estado en Zustand (ui.store.js)
+  - ~45 líneas
+
+#### Páginas (src/pages/)
+- `Overview.jsx` - Vista de resumen actualizada:
+  - Panel de tareas pendientes con toggle mostrar/ocultar eventos
+  - QuickAdd flotante
+  - Modales para crear tarea y materia
+  - Usa hooks de subjects y tasks
+  - ~140 líneas
+- `Subjects.jsx` - Vista de materias:
+  - Grid de SubjectCard
+  - Botón nueva materia
+  - Modal de crear/editar materia
+  - Confirmación de eliminación
+  - ~95 líneas
+- `Tasks.jsx` - Vista de todas las tareas:
+  - Filtros: materia, prioridad, estado (pendientes/completadas)
+  - Buscador por título
+  - Botón borrar completadas
+  - Modal de crear/editar tarea
+  - Confirmación de eliminación
+  - ~150 líneas
+- `Schedule.jsx` - Vista de Mi Horario:
+  - Grilla Lunes-Sábado por bloques de hora (7:00-19:00)
+  - Muestra materias con colores de horario jsonb
+  - Detalle de materias abajo con horarios
+  - ~80 líneas
+
+#### Routing (src/main.tsx)
+- Rutas agregadas bajo `/s/:semesterId`:
+  - `/s/:semesterId/subjects` → Subjects page
+  - `/s/:semesterId/tasks` → Tasks page
+  - `/s/:semesterId/schedule` → Schedule page
+
+#### Layout (src/layouts/)
+- `AppLayout.jsx` - Actualizado con:
+  - Sidebar con navegación: Inicio, Materias, Tareas, Mi Horario
+  - Links activos con highlight azul
+  - ConfirmDialog global
+  - UndoToast global
+  - ~100 líneas
+
+### Reglas de arquitectura cumplidas
+✅ 1. Ningún componente llama a Supabase directo - todo pasa por `features/subjects/api.js` y `features/tasks/api.js`
+✅ 2. Datos de Supabase viven en TanStack Query - no hay useState duplicando datos
+✅ 3. Zustand SOLO para estado de UI (modal, sidebar, toasts, mute) - nada de servidor ni URL
+✅ 4. Componentes bajo ~200 líneas (todos los componentes nuevos están bajo el límite)
+✅ 5. Columnas explícitas en cada query - NUNCA select('*')
+✅ 6. Animaciones con Framer Motion en transiciones y acciones
+
+### Tablas tocadas en Fase 1
+- `subjects` - CRUD completo con triggers y RLS
+- `tasks` - CRUD completo con triggers y RLS
+
+### QueryKeys utilizados
+- `['subjects']`, `['subjects', 'semester', semesterId]`, `['subjects', id]`
+- `['tasks']`, `['tasks', 'semester', semesterId]`, `['tasks', 'subject', subjectId]`, `['tasks', id]`, `['tasks', 'pending', semesterId]`
+
+### Estado de implementación
+✅ Features subjects y tasks completos (api + hooks)
+✅ Componentes de subjects y tasks
+✅ QuickAdd con 4 opciones (2 habilitadas, 2 placeholder)
+✅ Páginas Overview, Subjects, Tasks, Schedule
+✅ Routing anidado actualizado
+✅ Animaciones con Framer Motion
+✅ Undo toast para delete con ventana de gracia de 5 segundos
+
+### Próximos pasos (para el usuario)
+1. Probar criterios de aceptación:
+   - Crear/editar/archivar semestre (ya funcional desde Fase 0)
+   - Crear materia con horario
+   - Crear tarea
+   - Marcar tarea como hecha
+   - Verificar que todo persiste tras refrescar
+   - Verificar en Network tab que solo se muestran columnas usadas
+
 ## [Fase 0 - Cimientos] - 2024-01-17
 
 ### Resumen
