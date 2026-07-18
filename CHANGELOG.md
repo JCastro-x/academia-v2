@@ -1,5 +1,132 @@
 # CHANGELOG
 
+## [Fase 3 - Contenido académico (Notas)] - 2024-01-17
+
+### Resumen
+Implementación del segundo ticket de Fase 3 (Contenido académico) según `academia-v2-spec-funcional.md`. Se implementó el sistema de notas con carpetas anidadas tipo explorador de archivos de Windows, editor de texto básico con formato (negrita/cursiva/subrayado), buscador de notas, y funcionalidad de pantalla completa. NO se implementó canvas de dibujo, subir/pegar imágenes, ni extracción de PDF (ticket 3C separado).
+
+### Archivos creados
+
+#### Feature: Folders (src/features/folders/)
+- `api.js` - API layer con columnas explícitas:
+  - `foldersQueryKeys` - QueryKeys de TanStack Query
+  - `getFolders(parentId)` - SELECT: id, user_id, subject_id, parent_id, nombre (is parent_id = null para raíz)
+  - `getFolderById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `createFolder(folder)` - INSERT con columnas explícitas
+  - `updateFolder(id, updates)` - UPDATE con columnas explícitas
+  - `deleteFolder(id)` - DELETE
+- `hooks.js` - TanStack Query hooks:
+  - `useFolders(parentId)` - Query de carpetas por parent_id (null = raíz)
+  - `useFolder(id)` - Query de carpeta por ID
+  - `useCreateFolder()` - Mutation con cache update
+  - `useUpdateFolder()` - Mutation con cache update
+  - `useDeleteFolder()` - Mutation con cache invalidation
+
+QueryKeys utilizados:
+- `['folders']` - Lista general
+- `['folders', 'parent', parentId]` - Carpetas por parent_id
+- `['folders', 'subject', subjectId]` - Carpetas por materia
+- `['folders', id]` - Carpeta específica
+
+#### Feature: Notes (src/features/notes/)
+- `api.js` - API layer con columnas explícitas:
+  - `notesQueryKeys` - QueryKeys de TanStack Query
+  - `getNotes(folderId)` - SELECT: id, subject_id, folder_id, titulo, contenido, updated_at (is folder_id = null para notas sin carpeta)
+  - `getNoteById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `searchNotes(query)` - SELECT: mismas columnas, WHERE titulo OR contenido ilike %query%
+  - `createNote(note)` - INSERT con columnas explícitas
+  - `updateNote(id, updates)` - UPDATE con columnas explícitas
+  - `deleteNote(id)` - DELETE
+- `hooks.js` - TanStack Query hooks:
+  - `useNotes(folderId)` - Query de notas por folder_id
+  - `useNote(id)` - Query de nota por ID
+  - `useSearchNotes(query)` - Query de búsqueda de notas
+  - `useCreateNote()` - Mutation con cache update
+  - `useUpdateNote()` - Mutation con cache update
+  - `useDeleteNote()` - Mutation con cache invalidation
+
+QueryKeys utilizados:
+- `['notes']` - Lista general
+- `['notes', 'folder', folderId]` - Notas por carpeta
+- `['notes', 'subject', subjectId]` - Notas por materia
+- `['notes', id]` - Nota específica
+- `['notes', 'search', query]` - Búsqueda de notas
+
+#### Componentes (src/components/)
+- `NoteForm.jsx` - Formulario para crear notas:
+  - Campos: título (requerido), materia (opcional)
+  - folder_id se pasa como prop desde contexto
+  - ~45 líneas
+- `FolderForm.jsx` - Formulario para crear carpetas:
+  - Campos: nombre (requerido), materia (opcional)
+  - parent_id se pasa como prop desde contexto
+  - ~45 líneas
+- `NoteEditor.jsx` - Editor de notas con contentEditable:
+  - Toolbar con negrita/cursiva/subrayado (document.execCommand)
+  - contentEditable div para edición de texto
+  - Título editable
+  - Modo pantalla completa
+  - Guardado manual (Ctrl+S) y botón guardar
+  - ~80 líneas
+
+#### Páginas (src/pages/)
+- `Notes.jsx` - Vista de notas con explorador de carpetas:
+  - Explorador tipo árbol de carpetas (estilo Windows)
+  - Navegación entrar/salir de carpetas (parent_id null = raíz)
+  - Crear carpeta nueva (en carpeta actual o raíz)
+  - Crear carpeta dentro de otra
+  - Crear nota con título, carpeta (opcional/ya seleccionada), materia (opcional)
+  - Buscador entre notas (búsqueda en título y contenido)
+  - Ver nota en pantalla completa
+  - Eliminar nota y carpeta con ConfirmDialog + UndoToast + pendingDeletes
+  - ~200 líneas
+
+### Reglas de arquitectura cumplidas
+✅ 1. Ningún componente llama a Supabase directo - todo pasa por `features/folders/api.js` y `features/notes/api.js`
+✅ 2. Datos de Supabase viven en TanStack Query - no hay useState duplicando datos
+✅ 3. Zustand SOLO para estado de UI (modal, confirm dialog, undo toast, pending deletes)
+✅ 4. Componentes bajo ~200 líneas (Notes: ~200 líneas, NoteEditor: ~80 líneas, forms: ~45 líneas)
+✅ 5. Columnas explícitas en cada query - NUNCA select('*')
+✅ 6. Editor de texto simple con contentEditable - sin dependencias pesadas
+
+### Tablas tocadas en Fase 3 ticket 2
+- `folders` - CRUD completo con triggers y RLS (tabla ya existía en schema, ahora con API layer)
+- `notes` - CRUD completo con triggers y RLS (tabla ya existía en schema, ahora con API layer)
+
+### QueryKeys utilizados
+- `['folders']`, `['folders', 'parent', parentId]`, `['folders', 'subject', subjectId]`, `['folders', id]`
+- `['notes']`, `['notes', 'folder', folderId]`, `['notes', 'subject', subjectId]`, `['notes', id]`, `['notes', 'search', query]`
+
+### Estado de implementación
+✅ Feature folders completo (api + hooks)
+✅ Feature notes completo (api + hooks)
+✅ Página Notes con explorador de carpetas tipo Windows
+✅ Crear carpeta/note con modales
+✅ Editor de texto con negrita/cursiva/subrayado (contentEditable)
+✅ Buscador de notas
+✅ Vista pantalla completa de notas
+✅ Eliminar con ConfirmDialog + UndoToast + pendingDeletes
+✅ Animaciones con Framer Motion
+✅ Sin dependencias pesadas agregadas
+
+### Próximos pasos (para el usuario)
+1. **Probar criterios de aceptación**:
+   - Crear carpeta en raíz
+   - Entrar a carpeta y crear subcarpeta
+   - Crear nota dentro de carpeta
+   - Navegar entre carpetas (volver a raíz)
+   - Crear nota sin carpeta
+   - Editar nota con formato (negrita/cursiva/subrayado)
+   - Guardar nota con Ctrl+S y botón guardar
+   - Abrir nota en pantalla completa
+   - Buscar notas por título y contenido
+   - Eliminar nota y verificar undo toast
+   - Eliminar carpeta y verificar undo toast
+   - Verificar que todo persiste tras refrescar
+   - Verificar en Network tab que solo se muestran columnas usadas
+
+2. **Ticket 3C (futuro)**: Canvas de dibujo, subir/pegar imágenes, extracción de PDF
+
 ## [Fase 3 - Contenido académico (Calendario y Temas)] - 2024-01-17
 
 ### Resumen

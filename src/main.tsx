@@ -14,6 +14,7 @@ import Tasks from './pages/Tasks.jsx'
 import Schedule from './pages/Schedule.jsx'
 import Grades from './pages/Grades.jsx'
 import Calendar from './pages/Calendar.jsx'
+import Notes from './pages/Notes.jsx'
 import './styles/index.css'
 
 function ProtectedRoute({ children }) {
@@ -81,6 +82,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="schedule" element={<Schedule />} />
             <Route path="grades" element={<Grades />} />
             <Route path="calendar" element={<Calendar />} />
+            <Route path="notes" element={<Notes />} />
           </Route>
           
           {/* Fallback */}

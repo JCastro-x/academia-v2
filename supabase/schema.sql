@@ -77,7 +77,7 @@ create index on tasks (user_id);
 -- Notes table
 create table notes (
   id uuid primary key default gen_random_uuid(),
-  subject_id uuid references subjects not null,
+  subject_id uuid references subjects,
   user_id uuid not null,
   folder_id uuid,
   titulo text,
@@ -176,7 +176,11 @@ $$ language plpgsql security definer;
 
 create or replace function set_user_id_from_folder() returns trigger as $$
 begin
-  new.user_id := (select user_id from folders where id = new.parent_id);
+  if new.parent_id is not null then
+    new.user_id := (select user_id from folders where id = new.parent_id);
+  else
+    new.user_id := auth.uid();
+  end if;
   return new;
 end;
 $$ language plpgsql security definer;
@@ -204,7 +208,7 @@ create trigger trg_flashcards_user_id before insert on flashcards
   for each row execute function set_user_id_from_subject();
 
 create trigger trg_folders_user_id before insert on folders
-  for each row when (new.parent_id is not null) execute function set_user_id_from_folder();
+  for each row execute function set_user_id_from_folder();
 
 create trigger trg_grade_items_user_id before insert on grade_items
   for each row execute function set_user_id_from_zone();
