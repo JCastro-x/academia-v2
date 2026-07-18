@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signInWithGoogle } from '../lib/supabase.js'
+import { useUIStore } from '../stores/ui.store.js'
 
 export default function Auth() {
   const [isGuest, setIsGuest] = useState(false)
   const navigate = useNavigate()
+  const resetTheme = useUIStore(s => s.resetTheme)
+
+  // Resetear tema al salir (por si otro usuario se loguea sin refrescar)
+  useEffect(() => { resetTheme() }, [resetTheme])
 
   const handleGoogleSignIn = async () => {
     try {

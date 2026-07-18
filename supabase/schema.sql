@@ -368,3 +368,24 @@ alter table pomodoro_sessions enable row level security;
 create policy "own rows" on pomodoro_sessions
   for all using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Profiles table (datos de usuario y preferencias, a nivel de usuario no de semestre)
+create table profiles (
+  user_id uuid primary key references auth.users not null default auth.uid(),
+  nombre text,
+  registro_academico text,
+  carrera text,
+  institucion text,
+  cursos_ganados int default 0,
+  tipografia text default 'Inter',              -- 'Inter' | 'sans' | 'serif' | 'mono'
+  tema_color text default '#84cc16',            -- color hex (ej. '#84cc16')
+  sonidos_interaccion text default 'classic',  -- 'classic' | 'modern' | 'off'
+  modo_oscuro boolean default false,
+  updated_at timestamptz default now()
+);
+
+-- RLS: simple equality (una sola igualdad, sin joins)
+alter table profiles enable row level security;
+create policy "own rows" on profiles
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);

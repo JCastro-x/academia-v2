@@ -1,6 +1,22 @@
 import { create } from 'zustand'
 
 export const useUIStore = create((set) => ({
+  // Theme state (preview en vivo, se guarda aparte en profiles)
+  modoOscuro: false,
+  tipografia: 'Inter',
+  temaColor: '#84cc16',
+  sonidosInteraccion: 'classic',
+  setModoOscuro: (val) => set({ modoOscuro: val }),
+  setTipografia: (val) => set({ tipografia: val }),
+  setTemaColor: (val) => set({ temaColor: val }),
+  setSonidosInteraccion: (val) => set({ sonidosInteraccion: val }),
+  resetTheme: () => set({
+    modoOscuro: false,
+    tipografia: 'Inter',
+    temaColor: '#84cc16',
+    sonidosInteraccion: 'classic',
+  }),
+
   // Modal state
   isModalOpen: false,
   modalContent: null,

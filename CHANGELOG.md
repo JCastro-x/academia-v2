@@ -1,5 +1,108 @@
 # CHANGELOG
 
+## [Fase 4 - Extras (Perfil y Personalización)] - 2024-01-18
+
+### Resumen
+Implementación del tercer ticket de Fase 4 (Extras) según `academia-v2-spec-funcional.md` sección 10. Se implementó la página de perfil con datos personales editables (nombre, registro académico, carrera, institución), cursos ganados (solo lectura), y personalización visual (tipografía, color de tema, sonidos de interacción, modo oscuro) con preview en vivo. Se creó el mecanismo de tema global (darkMode: 'class' en Tailwind, CSS variables, hidratación desde perfil en AppLayout, reset en logout).
+
+### Archivos creados
+
+#### Páginas (src/pages/)
+- `Profile.jsx` - Página de perfil:
+  - Datos personales: nombre, registro académico, carrera, institución (inputs editables)
+  - Cursos ganados (input disabled, solo lectura)
+  - Tipografía: selector con 4 opciones (Inter, Roboto, Open Sans, System UI) con preview en vivo
+  - Color de tema: 6 colores predefinidos en círculos (verde lima, azul, índigo, púrpura, naranja, rojo)
+  - Sonidos de interacción: toggle switch (ON = 'classic', OFF = 'off')
+  - Modo oscuro: toggle switch con preview en vivo
+  - Creación automática de perfil (upsert con defaults) si no existe fila en DB (una vez por sesión)
+  - Guardado explícito con useUpsertProfile()
+  - Animación de entrada con Framer Motion (fade + slide up)
+  - Clases dark: en todas las secciones para demostrar que el mecanismo funciona
+  - ~200 líneas
+
+### Archivos modificados
+
+#### Configuración
+- `index.html` - Agregados preconnect a Google Fonts + stylesheet (Inter, Roboto, Open Sans)
+- `tailwind.config.js` - Agregado `darkMode: 'class'` para habilitar clases `dark:` en Tailwind
+
+#### Estilos
+- `src/styles/index.css` - Agregado `:root` con `--color-primary` y `--font-family` como CSS variables; body usa `var(--font-family)`
+
+#### Store
+- `src/stores/ui.store.js` - Agregados 4 campos de theme preview (modoOscuro, tipografia, temaColor, sonidosInteraccion) con sus setters + `resetTheme()` para limpiar en logout
+
+#### Layout
+- `src/layouts/AppLayout.jsx` - Agregado:
+  - useEffect de hidratación: lee `useProfile()` y escribe en ui.store (se monta en todas las rutas protegidas)
+  - useEffect de aplicación: lee ui.store y aplica al `<html>` (clase 'dark', CSS variable --color-primary, fontFamily, mute)
+  - Nav item "Perfil" con icono de usuario
+
+#### Auth
+- `src/pages/Auth.jsx` - Agregado `resetTheme()` en useEffect al montar (para que al cerrar sesión y loguear otro usuario sin refrescar, el tema se limpie)
+
+#### Routing
+- `src/main.tsx` - Agregada ruta `/s/:semesterId/profile` → Profile page
+
+### Reglas de arquitectura cumplidas
+✅ 1. Ningún componente llama a Supabase directo - todo pasa por `features/profile/api.js`
+✅ 2. Datos de Supabase viven en TanStack Query - no hay useState duplicando datos
+✅ 3. Zustand para estado de UI (theme preview en vivo) - los datos de servidor siguen en TanStack Query
+✅ 4. Componentes bajo ~200 líneas (Profile: ~200 líneas)
+✅ 5. Columnas explícitas en cada query - NUNCA select('*')
+✅ 6. Preview en vivo: los cambios de tema/color/tipografía se aplican al instante sin esperar "Guardar"
+✅ 7. Hidratación en AppLayout (no en Profile.jsx) para que el tema se aplique en TODAS las pantallas, no solo al visitar Perfil
+✅ 8. resetTheme() en Auth.jsx para evitar que el tema del usuario anterior quede pegado al loguear otro sin refrescar
+✅ 9. Creación automática de perfil (upsert con defaults) una vez por sesión si no existe fila
+✅ 10. Animaciones con Framer Motion
+✅ 11. Modo oscuro limitado a Profile.jsx en este ticket - el resto de pantallas queda pendiente para ticket futuro de "dark mode global"
+
+### Tablas tocadas en Fase 4 ticket 3
+- `profiles` - Solo lectura/escritura (api.js y hooks.js ya existían de fase anterior)
+
+### QueryKeys utilizados
+- `['profiles', 'current']` - Perfil del usuario actual
+
+### Estado de implementación
+✅ Página Profile con datos personales y personalización
+✅ Mecanismo de tema global (darkMode: 'class', CSS variables, hidratación en AppLayout)
+✅ Preview en vivo de todos los controles de personalización
+✅ Creación automática de perfil si no existe
+✅ Guardado explícito con upsert
+✅ Routing y navegación (sidebar + ruta)
+✅ resetTheme en logout
+✅ Animaciones con Framer Motion
+✅ Clases dark: en Profile.jsx + AppLayout (sidebar, header, fondo general)
+⏳ Dark mode global en el resto de pantallas (ticket futuro)
+
+### Pendientes detectados (no implementados en este ticket)
+Estos son huecos de fases anteriores o extensiones necesarias identificadas durante el desarrollo, pendientes para tickets futuros del roadmap:
+
+1. **"Nuevo Evento" / "Nuevo Tema" deshabilitados en modal Agregar rápido** — El componente `QuickAdd.jsx` tiene 4 opciones, pero solo "Nueva Tarea" y "Nueva Clase" están habilitadas. "Nuevo Evento" y "Nuevo Tema" están deshabilitados con placeholder desde Fase 1.
+
+2. **Dark mode global (resto de pantallas)** — Profile.jsx y AppLayout (sidebar, header, fondo) ya tienen clases `dark:` con paleta zinc. El resto de pantallas (Tareas, Calendario, Notas, Hábitos, Materias, Calificaciones, Reloj, Mi Horario, Resumen) quedan en modo claro. Ticket futuro: agregar clases `dark:` a cada página con la misma paleta zinc.
+
+3. **Barra superior completa (spec sección 1)** — La barra superior de AppLayout actualmente solo tiene hamburguesa + título + mute. La spec requiere: botón de cerrar sesión, exportar/importar JSON, toggle claro/oscuro, accesos rápidos a "+Clase", "Agregar" y "Examen". No existe ninguna parte de esto todavía.
+
+### Próximos pasos (para el usuario)
+1. **Ejecutar schema.sql en Supabase** (si no se ha ejecutado aún):
+   - Verificar que tabla `profiles` existe con columnas: user_id, nombre, registro_academico, carrera, institucion, cursos_ganados, tipografia, tema_color, sonidos_interaccion, modo_oscuro, updated_at
+   - Verificar RLS policy con `with check (auth.uid() = user_id)`
+
+2. **Probar criterios de aceptación**:
+   - Abrir Perfil desde la sidebar
+   - Verificar que los datos personales se cargan desde Supabase
+   - Editar nombre, registro, carrera, institución y guardar
+   - Verificar que cursos_ganados es solo lectura
+   - Cambiar tipografía y verificar que se aplica al instante en toda la página
+   - Cambiar color de tema y verificar que los botones/inputs cambian al instante
+   - Activar modo oscuro y verificar que Profile.jsx + sidebar + header cambian a fondo oscuro
+   - Desactivar modo oscuro y verificar que vuelve a claro
+   - Toggle sonidos y verificar que el icono de mute en la barra superior cambia
+   - Cerrar sesión, loguear de nuevo y verificar que el tema guardado se restaura
+   - Verificar en Network tab que solo se muestran columnas usadas
+
 ## [Fase 4 - Extras (Pomodoro y Cronómetro)] - 2024-01-18
 
 ### Resumen

@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { Outlet, useParams, Link, useLocation } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
+import { useProfile } from '../features/profile/hooks.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import UndoToast from '../components/UndoToast.jsx'
 import Lightbox from '../components/Lightbox.jsx'
@@ -7,7 +9,40 @@ import Lightbox from '../components/Lightbox.jsx'
 export default function AppLayout() {
   const { semesterId } = useParams()
   const location = useLocation()
-  const { isSidebarCollapsed, toggleSidebar, isMuted, toggleMute } = useUIStore()
+  const {
+    isSidebarCollapsed, toggleSidebar,
+    isMuted, toggleMute,
+    modoOscuro, tipografia, temaColor, sonidosInteraccion,
+    setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setMuted,
+  } = useUIStore()
+
+  // Hidratación: perfil guardado → ui.store (al montar AppLayout)
+  const { data: profile } = useProfile()
+
+  useEffect(() => {
+    if (!profile) return // null o undefined → no hay perfil, mantener defaults del store
+    setModoOscuro(profile.modo_oscuro ?? false)
+    setTipografia(profile.tipografia ?? 'Inter')
+    setTemaColor(profile.tema_color ?? '#84cc16')
+    setSonidosInteraccion(profile.sonidos_interaccion ?? 'classic')
+  }, [profile, setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion])
+
+  // Mapeo de nombre corto de tipografía a CSS font-family
+  const FONT_MAP = {
+    'Inter': 'Inter, system-ui, sans-serif',
+    'Roboto': 'Roboto, system-ui, sans-serif',
+    'Open Sans': '"Open Sans", system-ui, sans-serif',
+    'System UI': 'system-ui, -apple-system, sans-serif',
+  }
+
+  // Aplicación de tema desde ui.store (preview en vivo)
+  useEffect(() => {
+    console.log('[AppLayout] aplicando tema', { modoOscuro, tipografia, temaColor, sonidosInteraccion })
+    document.documentElement.classList.toggle('dark', modoOscuro)
+    document.documentElement.style.setProperty('--color-primary', temaColor)
+    document.documentElement.style.fontFamily = FONT_MAP[tipografia] || 'Inter, system-ui, sans-serif'
+    setMuted(sonidosInteraccion === 'off')
+  }, [modoOscuro, tipografia, temaColor, sonidosInteraccion, setMuted])
 
   const navItems = [
     { path: '', label: 'Inicio', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -19,6 +54,7 @@ export default function AppLayout() {
     { path: 'habits', label: 'Hábitos', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
     { path: 'clock', label: 'Reloj', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
     { path: 'schedule', label: 'Mi Horario', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+    { path: 'profile', label: 'Perfil', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
   ]
 
   const isActive = (path) => {
@@ -27,26 +63,26 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
       {/* Top Bar */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
             onClick={toggleSidebar}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg"
             aria-label="Toggle sidebar"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Academia v2</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Academia v2</h1>
         </div>
         
         <div className="flex items-center gap-2">
           <button
             onClick={toggleMute}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg"
             aria-label={isMuted ? 'Unmute' : 'Mute'}
           >
             {isMuted ? (
@@ -74,7 +110,7 @@ export default function AppLayout() {
 
         {/* Sidebar */}
         <aside
-          className={`bg-white border-r border-gray-200 transition-all duration-300 fixed md:relative z-50 h-full ${
+          className={`bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-700 transition-all duration-300 fixed md:relative z-50 h-full ${
             isSidebarCollapsed ? '-translate-x-full md:w-16 md:translate-x-0' : 'w-64 translate-x-0'
           }`}
         >
@@ -89,8 +125,8 @@ export default function AppLayout() {
                     }}
                     className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
                       isActive(item.path)
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                        : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
                     }`}
                   >
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
