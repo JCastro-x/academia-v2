@@ -1,5 +1,124 @@
 # CHANGELOG
 
+## [Fase 4 - Extras (Hábitos)] - 2024-01-18
+
+### Resumen
+Implementación del primer ticket de Fase 4 (Extras) según `academia-v2-spec-funcional.md`. Se implementó el sistema de hábitos con frecuencia diaria/semanal, cálculo de racha (streak) en cliente, historial de completado por día, y UI para marcar como completado hoy con un click.
+
+### Archivos creados
+
+#### Feature: Habits (src/features/habits/)
+- `api.js` - API layer con columnas explícitas:
+  - `habitsQueryKeys` - QueryKeys de TanStack Query
+  - `calculateStreak(habit)` - Cálculo de racha en cliente (derivada de historial)
+  - `getHabits()` - SELECT: id, user_id, nombre, frecuencia, dias_semana, racha, historial
+  - `getHabitById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `createHabit(habit)` - INSERT con columnas explícitas
+  - `updateHabit(id, updates)` - UPDATE con columnas explícitas
+  - `deleteHabit(id)` - DELETE
+  - `toggleHabitCompletion(id, date)` - Toggle completado en fecha específica + recálculo de racha
+- `hooks.js` - TanStack Query hooks:
+  - `useHabits()` - Query de todos los hábitos
+  - `useHabit(id)` - Query de hábito por ID
+  - `useCreateHabit()` - Mutation con cache update
+  - `useUpdateHabit()` - Mutation con cache update
+  - `useDeleteHabit()` - Mutation con cache invalidation
+  - `useToggleHabitCompletion()` - Mutation con cache update
+
+QueryKeys utilizados:
+- `['habits']` - Lista general
+- `['habits', id]` - Hábito específico
+
+#### Componentes (src/components/)
+- `HabitForm.jsx` - Formulario para crear hábitos:
+  - Campo nombre (requerido)
+  - Frecuencia (diario/semanal)
+  - Días de la semana (para frecuencia semanal, selector de 7 días)
+  - ~60 líneas
+
+#### Páginas (src/pages/)
+- `Habits.jsx` - Vista de hábitos:
+  - Lista/grid de hábitos con nombre, frecuencia, racha actual
+  - Botón circular para marcar como completado hoy (solo visible si aplica hoy)
+  - Visualización de racha con emoji 🔥 y contador de días
+  - Lógica de días programados: hábitos semanales solo muestran botón en días asignados
+  - ConfirmDialog + UndoToast + pendingDeletes para eliminaciones
+  - ~180 líneas
+
+#### Schema (supabase/schema.sql)
+- Tabla `habits` actualizada:
+  - nombre (not null)
+  - frecuencia (not null): 'diario' | 'semanal'
+  - dias_semana (int[]): array de días [1-7] para frecuencia semanal (1=lunes, 7=domingo)
+  - racha (int, default 0)
+  - historial (jsonb, default '[]'): array de fechas completadas ['2024-01-15', ...]
+  - RLS policy "own rows" con `with check (auth.uid() = user_id)` explícito
+
+#### Routing (src/main.tsx)
+- Ruta agregada: `/s/:semesterId/habits` → Habits page
+- Import de Habits component
+
+#### Layout (src/layouts/)
+- `AppLayout.jsx` - Actualizado con:
+  - Nav item "Hábitos" con icono de checkmark
+  - Reordenamiento: Inicio, Materias, Tareas, Calificaciones, Calendario, Notas, Hábitos, Mi Horario
+
+### Reglas de arquitectura cumplidas
+✅ 1. Ningún componente llama a Supabase directo - todo pasa por `features/habits/api.js`
+✅ 2. Datos de Supabase viven en TanStack Query - no hay useState duplicando datos
+✅ 3. Zustand SOLO para estado de UI (modal, confirm dialog, undo toast, pending deletes)
+✅ 4. Componentes bajo ~200 líneas (Habits: ~180 líneas, HabitForm: ~60 líneas)
+✅ 5. Columnas explícitas en cada query - NUNCA select('*')
+✅ 6. Cálculo de racha en cliente (no trigger en DB) - evita complejidad de debugging
+✅ 7. Lógica de racha correcta según especificación:
+   - Diario: cualquier día sin marcar rompe la racha
+   - Semanal: días no programados no cuentan ni rompen, días programados sin marcar sí rompen
+✅ 8. RLS INSERT explícito con `with check (auth.uid() = user_id)`
+✅ 9. ConfirmDialog + UndoToast + pendingDeletes reutilizado
+✅ 10. Animaciones con Framer Motion
+
+### Lógica de racha (streak)
+- **Cálculo en cliente**: La racha se calcula iterando el historial desde hoy hacia atrás
+- **Hábitos diarios**: Cualquier día sin marcar rompe la racha
+- **Hábitos semanales**: 
+  - Días no programados se saltan (no cuentan ni rompen)
+  - Días programados sin marcar sí rompen la racha
+- **Recálculo**: La racha se recalcula al cargar la vista de hábitos (no en tiempo real a medianocha)
+- **Persistencia**: La racha calculada se guarda en la columna `racha` de la tabla para facilitar queries
+
+### Tablas tocadas en Fase 4
+- `habits` - Schema actualizado con frecuencia, dias_semana, y RLS INSERT explícito
+
+### QueryKeys utilizados
+- `['habits']`, `['habits', id]`
+
+### Estado de implementación
+✅ Feature habits completo (api + hooks)
+✅ HabitForm con frecuencia diaria/semanal y selector de días
+✅ Página Habits con lista/grid, streak, y toggle de completado
+✅ Lógica de racha en cliente según especificación
+✅ Routing actualizado
+✅ AppLayout actualizado con nav item Hábitos
+✅ ConfirmDialog + UndoToast + pendingDeletes reutilizado
+✅ Animaciones con Framer Motion
+✅ Sin dependencias nuevas agregadas
+
+### Próximos pasos (para el usuario)
+1. **Ejecutar schema.sql en Supabase**:
+   - Actualizar tabla `habits` con nuevos campos (frecuencia, dias_semana)
+   - Verificar RLS policy con `with check` explícito
+
+2. **Probar criterios de aceptación**:
+   - Crear hábito diario
+   - Crear hábito semanal con días específicos (ej. Lun/Mie/Vie)
+   - Marcar hábito como completado hoy y verificar que se muestra check
+   - Verificar que racha se incrementa al marcar
+   - Verificar que días no programados no muestran botón (semanal)
+   - Verificar que al desmarcar se decrementa racha
+   - Eliminar hábito y verificar undo toast
+   - Verificar que todo persiste tras refrescar
+   - Verificar en Network tab que solo se muestran columnas usadas
+
 ## [Fase 3 - Contenido académico (Notas - Canvas, Imágenes, PDF)] - 2024-01-18
 
 ### Resumen

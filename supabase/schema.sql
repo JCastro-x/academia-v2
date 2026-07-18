@@ -131,9 +131,11 @@ create index on flashcards (user_id);
 create table habits (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null default auth.uid(),
-  nombre text,
+  nombre text not null,
+  frecuencia text not null, -- 'diario' | 'semanal'
+  dias_semana int[], -- array de días [1-7] para frecuencia semanal (1=lunes, 7=domingo)
   racha int default 0,
-  historial jsonb default '[]'
+  historial jsonb default '[]' -- array de fechas completadas ['2024-01-15', '2024-01-16', ...]
 );
 create index on habits (user_id);
 
