@@ -118,7 +118,7 @@ QueryKeys utilizados:
 ✅ Sin dependencias nuevas agregadas
 
 ### Bug fixes (post-implementación)
-**Bug 1: Timer no avanza visualmente**
+**Bug 1: Timer no avanza visualmente (dependencia inestable)**
 - **Causa**: El useEffect del timer tenía `pomodoroConfig` como dependencia. Como `pomodoroConfig` es un objeto recreado en cada render, el useEffect se reiniciaba constantemente (cleanup → setup), limpiando y recreando el interval antes de que pudiera completar ciclos normales.
 - **Problema adicional**: `getTotalDuration()` se llamaba dentro del interval leyendo el store en vivo, lo que podía causar inconsistencias si la config cambiaba mientras el timer corría.
 - **Fix**:
@@ -128,10 +128,15 @@ QueryKeys utilizados:
   - Corregir variable `nextDuration` sin declarar en `completePomodoroSession()` (causaba ReferenceError al completar sesión)
 - **Archivos modificados**: `src/features/pomodoro/timerStore.js`, `src/components/PomodoroTimer.jsx`
 
-**Bug 2: NaN:NaN al cargar la página Reloj**
+**Bug 2: NaN:NaN al cargar la página Reloj (merge shallow persist)**
 - **Causa**: El middleware `persist` de Zustand hace merge shallow por defecto. Como `partialize` solo persiste `pomodoroState.completedSessions`, al hidratar reemplaza todo el objeto `pomodoroState` del estado inicial con el objeto parcial persistido, dejando `remainingSeconds`, `currentSessionCount`, etc. como `undefined`.
 - **Fix**: Agregar función `merge` custom que hace merge profundo de `pomodoroState` específicamente, preservando los valores del estado inicial para las claves no persistidas.
 - **Archivos modificados**: `src/features/pomodoro/timerStore.js`
+
+**Bug 3: Timer congelado sin avanzar tras iniciar (dependencia inestable createSession)**
+- **Causa**: El useEffect del timer tenía `createSession` (resultado de `useCreatePomodoroSession()`, un hook de TanStack Query) como dependencia. Este objeto se recrea en cada render, causando un loop continuo de cleanup + recreate del interval sin darle tiempo a completar un tick de 1000ms.
+- **Fix**: Remover `createSession` del array de dependencias del useEffect. La función `createSession.mutate` se sigue usando dentro del interval, pero no necesita estar en las dependencias porque es estable.
+- **Archivos modificados**: `src/components/PomodoroTimer.jsx`
 
 ### Próximos pasos (para el usuario)
 1. **Ejecutar schema.sql en Supabase**:
