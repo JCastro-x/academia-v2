@@ -1,5 +1,225 @@
 # CHANGELOG
 
+## [Fase 3 - Contenido académico (Notas - Canvas, Imágenes, PDF)] - 2024-01-18
+
+### Resumen
+Implementación del tercer ticket de Fase 3 (Contenido académico) según `academia-v2-spec-funcional.md`. Se implementó canvas de dibujo simple, subir/pegar imágenes, y extracción de texto de PDF en el editor de notas. Las imágenes se almacenan en Supabase Storage con RLS por user_id.
+
+### Archivos creados
+
+#### Feature: Note Attachments (src/features/note-attachments/)
+- `api.js` - API layer con columnas explícitas:
+  - `noteAttachmentsQueryKeys` - QueryKeys de TanStack Query
+  - `getAttachmentsByNote(noteId)` - SELECT: id, note_id, user_id, tipo, nombre, storage_path, metadata, created_at
+  - `getAttachmentById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `createAttachment(attachment)` - INSERT con columnas explícitas
+  - `deleteAttachment(id)` - DELETE
+  - `uploadAttachment(userId, noteId, file, tipo)` - Upload a Supabase Storage
+  - `deleteAttachmentFile(storagePath)` - Delete de Storage
+  - `getSignedUrl(storagePath, expiresIn)` - Genera signed URL temporal
+  - `getPublicUrl(storagePath)` - Genera URL pública (no usado, bucket privado)
+- `hooks.js` - TanStack Query hooks:
+  - `useAttachmentsByNote(noteId)` - Query de adjuntos por nota
+  - `useAttachment(id)` - Query de adjunto por ID
+  - `useCreateAttachment()` - Mutation con upload a Storage + insert en DB
+  - `useDeleteAttachment()` - Mutation con delete de Storage + DB
+  - `useSignedUrl(storagePath, expiresIn)` - Query de signed URL con refresh automático
+
+QueryKeys utilizados:
+- `['note_attachments']` - Lista general
+- `['note_attachments', 'note', noteId]` - Adjuntos por nota
+- `['note_attachments', id]` - Adjunto específico
+- `['signedUrl', storagePath]` - Signed URL temporal
+
+#### Componentes (src/components/)
+- `DrawingCanvas.jsx` - Canvas de dibujo con react-painter:
+  - Selector de color (7 colores predefinidos)
+  - Control de grosor de trazo (1-20px)
+  - Modo borrador
+  - Botón limpiar canvas
+  - Exporta como blob PNG
+  - ~85 líneas
+
+#### Utilidades (src/lib/)
+- `pdf-extract.js` - Extracción de texto de PDF con docutext:
+  - `extractTextFromPDF(file)` - Extrae texto completo del PDF
+  - `extractTextFromPDFWithPages(file)` - Extrae texto por página
+  - Usa docutext (zero dependencies, ~24 KB gzipped)
+
+#### Modificaciones a componentes existentes
+- `NoteEditor.jsx` - Actualizado con:
+  - Botón de dibujo (✏️) que togglea DrawingCanvas
+  - Botón de subir archivo (📎) para imágenes/PDF
+  - Paste handler para pegar imágenes desde clipboard (Ctrl+V)
+  - Extracción de texto de PDF al subir archivo PDF
+  - Vista de adjuntos (imágenes/dibujos) con signed URLs
+  - Click en imagen abre en nueva pestaña
+  - Eliminación de adjuntos con ConfirmDialog + UndoToast + pendingDeletes
+  - Filtrado de adjuntos con pendingDeletes para ocultar inmediatamente
+  - ~180 líneas (incremento de ~45 líneas)
+
+#### Schema (supabase/schema.sql)
+- Tabla `note_attachments`:
+  - id, note_id, user_id, tipo (imagen|dibujo|pdf), nombre, storage_path, metadata, created_at
+  - Índices en note_id y user_id
+  - Trigger `set_user_id_from_note()` basado en note_id con auth.uid() fallback (lección aprendida)
+  - RLS policy "own rows"
+- Storage bucket `note-attachments`:
+  - Bucket privado (public=false)
+  - RLS policies para INSERT/SELECT/DELETE basadas en user_id del path
+  - Path pattern: `notes/{user_id}/{note_id}/{filename}`
+
+### Reglas de arquitectura cumplidas
+✅ 1. Ningún componente llama a Supabase directo - todo pasa por `features/note-attachments/api.js`
+✅ 2. Datos de Supabase viven en TanStack Query - no hay useState duplicando datos
+✅ 3. Zustand SOLO para estado de UI (modal, confirm dialog, undo toast, pending deletes)
+✅ 4. Componentes bajo ~200 líneas (DrawingCanvas: ~85 líneas, NoteEditor: ~180 líneas)
+✅ 5. Columnas explícitas en cada query - NUNCA select('*')
+✅ 6. Canvas con librería ligera (react-painter, 0 dependencias)
+✅ 7. Extracción de PDF con librería ligera (docutext, zero dependencies)
+✅ 8. Imágenes en Supabase Storage con RLS - no IndexedDB local
+✅ 9. Signed URLs generadas al leer, no guardadas en DB (lección aprendida)
+✅ 10. Trigger user_id basado en jerarquía estructural (note_id) con auth.uid() fallback (lección aprendida)
+
+### Tablas tocadas en Fase 3 ticket C
+- `note_attachments` - CRUD completo con triggers y RLS
+- Storage bucket `note-attachments` - Con RLS policies
+
+### QueryKeys utilizados
+- `['note_attachments']`, `['note_attachments', 'note', noteId]`, `['note_attachments', id]`
+- `['signedUrl', storagePath]`
+
+### Estado de implementación
+✅ Feature note_attachments completo (api + hooks)
+✅ DrawingCanvas con react-painter (color, grosor, borrador, limpiar)
+✅ Extracción de texto de PDF con docutext
+✅ NoteEditor con canvas, subir/pegar imágenes, extracción PDF
+✅ Supabase Storage bucket privado con RLS
+✅ Signed URLs temporales (no guardadas en DB)
+✅ Eliminación de adjuntos con ConfirmDialog + UndoToast + pendingDeletes
+✅ Filtrado de adjuntos con pendingDeletes
+✅ Animaciones con Framer Motion
+
+### Dependencias agregadas
+- `react-painter` - Canvas de dibujo (0 dependencias)
+- `docutext` - Extracción de texto de PDF (zero dependencies)
+- `fflate` - Compresión para docutext en browser (~3 KB)
+
+### Lecciones aprendidas — Fase 3 ticket C
+
+#### Lección 1: Signed URLs no deben guardarse en DB
+**Problema:** Las signed URLs de Supabase Storage expiran (por defecto 1 hora). Guardarlas en la tabla causaría URLs rotas tras el expiry.
+
+**Causa:** Diseño inicial incluía columna `url` en `note_attachments` para guardar la signed URL.
+
+**Fix aplicado:**
+1. Remover columna `url` de la tabla `note_attachments`
+2. Guardar solo `storage_path` (path en Storage)
+3. Generar signed URL al leer/mostrar con hook `useSignedUrl(storagePath, expiresIn)`
+4. El hook refresca automáticamente antes de que expire (staleTime = expiresIn - 60s)
+
+**Regla para futuro:**
+- NUNCA guardar signed URLs en DB - siempre generarlas al vuelo
+- Guardar solo el path/identificador del recurso en Storage
+- Usar hooks de TanStack Query con staleTime calculado para refresh automático
+
+#### Lección 2: Storage RLS debe coincidir con tabla RLS
+**Problema:** Las policies de Storage deben validar el mismo user_id que la tabla para consistencia de seguridad.
+
+**Causa:** El path en Storage incluye user_id (`notes/{user_id}/{note_id}/{filename}`), pero las policies deben extraerlo correctamente.
+
+**Fix aplicado:**
+1. Crear bucket privado `note-attachments` (public=false)
+2. Policies de Storage basadas en `storage.foldername(name)[2]` para extraer user_id del path
+3. Policies INSERT/SELECT/DELETE todas validan que `auth.uid()::text = (storage.foldername(name))[2]`
+4. Esto coincide con la RLS de la tabla `note_attachments` (auth.uid() = user_id)
+
+**Regla para futuro:**
+- Siempre incluir user_id en el path de Storage para RLS granular
+- Usar `storage.foldername(name)[index]` para extraer partes del path en policies
+- **PostgreSQL arrays son 1-indexed**: para path `notes/{userId}/{noteId}/{filename}`, [1]='notes', [2]=userId, [3]=noteId, [4]=filename
+- Las policies de Storage deben validar el mismo ownership que la tabla asociada
+
+### Bug fixes post-implementación
+
+#### Bug 1: Anti-patrón de hooks en map causando lag global
+**Problema:** Toda la app se puso lenta después de agregar note_attachments. Varios segundos de lag al crear nota/carpeta/navegar.
+
+**Causa:** Llamar a `useSignedUrl(storagePath)` dentro de un `.map()` en NoteEditor crea múltiples queries dinámicas de TanStack Query. Cada attachment = 1 query separada con su propio estado, cache, y refetch logic. TanStack Query tiene que trackear N queries en lugar de 1, causando sobrecarga global.
+
+**Fix aplicado:**
+1. Crear hook `useSignedUrls(storagePaths)` usando `useQueries` de TanStack Query
+2. NoteEditor ahora usa un solo hook para todas las signed URLs
+3. Mapear resultados a `signedUrlsMap` para acceso por storage_path
+4. Eliminar anti-patrón de hooks dentro de `.map()`
+
+**Regla para futuro:**
+- NUNCA llamar a hooks de TanStack Query dentro de un `.map()` o loop
+- Usar `useQueries` para arrays dinámicos de queries
+- Un hook por tipo de query, no uno por item
+
+#### Bug 2: Storage RLS rechazaba todos los uploads (índice incorrecto)
+**Problema:** El 100% de los uploads a Storage fallaban con RLS violation, para cualquier usuario.
+
+**Causa:** PostgreSQL arrays son 1-indexed, pero la policy usaba `[1]` para comparar contra userId. Para path `notes/{userId}/{noteId}/{filename}`, `[1]` = 'notes', no el userId.
+
+**Fix aplicado:**
+1. Cambiar índice de `[1]` a `[2]` en todas las policies del bucket `note-attachments`
+2. Agregar comentario explicativo sobre 1-indexing en schema.sql
+
+**Regla para futuro:**
+- PostgreSQL arrays son 1-indexed, no 0-indexed como JavaScript
+- Validar índices de `storage.foldername(name)` contra el path real
+- Agregar comentarios en SQL cuando se usan índices específicos
+
+#### Bug 3: Método inexistente `clear` en react-painter
+**Problema:** Botón "Limpiar" del canvas lanzaba "clear is not a function".
+
+**Causa:** Asumí que `usePainter` devolvía un método `clear()` sin verificar la documentación real. La API real no tiene ese método.
+
+**Fix aplicado:**
+1. Usar remount con key: agregar estado `canvasKey` que se incrementa al hacer click en "Limpiar"
+2. Canvas tiene `key={canvasKey}` para forzar remount limpio
+3. Estados de color/grosor/borrador viven en el padre (no se pierden con remount)
+
+**Regla para futuro:**
+- NUNCA asumir nombres de métodos sin verificar documentación real
+- Leer README/repo oficial antes de usar librerías
+- Para limpiar canvas sin método nativo, usar remount con key
+
+#### Bug 4: Método inexistente `getText()` en docutext
+**Problema:** Extracción de PDF fallaba con "doc.getText is not a function".
+
+**Causa:** Asumí que `DocuText.fromBuffer()` era async y devolvía un objeto con método `getText()`. La API real es síncrona y el texto es una propiedad `doc.text`.
+
+**Fix aplicado:**
+1. Remover `await` de `DocuText.fromBuffer(uint8Array)` (es síncrono)
+2. Cambiar `doc.getText()` a `doc.text` (propiedad, no método)
+
+**Regla para futuro:**
+- NUNCA asumir async/sync ni nombres de métodos sin verificar documentación
+- Leer README/repo oficial antes de usar librerías
+- Verificar si las funciones son async/sync antes de agregar await
+
+### Próximos pasos (para el usuario)
+1. **Ejecutar schema.sql en Supabase**:
+   - Crear tabla `note_attachments`
+   - Crear trigger `set_user_id_from_note()`
+   - Crear bucket `note-attachments` en Storage
+   - Crear policies de Storage RLS
+
+2. **Probar criterios de aceptación**:
+   - Crear nota y abrir editor
+   - Dibujar en canvas y guardar
+   - Subir imagen desde archivo
+   - Pegar imagen desde clipboard (Ctrl+V)
+   - Subir PDF y verificar extracción de texto
+   - Verificar que imágenes se muestran con signed URLs
+   - Click en imagen abre en nueva pestaña
+   - Eliminar imagen y verificar undo toast
+   - Verificar que todo persiste tras refrescar
+   - Verificar en Network tab que solo se muestran columnas usadas
+
 ## [Fase 3 - Contenido académico (Notas)] - 2024-01-17
 
 ### Resumen
@@ -126,6 +346,58 @@ QueryKeys utilizados:
    - Verificar en Network tab que solo se muestran columnas usadas
 
 2. **Ticket 3C (futuro)**: Canvas de dibujo, subir/pegar imágenes, extracción de PDF
+
+### Lecciones aprendidas — Fase 3 ticket B
+
+#### Bug 1: Uso incorrecto de .is() para UUIDs
+**Problema:** Usar `.is('columna', uuid)` para filtrar por foreign keys causa 400 Bad Request en Supabase/PostgREST.
+
+**Causa:** `.is()` en Supabase es SOLO para comparar contra `null`/`true`/`false`. No funciona para igualdad contra UUIDs u otros valores.
+
+**Fix aplicado:** Cambiar `.is('parent_id', parentId)` y `.is('folder_id', folderId)` por `.eq()` cuando el valor es un UUID, manteniendo `.is()` únicamente para el caso `null` (carpeta raíz).
+
+**Regla para futuro:** 
+- Cualquier filtro por UUID usa `.eq()`
+- `.is()` únicamente para el caso `null` (ej. carpeta raíz)
+- Patrón correcto:
+  ```javascript
+  if (parentId === null) {
+    query.is('parent_id', null)
+  } else {
+    query.eq('parent_id', parentId)
+  }
+  ```
+
+#### Bug 2: Triggers que derivan user_id de campos opcionales
+**Problema:** El trigger `trg_notes_user_id` derivaba `user_id` de `subject_id` (campo opcional), causando RLS violations cuando `subject_id` era `null`.
+
+**Causa:** El trigger usaba un campo decorativo/opcional (`subject_id`) en vez de la jerarquía estructural real del feature (`folder_id`). No manejaba el caso donde el campo padre es `null`.
+
+**Fix aplicado:**
+1. Crear función específica `set_user_id_from_note_folder()` que deriva `user_id` de `folder_id`:
+   - Si `folder_id is not null`: obtiene `user_id` de la carpeta padre
+   - Si `folder_id is null`: usa `auth.uid()` como fallback
+2. Reemplazar trigger para usar la nueva función
+3. Remover `not null` constraint de `subject_id` en tabla `notes`
+
+**Regla para futuro:**
+- Cualquier trigger que popule `user_id` debe basarse en la jerarquía estructural real (ej. `folder_id` en Notas, `parent_id` en Folders)
+- NUNCA basar ownership en campos decorativos/opcionales como `subject_id`
+- Siempre manejar explícitamente el caso "campo padre es null" con `auth.uid()` como fallback
+- No asumir que el campo padre siempre viene con valor
+- Patrón correcto:
+  ```sql
+  create or replace function set_user_id_from_x() returns trigger as $$
+  begin
+    if new.parent_field is not null then
+      new.user_id := (select user_id from parent_table where id = new.parent_field);
+    else
+      new.user_id := auth.uid();
+    end if;
+    return new;
+  end;
+  $$ language plpgsql security definer;
+  ```
 
 ## [Fase 3 - Contenido académico (Calendario y Temas)] - 2024-01-17
 

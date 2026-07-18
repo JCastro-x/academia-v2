@@ -268,3 +268,70 @@ alter table events enable row level security;
 create policy "own rows" on events
   for all using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Note attachments table (images, drawings, PDFs)
+create table note_attachments (
+  id uuid primary key default gen_random_uuid(),
+  note_id uuid references notes not null,
+  user_id uuid not null,
+  tipo text not null, -- 'imagen' | 'dibujo' | 'pdf'
+  nombre text not null,
+  storage_path text not null, -- path en Supabase Storage: notes/{user_id}/{note_id}/{filename}
+  metadata jsonb default '{}', -- info adicional (dimensiones, tamaño, etc)
+  created_at timestamptz default now()
+);
+create index on note_attachments (note_id);
+create index on note_attachments (user_id);
+
+-- Trigger for note_attachments user_id (based on note_id hierarchy with auth.uid() fallback)
+create or replace function set_user_id_from_note() returns trigger as $$
+begin
+  if new.note_id is not null then
+    new.user_id := (select user_id from notes where id = new.note_id);
+  else
+    new.user_id := auth.uid();
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger trg_note_attachments_user_id before insert on note_attachments
+  for each row execute function set_user_id_from_note();
+
+-- RLS for note_attachments
+alter table note_attachments enable row level security;
+create policy "own rows" on note_attachments
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Storage bucket for note attachments (private bucket with RLS)
+-- Run this in Supabase dashboard or via SQL:
+insert into storage.buckets (id, name, public)
+values ('note-attachments', 'note-attachments', false)
+on conflict (id) do nothing;
+
+-- Storage RLS policies for note-attachments bucket
+-- Allow users to upload to their own folder (notes/{user_id}/*)
+-- Note: PostgreSQL arrays are 1-indexed, so [2] = userId for path "notes/{userId}/{noteId}/{filename}"
+create policy "Users can upload to their own folder"
+on storage.objects for insert
+with check (
+  bucket_id = 'note-attachments' and
+  auth.uid()::text = (storage.foldername(name))[2]
+);
+
+-- Allow users to read their own files
+create policy "Users can read their own files"
+on storage.objects for select
+using (
+  bucket_id = 'note-attachments' and
+  auth.uid()::text = (storage.foldername(name))[2]
+);
+
+-- Allow users to delete their own files
+create policy "Users can delete their own files"
+on storage.objects for delete
+using (
+  bucket_id = 'note-attachments' and
+  auth.uid()::text = (storage.foldername(name))[2]
+);

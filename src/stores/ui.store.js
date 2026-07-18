@@ -12,6 +12,11 @@ export const useUIStore = create((set) => ({
   openConfirmDialog: (config) => set({ confirmDialog: config }),
   closeConfirmDialog: () => set({ confirmDialog: null }),
 
+  // Lightbox state
+  lightbox: null,
+  openLightbox: (config) => set({ lightbox: config }),
+  closeLightbox: () => set({ lightbox: null }),
+
   // Undo toast state
   undoToast: null,
   showUndoToast: (config) => set({ undoToast: config }),

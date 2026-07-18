@@ -2,6 +2,7 @@ import { Outlet, useParams, Link, useLocation } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import UndoToast from '../components/UndoToast.jsx'
+import Lightbox from '../components/Lightbox.jsx'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
@@ -109,6 +110,7 @@ export default function AppLayout() {
 
       <ConfirmDialog />
       <UndoToast />
+      <Lightbox />
     </div>
   )
 }
