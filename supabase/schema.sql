@@ -337,3 +337,34 @@ using (
   bucket_id = 'note-attachments' and
   auth.uid()::text = (storage.foldername(name))[2]
 );
+
+-- Pomodoro sessions table (historial de sesiones completadas)
+create table pomodoro_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  started_at timestamptz not null,
+  ended_at timestamptz not null,
+  duration_min int not null, -- duración real en minutos
+  tipo text not null, -- 'trabajo' | 'descanso_corto' | 'descanso_largo'
+  task_id uuid references tasks, -- nullable, opcional
+  subject_id uuid references subjects -- nullable, opcional
+);
+create index on pomodoro_sessions (user_id);
+create index on pomodoro_sessions (started_at);
+
+-- Trigger for pomodoro_sessions user_id (direct auth.uid(), no hierarchy dependency)
+create or replace function set_user_id_from_pomodoro_session() returns trigger as $$
+begin
+  new.user_id := auth.uid();
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger trg_pomodoro_sessions_user_id before insert on pomodoro_sessions
+  for each row execute function set_user_id_from_pomodoro_session();
+
+-- RLS for pomodoro_sessions
+alter table pomodoro_sessions enable row level security;
+create policy "own rows" on pomodoro_sessions
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);

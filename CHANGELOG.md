@@ -1,5 +1,154 @@
 # CHANGELOG
 
+## [Fase 4 - Extras (Pomodoro y Cronómetro)] - 2024-01-18
+
+### Resumen
+Implementación del segundo ticket de Fase 4 (Extras) según `academia-v2-spec-funcional.md`. Se implementó el sistema de Pomodoro con temporizador configurable (trabajo/descanso corto/descanso largo), historial de sesiones completadas en Supabase, cálculo de racha en cliente (días, sesiones, minutos por semana), y cronómetro simple sin persistencia. Los timers usan timestamp-based approach para evitar desincronización al cambiar de pestaña (visibilitychange).
+
+### Archivos creados
+
+#### Feature: Pomodoro (src/features/pomodoro/)
+- `api.js` - API layer con columnas explícitas:
+  - `pomodoroQueryKeys` - QueryKeys de TanStack Query
+  - `calculatePomodoroStats(sessions)` - Cálculo de racha en cliente (días, sesiones, minutos)
+  - `getPomodoroSessionsByDate(startDate, endDate)` - SELECT: id, user_id, started_at, ended_at, duration_min, tipo, task_id, subject_id
+  - `getPomodoroSessionsByTask(taskId)` - SELECT: mismas columnas, WHERE task_id=?
+  - `getPomodoroSessionsBySubject(subjectId)` - SELECT: mismas columnas, WHERE subject_id=?
+  - `getPomodoroSessionById(id)` - SELECT: mismas columnas, WHERE id=?
+  - `createPomodoroSession(session)` - INSERT con columnas explícitas
+  - `deletePomodoroSession(id)` - DELETE
+- `hooks.js` - TanStack Query hooks:
+  - `usePomodoroSessionsByDate(startDate, endDate)` - Query de sesiones por rango de fechas
+  - `usePomodoroSessionsByTask(taskId)` - Query de sesiones por tarea
+  - `usePomodoroSessionsBySubject(subjectId)` - Query de sesiones por materia
+  - `usePomodoroSession(id)` - Query de sesión por ID
+  - `useCreatePomodoroSession()` - Mutation con cache update
+  - `useDeletePomodoroSession()` - Mutation con cache invalidation
+- `timerStore.js` - Zustand store para estado de timers:
+  - Configuración de Pomodoro (duración trabajo/descanso, sesiones antes de descanso largo)
+  - Estado del timer activo (running/paused, started_at, remaining_seconds, current_phase)
+  - Estado del cronómetro (running/paused, started_at, elapsed_seconds)
+  - Persistencia parcial (config + completedSessions) en localStorage
+
+QueryKeys utilizados:
+- `['pomodoro_sessions']` - Lista general
+- `['pomodoro_sessions', 'date', startDate, endDate]` - Sesiones por rango de fechas
+- `['pomodoro_sessions', 'task', taskId]` - Sesiones por tarea
+- `['pomodoro_sessions', 'subject', subjectId]` - Sesiones por materia
+- `['pomodoro_sessions', id]` - Sesión específica
+
+#### Componentes (src/components/)
+- `PomodoroTimer.jsx` - Timer de Pomodoro:
+  - Panel de stats (días racha, sesiones hoy, minutos semana)
+  - Display de tiempo con colores por fase (trabajo=azul, descanso corto=verde, descanso largo=púrpura)
+  - Controles: iniciar/pausar/reanudar/reset
+  - Configuración de duraciones (trabajo, descanso corto, descanso largo, sesiones antes de descanso largo)
+  - Timestamp-based timer con visibilitychange handler
+  - Guardado automático de sesiones completadas en Supabase
+  - ~190 líneas
+- `ChronometerTimer.jsx` - Cronómetro simple:
+  - Display de tiempo (formato HH:MM:SS o MM:SS)
+  - Controles: iniciar/pausar/reanudar/reset
+  - Timestamp-based timer con visibilitychange handler
+  - Sin persistencia (estado efímero en Zustand)
+  - ~80 líneas
+
+#### Páginas (src/pages/)
+- `Clock.jsx` - Vista de Reloj:
+  - Tabs para cambiar entre Pomodoro y Cronómetro
+  - Animación de transición entre tabs con Framer Motion
+  - ~40 líneas
+
+#### Schema (supabase/schema.sql)
+- Tabla `pomodoro_sessions`:
+  - id, user_id, started_at, ended_at, duration_min, tipo
+  - task_id (nullable, referencia a tasks)
+  - subject_id (nullable, referencia a subjects)
+  - Índices en user_id y started_at
+  - Trigger `set_user_id_from_pomodoro_session()` con auth.uid() directo (sin jerarquía)
+  - RLS policy "own rows" con `with check (auth.uid() = user_id)` explícito
+
+#### Routing (src/main.tsx)
+- Ruta agregada: `/s/:semesterId/clock` → Clock page
+- Import de Clock component
+
+#### Layout (src/layouts/)
+- `AppLayout.jsx` - Actualizado con:
+  - Nav item "Reloj" con icono de reloj
+  - Reordenamiento: Inicio, Materias, Tareas, Calificaciones, Calendario, Notas, Hábitos, Reloj, Mi Horario
+
+### Reglas de arquitectura cumplidas
+✅ 1. Ningún componente llama a Supabase directo - todo pasa por `features/pomodoro/api.js`
+✅ 2. Datos de Supabase viven en TanStack Query - no hay useState duplicando datos
+✅ 3. Zustand para estado de timers (configuración, estado activo) - persistencia parcial en localStorage
+✅ 4. Componentes bajo ~200 líneas (PomodoroTimer: ~190 líneas, ChronometerTimer: ~80 líneas, Clock: ~40 líneas)
+✅ 5. Columnas explícitas en cada query - NUNCA select('*')
+✅ 6. Cálculo de racha en cliente (no trigger en DB) - mismo patrón que habits
+✅ 7. Timestamp-based timer para evitar desincronización por browser throttling
+✅ 8. visibilitychange handler para recalcular tiempo al volver a la pestaña
+✅ 9. Trigger user_id con auth.uid() directo (sin jerarquía, como habits)
+✅ 10. RLS INSERT explícito con `with check (auth.uid() = user_id)`
+✅ 11. Animaciones con Framer Motion
+✅ 12. Solo sesiones completadas se persisten (sin sesiones parciales)
+✅ 13. Cronómetro sin persistencia (estado efímero en Zustand)
+
+### Lógica de timer (timestamp-based)
+- **Timestamp approach**: Guardar `started_at` y calcular tiempo restante/transcurrido por diferencia con `Date.now()`
+- **visibilitychange**: Recalcular tiempo cuando la pestaña vuelve a estar visible para evitar desincronización
+- **Browser throttling**: No depender de `setInterval` tick a tick - el timer "se pone al día" al volver
+- **Pomodoro**: Al completar sesión de trabajo, se guarda en Supabase con task_id/subject_id opcionales
+- **Cronómetro**: Sin persistencia - solo estado efímero en Zustand
+
+### Tablas tocadas en Fase 4 ticket 2
+- `pomodoro_sessions` - Nueva tabla con trigger y RLS
+
+### QueryKeys utilizados
+- `['pomodoro_sessions']`, `['pomodoro_sessions', 'date', startDate, endDate]`
+- `['pomodoro_sessions', 'task', taskId]`, `['pomodoro_sessions', 'subject', subjectId]`
+- `['pomodoro_sessions', id]`
+
+### Estado de implementación
+✅ Feature pomodoro completo (api + hooks + store)
+✅ PomodoroTimer con stats, configuración, y timestamp-based timer
+✅ ChronometerTimer simple sin persistencia
+✅ Página Clock con tabs Pomodoro/Cronómetro
+✅ Routing actualizado
+✅ AppLayout actualizado con nav item Reloj
+✅ Animaciones con Framer Motion
+✅ Sin dependencias nuevas agregadas
+
+### Bug fixes (post-implementación)
+**Bug 1: Timer no avanza visualmente**
+- **Causa**: El useEffect del timer tenía `pomodoroConfig` como dependencia. Como `pomodoroConfig` es un objeto recreado en cada render, el useEffect se reiniciaba constantemente (cleanup → setup), limpiando y recreando el interval antes de que pudiera completar ciclos normales.
+- **Problema adicional**: `getTotalDuration()` se llamaba dentro del interval leyendo el store en vivo, lo que podía causar inconsistencias si la config cambiaba mientras el timer corría.
+- **Fix**:
+  - Agregar `totalDuration` al estado de Zustand (capturada al iniciar/reset/completar sesión)
+  - Usar `pomodoroState.totalDuration` en lugar de `getTotalDuration()` en el tick del timer
+  - Sacar `pomodoroConfig` de las dependencias del useEffect
+  - Corregir variable `nextDuration` sin declarar en `completePomodoroSession()` (causaba ReferenceError al completar sesión)
+- **Archivos modificados**: `src/features/pomodoro/timerStore.js`, `src/components/PomodoroTimer.jsx`
+
+**Bug 2: NaN:NaN al cargar la página Reloj**
+- **Causa**: El middleware `persist` de Zustand hace merge shallow por defecto. Como `partialize` solo persiste `pomodoroState.completedSessions`, al hidratar reemplaza todo el objeto `pomodoroState` del estado inicial con el objeto parcial persistido, dejando `remainingSeconds`, `currentSessionCount`, etc. como `undefined`.
+- **Fix**: Agregar función `merge` custom que hace merge profundo de `pomodoroState` específicamente, preservando los valores del estado inicial para las claves no persistidas.
+- **Archivos modificados**: `src/features/pomodoro/timerStore.js`
+
+### Próximos pasos (para el usuario)
+1. **Ejecutar schema.sql en Supabase**:
+   - Crear tabla `pomodoro_sessions`
+   - Crear trigger `set_user_id_from_pomodoro_session()`
+   - Verificar RLS policy con `with check` explícito
+
+2. **Probar criterios de aceptación**:
+   - Iniciar Pomodoro y verificar que el timer funciona
+   - Cambiar de pestaña y volver - verificar que el tiempo se actualiza correctamente (visibilitychange)
+   - Completar sesión de trabajo y verificar que se guarda en Supabase
+   - Verificar que stats (racha, sesiones hoy, minutos semana) se calculan correctamente
+   - Configurar duraciones de Pomodoro y verificar que persisten
+   - Probar cronómetro (iniciar/pausar/reset)
+   - Verificar que todo persiste tras refrescar (configuración, completedSessions)
+   - Verificar en Network tab que solo se muestran columnas usadas
+
 ## [Fase 4 - Extras (Hábitos)] - 2024-01-18
 
 ### Resumen
