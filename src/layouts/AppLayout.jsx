@@ -83,7 +83,7 @@ export default function AppLayout() {
   const handleOpenQuickAdd = () => openModal('quickadd')
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[var(--dm-bg)]">
       <TopBar onOpenClassModal={handleOpenClassModal} onOpenQuickAdd={handleOpenQuickAdd} />
 
       <div className="flex relative">
