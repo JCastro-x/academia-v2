@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## [Fase 4 - Extras (QuickAdd, Temas y base de dark mode)] - 2026-07-18
+
+### Resumen
+Se cerraron los últimos ajustes de la barra de acceso rápido y se corrigió la base visual del dark mode para que el contenedor principal de las páginas use el fondo oscuro una sola vez desde el layout raíz. Además, se terminó la Pasada 3 de Calificaciones para Temas, manteniendo el render y el modal dentro de bloques completos y validados con build en cada paso.
+
+### Archivos modificados
+
+#### QuickAdd / Flujos rápidos
+- `src/components/QuickAdd.jsx` - Los accesos "Nuevo Evento" y "Nuevo Tema" ahora apuntan a los flujos reales existentes en Calendario y Calificaciones mediante navegación con estado de ruta.
+- `src/pages/Calendar.jsx` - Al llegar desde QuickAdd con `quickAdd=event`, abre el modal de evento existente sin duplicar lógica de creación.
+- `src/pages/Grades.jsx` - Al llegar desde QuickAdd con `quickAdd=topic`, abre el modal de tema existente; además el formulario de tema acepta `subject_id` explícito para crear sin depender de una selección previa.
+
+#### Dark mode raíz
+- `src/layouts/AppLayout.jsx` - El contenedor principal que envuelve el `<Outlet />` volvió a ser la fuente única del fondo de la app, con `dark:bg-[var(--dm-bg)]` aplicado en el nivel raíz para evitar paneles flotantes sobre fondo claro.
+
+### Validación
+✅ `npm run build` pasó después de cada reemplazo importante y al final del ticket.
+✅ El render de Temas se mantiene contenido en bloques completos y el modal quedó compilando sin errores de JSX.
+
+### Pendiente
+- `Importar JSON` sigue sin implementarse; falta decidir entre `MERGE` o `REEMPLAZO TOTAL` antes de empezar ese ticket.
+
 ## [Fase 4 - Extras (Barra Superior)] - 2024-01-18
 
 ### Resumen

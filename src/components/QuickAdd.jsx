@@ -1,13 +1,15 @@
 import { motion, AnimatePresence } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
 
 export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject }) {
   const { isModalOpen, modalContent, openModal, closeModal } = useUIStore()
+  const navigate = useNavigate()
 
   const options = [
     { id: 'task', label: 'Nueva Tarea', icon: '📝', enabled: true, action: () => openModal('task') },
-    { id: 'event', label: 'Nuevo Evento', icon: '📅', enabled: false, action: () => {} },
-    { id: 'topic', label: 'Nuevo Tema', icon: '📖', enabled: false, action: () => {} },
+    { id: 'event', label: 'Nuevo Evento', icon: '📅', enabled: true, action: () => navigate(`/s/${semesterId}/calendar`, { state: { quickAdd: 'event' } }) },
+    { id: 'topic', label: 'Nuevo Tema', icon: '📖', enabled: (subjects?.length || 0) > 0, action: () => navigate(`/s/${semesterId}/grades`, { state: { quickAdd: 'topic' } }) },
     { id: 'class', label: 'Nueva Clase', icon: '🎓', enabled: true, action: () => openModal('subject') },
   ]
 

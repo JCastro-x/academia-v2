@@ -1,5 +1,5 @@
-import { useParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEventsByMonth, useCreateEvent, useUpdateEvent, useDeleteEvent } from '../features/events/hooks.js'
 import { useTasks } from '../features/tasks/hooks.js'
@@ -8,6 +8,8 @@ import { useUIStore } from '../stores/ui.store.js'
 
 export default function Calendar() {
   const { semesterId } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
   const [editingEvent, setEditingEvent] = useState(null)
@@ -23,6 +25,13 @@ export default function Calendar() {
   const deleteEvent = useDeleteEvent()
   
   const { isModalOpen, modalContent, openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
+
+  useEffect(() => {
+    if (location.state?.quickAdd === 'event') {
+      openModal('event')
+      navigate(location.pathname, { replace: true })
+    }
+  }, [location.pathname, location.state, navigate, openModal])
 
   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']

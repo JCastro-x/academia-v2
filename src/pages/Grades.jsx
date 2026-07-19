@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useZonesBySubject, useCreateZone, useUpdateZone, useDeleteZone, useCreateItem, useUpdateItem, useDeleteItem } from '../features/grades/hooks.js'
@@ -14,6 +14,7 @@ import ItemForm from '../features/grades/components/ItemForm.jsx'
 export default function Grades() {
   const { semesterId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects(semesterId)
   const [selectedSubjectId, setSelectedSubjectId] = useState(null)
   const [viewMode, setViewMode] = useState('grades') // 'grades' | 'topics'
@@ -36,6 +37,13 @@ export default function Grades() {
   const [editingItem, setEditingItem] = useState(null)
   const [addingItemToZone, setAddingItemToZone] = useState(null)
   const [editingTopic, setEditingTopic] = useState(null)
+
+  useEffect(() => {
+    if (location.state?.quickAdd === 'topic') {
+      openModal('topic')
+      navigate(location.pathname, { replace: true })
+    }
+  }, [location.pathname, location.state, navigate, openModal])
 
   const subjectStats = zones ? calculateSubjectStats(zones) : null
 
@@ -150,7 +158,11 @@ export default function Grades() {
 
   const handleCreateTopic = async (topicData) => {
     try {
-      await createTopic.mutateAsync({ ...topicData, subject_id: selectedSubjectId })
+      await createTopic.mutateAsync(topicData)
+      if (topicData.subject_id) {
+        setSelectedSubjectId(topicData.subject_id)
+        setViewMode('topics')
+      }
       closeModal()
     } catch (error) {
       console.error('Error creating topic:', error)
@@ -510,8 +522,10 @@ export default function Grades() {
                 const formData = new FormData(e.target)
                 const subtemasText = formData.get('subtemas')
                 const subtemas = subtemasText ? subtemasText.split('\n').filter(s => s.trim()) : []
+                const subjectId = formData.get('subject_id') || selectedSubjectId
 
                 const topicData = {
+                  subject_id: subjectId,
                   parcial: formData.get('parcial'),
                   nombre: formData.get('nombre'),
                   subtemas,
@@ -526,6 +540,25 @@ export default function Grades() {
                   handleCreateTopic(topicData)
                 }
               }} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
+                    Materia *
+                  </label>
+                  <select
+                    name="subject_id"
+                    required
+                    defaultValue={editingTopic?.subject_id || selectedSubjectId || ''}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
+                  >
+                    <option value="" disabled>Seleccionar materia</option>
+                    {subjects?.map(subject => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
                     Parcial *
