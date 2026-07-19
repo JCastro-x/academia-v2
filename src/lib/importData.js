@@ -1,21 +1,13 @@
 import { supabase, getCurrentUser } from './supabase.js'
 import { BACKUP_TABLES } from './exportData.js'
 
-const IMPORT_ORDER = [
-  'profiles',
-  'semesters',
-  'subjects',
-  'folders',
-  'grade_zones',
-  'grade_items',
-  'tasks',
-  'notes',
-  'note_attachments',
-  'topics',
-  'flashcards',
-  'events',
-  'pomodoro_sessions',
-  'habits',
+const IMPORT_GROUPS = [
+  ['profiles', 'semesters', 'habits'],
+  ['subjects'],
+  ['folders', 'grade_zones', 'topics', 'flashcards', 'tasks', 'notes', 'events'],
+  ['grade_items'],
+  ['note_attachments'],
+  ['pomodoro_sessions'],
 ]
 
 const DELETE_ORDER = [
@@ -152,9 +144,11 @@ export async function importUserBackup(backup, options = { replaceAll: false }) 
 
   const normalizedData = normalizeBackupTables(backup)
 
-  for (const table of IMPORT_ORDER) {
-    const rows = normalizedData[table]
-    if (!rows || rows.length === 0) continue
-    await upsertTableRows(table, rows, user.id)
+  for (const group of IMPORT_GROUPS) {
+    await Promise.all(group.map(async (table) => {
+      const rows = normalizedData[table]
+      if (!rows || rows.length === 0) return
+      await upsertTableRows(table, rows, user.id)
+    }))
   }
 }

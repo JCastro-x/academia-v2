@@ -19,15 +19,64 @@ export const BACKUP_TABLES = [
 
 const TABLES_BY_USER = BACKUP_TABLES
 
-// Excepción: export necesita TODOS los campos del usuario.
-// No aplica la regla de "columnas explícitas" porque el propósito
-// es respaldar la totalidad de los datos, no optimizar una vista.
-// Se usa select('*') intencionalmente para capturar cualquier
-// columna nueva que se agregue al schema en el futuro.
+const TABLE_COLUMNS = {
+  profiles: [
+    'user_id', 'nombre', 'registro_academico', 'carrera', 'institucion',
+    'cursos_ganados', 'tipografia', 'tema_color', 'sonidos_interaccion',
+    'modo_oscuro', 'updated_at',
+  ],
+  semesters: [
+    'id', 'user_id', 'nombre', 'activo', 'promedio_objetivo', 'nota_minima',
+    'promedio_previo', 'creditos_previos', 'updated_at',
+  ],
+  subjects: [
+    'id', 'semester_id', 'user_id', 'nombre', 'codigo', 'catedratico',
+    'seccion', 'creditos', 'color', 'icono', 'horario', 'updated_at',
+  ],
+  grade_zones: [
+    'id', 'subject_id', 'user_id', 'nombre', 'peso_pts', 'ganada_pct',
+  ],
+  grade_items: [
+    'id', 'zone_id', 'user_id', 'nombre', 'porcentaje_ingresado', 'puntos_netos',
+  ],
+  tasks: [
+    'id', 'subject_id', 'semester_id', 'user_id', 'titulo', 'prioridad',
+    'due', 'done', 'subtasks', 'attachments', 'reminder_at', 'updated_at',
+  ],
+  notes: [
+    'id', 'subject_id', 'user_id', 'folder_id', 'titulo', 'contenido', 'updated_at',
+  ],
+  folders: [
+    'id', 'user_id', 'subject_id', 'parent_id', 'nombre',
+  ],
+  topics: [
+    'id', 'subject_id', 'user_id', 'parcial', 'nombre', 'subtemas',
+    'dificultad', 'tiempo_dedicado_min', 'fecha_examen', 'comprension', 'visto',
+  ],
+  flashcards: [
+    'id', 'subject_id', 'user_id', 'frente', 'dorso', 'estado',
+  ],
+  habits: [
+    'id', 'user_id', 'nombre', 'frecuencia', 'dias_semana', 'racha', 'historial',
+  ],
+  events: [
+    'id', 'subject_id', 'semester_id', 'user_id', 'nombre', 'tipo',
+    'start_at', 'end_at', 'descripcion',
+  ],
+  pomodoro_sessions: [
+    'id', 'user_id', 'started_at', 'ended_at', 'duration_min', 'tipo',
+    'task_id', 'subject_id',
+  ],
+  note_attachments: [
+    'id', 'note_id', 'user_id', 'tipo', 'nombre', 'storage_path', 'metadata', 'created_at',
+  ],
+}
+
 async function fetchAllFromTable(tableName) {
+  const columns = TABLE_COLUMNS[tableName]?.join(', ')
   const { data, error } = await supabase
     .from(tableName)
-    .select('*')
+    .select(columns)
 
   if (error) {
     console.warn(`[exportData] Error fetching ${tableName}:`, error)
@@ -40,14 +89,13 @@ export async function exportAllUserData() {
   const user = await getCurrentUser()
   const userId = user.id
 
-  const data = {}
-
-  for (const table of TABLES_BY_USER) {
+  const tablePromises = TABLES_BY_USER.map(async (table) => {
     const rows = await fetchAllFromTable(table)
-    // Filtrar solo las filas del usuario (por si alguna tabla no
-    // tiene RLS configurada, aunque debería)
-    data[table] = rows.filter(row => row.user_id === userId)
-  }
+    return [table, rows.filter(row => row.user_id === userId)]
+  })
+
+  const tableEntries = await Promise.all(tablePromises)
+  const data = Object.fromEntries(tableEntries)
 
   return {
     version: 1,
