@@ -138,9 +138,9 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
             Agregar
           </button>
           <button
-            disabled
-            title="Próximamente"
-            className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-[var(--dm-border)] text-gray-400 dark:text-[var(--dm-text-muted)] rounded-lg cursor-not-allowed"
+            onClick={() => navigate(`/s/${semesterId}/exam`)}
+            className="px-3 py-1.5 text-sm text-white rounded-lg transition-colors"
+            style={{ backgroundColor: 'var(--color-primary)' }}
           >
             Examen
           </button>

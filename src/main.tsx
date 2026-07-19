@@ -18,6 +18,7 @@ import Notes from './pages/Notes.jsx'
 import Habits from './pages/Habits.jsx'
 import Clock from './pages/Clock.jsx'
 import Profile from './pages/Profile.jsx'
+import Exam from './pages/Exam.jsx'
 import './styles/index.css'
 
 function ProtectedRoute({ children }) {
@@ -90,6 +91,16 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="clock" element={<Clock />} />
             <Route path="profile" element={<Profile />} />
           </Route>
+
+          {/* Exam mode - fullscreen without sidebar */}
+          <Route
+            path="/s/:semesterId/exam"
+            element={
+              <ProtectedRoute>
+                <Exam />
+              </ProtectedRoute>
+            }
+          />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/auth" replace />} />
