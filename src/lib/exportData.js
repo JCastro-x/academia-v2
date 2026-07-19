@@ -1,6 +1,6 @@
 import { supabase, getCurrentUser } from './supabase.js'
 
-const TABLES_BY_USER = [
+export const BACKUP_TABLES = [
   'profiles',
   'semesters',
   'subjects',
@@ -16,6 +16,8 @@ const TABLES_BY_USER = [
   'pomodoro_sessions',
   'note_attachments',
 ]
+
+const TABLES_BY_USER = BACKUP_TABLES
 
 // Excepción: export necesita TODOS los campos del usuario.
 // No aplica la regla de "columnas explícitas" porque el propósito

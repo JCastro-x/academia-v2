@@ -3,6 +3,7 @@ import { Outlet, useParams, Link, useLocation } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
 import { useProfile } from '../features/profile/hooks.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import ImportModal from '../components/ImportModal.jsx'
 import UndoToast from '../components/UndoToast.jsx'
 import Lightbox from '../components/Lightbox.jsx'
 import TopBar from '../components/TopBar.jsx'
@@ -135,6 +136,7 @@ export default function AppLayout() {
       </div>
 
       <ConfirmDialog />
+      <ImportModal />
       <UndoToast />
       <Lightbox />
     </div>

@@ -40,6 +40,7 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
     isMuted, toggleMute,
     isOnline,
     modoOscuro, setModoOscuro,
+    openModal,
   } = useUIStore()
 
   // Dropdown de ajustes
@@ -70,6 +71,11 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
       setIsExporting(false)
       setDropdownOpen(false)
     }
+  }
+
+  const handleImport = () => {
+    setDropdownOpen(false)
+    openModal('import')
   }
 
   const handleLogout = async () => {
@@ -201,9 +207,8 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
                 {isExporting ? 'Exportando...' : 'Exportar JSON'}
               </button>
               <button
-                disabled
-                title="Próximamente"
-                className="w-full text-left px-4 py-2.5 text-sm text-gray-400 dark:text-[var(--dm-text-muted)] cursor-not-allowed"
+                onClick={handleImport}
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-[var(--dm-text-muted)] hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
               >
                 Importar JSON
               </button>
