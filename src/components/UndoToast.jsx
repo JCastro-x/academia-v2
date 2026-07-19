@@ -49,12 +49,12 @@ export default function UndoToast() {
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 50 }}
-        className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-4 z-50"
+        className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-4 z-50 dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] dark:border dark:border-[var(--dm-border)]"
       >
         <span>{undoToast.message}</span>
         <button
           onClick={handleUndo}
-          className="bg-white text-gray-800 px-4 py-1 rounded font-medium hover:bg-gray-100"
+          className="bg-white text-gray-800 px-4 py-1 rounded font-medium hover:bg-gray-100 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
         >
           Deshacer ({timeLeft}s)
         </button>

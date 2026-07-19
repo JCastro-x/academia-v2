@@ -78,15 +78,17 @@ export default function Subjects() {
     }
   }
 
-  if (isLoading) return <div>Cargando...</div>
+  if (isLoading) {
+    return <div className="flex min-h-[40vh] items-center justify-center text-gray-500 dark:text-[var(--dm-text-muted)]">Cargando...</div>
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Materias</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Materias</h1>
         <button
           onClick={() => { setEditingSubject(null); openModal('subject') }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full sm:w-auto"
+          className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] w-full sm:w-auto"
         >
           + Nueva materia
         </button>
@@ -104,7 +106,7 @@ export default function Subjects() {
       </div>
 
       {!subjects || subjects.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-500 dark:text-[var(--dm-text-muted)]">
           <p>No hay materias. Crea tu primera materia.</p>
         </div>
       )}
@@ -122,10 +124,10 @@ export default function Subjects() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
               onClick={e => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">
                 {editingSubject ? 'Editar materia' : 'Nueva materia'}
               </h3>
               <SubjectForm

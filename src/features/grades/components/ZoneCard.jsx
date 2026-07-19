@@ -23,25 +23,25 @@ export default function ZoneCard({ zone, onEdit, onDelete, onAddItem, onEditItem
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`border-2 rounded-lg p-4 ${statusColors[stats.statusColor]}`}
+      className={`border-2 rounded-lg p-4 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] ${statusColors[stats.statusColor]}`}
     >
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-lg">{zone.nombre}</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--dm-text)]">{zone.nombre}</h3>
+          <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
             {stats.netPoints.toFixed(2)} / {stats.maxPoints} pts ({stats.percentageObtained.toFixed(1)}%)
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => onEdit(zone)}
-            className="text-gray-600 hover:text-blue-600 text-sm"
+            className="text-gray-600 hover:text-[var(--color-primary)] dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)] text-sm"
           >
             Editar
           </button>
           <button
             onClick={() => onDelete(zone)}
-            className="text-gray-600 hover:text-red-600 text-sm"
+            className="text-gray-600 hover:text-red-600 dark:text-[var(--dm-text-muted)] dark:hover:text-red-300 text-sm"
           >
             Eliminar
           </button>
@@ -62,12 +62,12 @@ export default function ZoneCard({ zone, onEdit, onDelete, onAddItem, onEditItem
           return (
             <div
               key={item.id}
-              className="flex items-center justify-between bg-white/50 rounded px-3 py-2"
+              className="flex items-center justify-between bg-white/50 rounded px-3 py-2 dark:bg-[var(--dm-bg)] dark:border dark:border-[var(--dm-border)]"
             >
               <div>
-                <span className="font-medium">{item.nombre}</span>
+                <span className="font-medium text-gray-900 dark:text-[var(--dm-text)]">{item.nombre}</span>
                 {item.porcentaje_ingresado != null && (
-                  <span className="ml-2 text-gray-600">
+                  <span className="ml-2 text-gray-600 dark:text-[var(--dm-text-muted)]">
                     {item.porcentaje_ingresado}%
                   </span>
                 )}
@@ -75,13 +75,13 @@ export default function ZoneCard({ zone, onEdit, onDelete, onAddItem, onEditItem
               <div className="flex gap-2">
                 <button
                   onClick={() => onEditItem(item)}
-                  className="text-gray-600 hover:text-blue-600 text-xs"
+                  className="text-gray-600 hover:text-[var(--color-primary)] hover:bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)] dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] rounded px-1 text-xs"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => onDeleteItem(item)}
-                  className="text-gray-600 hover:text-red-600 text-xs"
+                  className="text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-[var(--dm-text-muted)] dark:hover:text-red-300 dark:hover:bg-[color-mix(in_srgb,red_12%,transparent)] rounded px-1 text-xs"
                 >
                   Eliminar
                 </button>
@@ -93,7 +93,7 @@ export default function ZoneCard({ zone, onEdit, onDelete, onAddItem, onEditItem
 
       <button
         onClick={() => onAddItem(zone)}
-        className="mt-3 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700 text-sm"
+        className="mt-3 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[var(--color-primary)] hover:text-gray-700 dark:border-[var(--dm-border)] dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)] text-sm"
       >
         + Agregar ítem
       </button>

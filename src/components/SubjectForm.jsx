@@ -27,15 +27,15 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Nombre *</label>
         <input
           type="text"
           name="nombre"
           value={formData.nombre}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           required
           disabled={isPending}
         />
@@ -43,63 +43,63 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Código</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Código</label>
           <input
             type="text"
             name="codigo"
             value={formData.codigo}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
             disabled={isPending}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Créditos</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Créditos</label>
           <input
             type="number"
             name="creditos"
             value={formData.creditos}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             disabled={isPending}
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Catedrático</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Catedrático</label>
         <input
           type="text"
           name="catedratico"
           value={formData.catedratico}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           disabled={isPending}
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Sección</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Sección</label>
           <input
             type="text"
             name="seccion"
             value={formData.seccion}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
             disabled={isPending}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Ícono</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Ícono</label>
           <input
             type="text"
             name="icono"
             value={formData.icono}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
             maxLength={2}
             disabled={isPending}
           />
@@ -107,14 +107,14 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Color</label>
         <div className="flex items-center gap-2">
           <input
             type="color"
             name="color"
             value={formData.color}
             onChange={handleChange}
-            className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+            className="w-12 h-10 border border-gray-300 rounded cursor-pointer dark:border-[var(--dm-border)]"
             disabled={isPending}
           />
           <input
@@ -122,7 +122,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             name="color"
             value={formData.color}
             onChange={handleChange}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             disabled={isPending}
           />
         </div>
@@ -132,7 +132,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="flex-1 bg-[var(--color-primary)] text-white py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isPending ? 'Guardando...' : (initialData ? 'Guardar' : 'Crear')}
         </button>
@@ -141,7 +141,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] dark:disabled:bg-[var(--dm-border)]"
           >
             Cancelar
           </button>

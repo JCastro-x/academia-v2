@@ -15,7 +15,7 @@ export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject
     <>
       <button
         onClick={() => openModal('quickadd')}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 flex items-center justify-center text-2xl z-40"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-[var(--color-primary)] text-white rounded-full shadow-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] flex items-center justify-center text-2xl z-40"
       >
         +
       </button>
@@ -33,10 +33,10 @@ export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject
               initial={{ y: 100 }}
               animate={{ y: 0 }}
               exit={{ y: 100 }}
-              className="bg-white rounded-t-2xl p-6 w-full max-w-md"
+              className="bg-white rounded-t-2xl p-6 w-full max-w-md dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
               onClick={e => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4">Agregar rápido</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Agregar rápido</h3>
               <div className="grid grid-cols-2 gap-3">
                 {options.map(option => (
                   <button
@@ -48,18 +48,18 @@ export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject
                     disabled={!option.enabled}
                     className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-colors ${
                       option.enabled
-                        ? 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
-                        : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                        ? 'border-gray-200 hover:border-[var(--color-primary)] hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] dark:border-[var(--dm-border)] dark:hover:border-[var(--color-primary)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]'
+                        : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed dark:border-[var(--dm-border)] dark:bg-[var(--dm-bg)]'
                     }`}
                   >
                     <span className="text-3xl">{option.icon}</span>
-                    <span className="text-sm font-medium">{option.label}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-[var(--dm-text)]">{option.label}</span>
                   </button>
                 ))}
               </div>
               <button
                 onClick={closeModal}
-                className="w-full mt-4 py-3 text-gray-600 hover:text-gray-800"
+                className="w-full mt-4 py-3 text-gray-600 hover:text-gray-800 dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)]"
               >
                 Cancelar
               </button>

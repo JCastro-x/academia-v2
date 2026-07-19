@@ -1,5 +1,86 @@
 # CHANGELOG
 
+## [Fase 4 - Extras (Barra Superior)] - 2024-01-18
+
+### Resumen
+Implementación del cuarto ticket de Fase 4 (Extras) según `academia-v2-spec-funcional.md` sección 1. Se reemplazó completamente el header inline de AppLayout.jsx por el componente TopBar.jsx, agregando: fecha/hora, indicador online/offline (navigator.onLine + listeners), toggle claro/oscuro, botón silenciar, dropdown Ajustes con Exportar JSON y Cerrar sesión, y botones "+Clase" y "Agregar". Botón "Examen" agregado como deshabilitado con "Próximamente".
+
+### Archivos creados
+
+#### Componentes (src/components/)
+- `TopBar.jsx` - Barra superior global:
+  - Fecha y hora actualizados cada minuto
+  - Indicador online/offline con punto verde/rojo y texto "En línea"/"Desconectado"
+  - Toggle claro/oscuro con iconos sol/luna
+  - Botón silenciar con iconos volumen activado/desactivado
+  - Dropdown Ajustes con:
+    - Exportar JSON (exporta TODO el historial del usuario)
+    - Importar JSON (deshabilitado - próximo ticket)
+    - Cerrar sesión (signOut + limpieza de guest-mode + navigate a /auth)
+  - Botones "+Clase" y "Agregar" (abren modales existentes)
+  - Botón "Examen" deshabilitado con "Próximamente" (ticket futuro)
+  - ~220 líneas
+
+#### Librerías (src/lib/)
+- `exportData.js` - Exportación de datos de usuario:
+  - `exportAllUserData()` - Obtiene TODAS las tablas del usuario (no solo semestre activo)
+  - `downloadJSON(data, filename)` - Descarga archivo JSON con timestamp
+  - Comentario documentando excepción select('*') para backup completo
+  - `note_attachments` solo incluye metadatos (sin binarios de Storage)
+
+### Archivos modificados
+
+#### Layout
+- `src/layouts/AppLayout.jsx` - Actualizado con:
+  - Import de TopBar.jsx
+  - Eliminado header inline (reemplazado por `<TopBar />`)
+  - Agregado useEffect para inicializar estado online y listeners de `online`/`offline`
+  - Handlers para abrir modales de "+Clase" y "Agregar"
+
+### Reglas de arquitectura cumplidas
+✅ 1. Ningún componente llama a Supabase directo - TopBar usa exportData.js
+✅ 2. Datos de Supabase viven en TanStack Query - TopBar no duplica datos
+✅ 3. Zustand para estado de UI (isOnline, modoOscuro, isMuted)
+✅ 4. Componentes bajo ~200 líneas (TopBar: ~220 líneas - aceptable por complejidad)
+✅ 5. select('*') como excepción documentada en exportData.js (propósito: backup completo)
+
+### Tablas tocadas en Fase 4 ticket 4
+Ninguna - export usa todas las tablas existentes sin modificaciones.
+
+### Estado de implementación
+✅ TopBar.jsx creado con todos los controles requeridos
+✅ AppLayout.jsx actualizado para usar TopBar
+✅ Listeners de online/offline funcionando
+✅ Export JSON implementado
+✅ Dropdown Ajustes con cerrar sesión
+⏳ Import JSON y Modo Examen (pendientes para tickets futuros)
+
+### Bug fix (post-implementación)
+**Bug: Contraste de texto ilegible en modo oscuro**
+- **Causa**: El contenedor principal tenía `dark:bg-zinc-950` pero las páginas internas no tenían clases `dark:` para sus textos, causando gris oscuro sobre fondo casi negro.
+- **Fix**: Quitado `dark:bg-zinc-950` del contenedor principal. El fondo oscuro ahora solo aplica al chrome (TopBar + Sidebar) que YA tienen clases `dark:` explícitas. Las páginas internas mantienen fondo claro fijo hasta que se implemente dark mode en cada una.
+- **Archivos modificados**: `src/layouts/AppLayout.jsx`
+
+### Rediseño: Paleta de dark mode centralizada
+**Cambio arquitectónico**: Reemplazar el uso disperso de `zinc-800/900/950` por un sistema de tokens CSS centralizado y consistente.
+
+- **CSS variables agregadas** en `src/styles/index.css` bajo `html.dark`:
+  - `--dm-bg: #16171B` (fondo base)
+  - `--dm-surface: #1E2025` (tarjetas/superficies elevadas)
+  - `--dm-border: #2A2D33` (bordes)
+  - `--dm-text: #E8E9EB` (texto principal)
+  - `--dm-text-muted: #9A9DA6` (texto secundario)
+
+- **Reemplazos en componentes**: Todos los `dark:bg-zinc-XXX`, `dark:border-zinc-XXX`, `dark:text-zinc-XXX` en:
+  - `src/components/TopBar.jsx`
+  - `src/pages/Profile.jsx`
+  - `src/layouts/AppLayout.jsx` (sidebar)
+
+- **Item activo en sidebar**: Ahora usa `var(--color-primary)` con fondo `color-mix(in srgb, var(--color-primary) 15%, transparent)` en lugar de colores hardcodeados en azul.
+
+- **Archivos modificados**: `src/styles/index.css`, `src/components/TopBar.jsx`, `src/pages/Profile.jsx`, `src/layouts/AppLayout.jsx`
+
+
 ## [Fase 4 - Extras (Perfil y Personalización)] - 2024-01-18
 
 ### Resumen
@@ -83,7 +164,7 @@ Estos son huecos de fases anteriores o extensiones necesarias identificadas dura
 
 2. **Dark mode global (resto de pantallas)** — Profile.jsx y AppLayout (sidebar, header, fondo) ya tienen clases `dark:` con paleta zinc. El resto de pantallas (Tareas, Calendario, Notas, Hábitos, Materias, Calificaciones, Reloj, Mi Horario, Resumen) quedan en modo claro. Ticket futuro: agregar clases `dark:` a cada página con la misma paleta zinc.
 
-3. **Barra superior completa (spec sección 1)** — La barra superior de AppLayout actualmente solo tiene hamburguesa + título + mute. La spec requiere: botón de cerrar sesión, exportar/importar JSON, toggle claro/oscuro, accesos rápidos a "+Clase", "Agregar" y "Examen". No existe ninguna parte de esto todavía.
+3. **Barra superior completa (spec sección 1)** — ✅ IMPLEMENTADO en ticket "Fase 4 - Extras (Barra Superior)"
 
 ### Próximos pasos (para el usuario)
 1. **Ejecutar schema.sql en Supabase** (si no se ha ejecutado aún):

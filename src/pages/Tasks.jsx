@@ -105,12 +105,14 @@ export default function Tasks() {
     return true
   }) || []
 
-  if (isLoading) return <div>Cargando...</div>
+  if (isLoading) {
+    return <div className="flex min-h-[40vh] items-center justify-center text-gray-500 dark:text-[var(--dm-text-muted)]">Cargando...</div>
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Tareas</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Tareas</h1>
         <button
           onClick={() => { setEditingTask(null); openModal('task') }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full sm:w-auto"
@@ -119,20 +121,20 @@ export default function Tasks() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-4 space-y-4">
+      <div className="bg-white rounded-lg shadow-md p-4 space-y-4 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <input
             type="text"
             placeholder="Buscar tareas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           />
 
           <select
             value={filterSubject}
             onChange={(e) => setFilterSubject(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           >
             <option value="">Todas las materias</option>
             {subjects?.map(subject => (
@@ -143,7 +145,7 @@ export default function Tasks() {
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           >
             <option value="">Todas las prioridades</option>
             <option value="baja">Baja</option>
@@ -154,7 +156,7 @@ export default function Tasks() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           >
             <option value="all">Todas</option>
             <option value="pending">Pendientes</option>
@@ -165,7 +167,7 @@ export default function Tasks() {
         <div className="flex justify-end">
           <button
             onClick={handleDeleteCompleted}
-            className="text-red-600 hover:text-red-800 text-sm"
+            className="text-red-600 hover:text-red-800 text-sm dark:text-red-400 dark:hover:text-red-300"
           >
             Borrar completadas
           </button>
@@ -193,10 +195,10 @@ export default function Tasks() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
               onClick={e => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
               <TaskForm
                 semesterId={semesterId}
                 subjects={subjects}

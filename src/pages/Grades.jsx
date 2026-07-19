@@ -269,29 +269,29 @@ export default function Grades() {
           {viewMode === 'grades' ? (
             <>
               {subjectStats && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h2 className="font-semibold text-blue-900 mb-2">Proyección del semestre</h2>
-                  <p className="text-3xl font-bold text-blue-700">
+                <div className="bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] border border-[color-mix(in_srgb,var(--color-primary)_24%,transparent)] rounded-lg p-4 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)]">
+                  <h2 className="font-semibold text-[var(--color-primary)] dark:text-[var(--dm-text)] mb-2">Proyección del semestre</h2>
+                  <p className="text-3xl font-bold text-[var(--color-primary)] dark:text-[var(--dm-text)]">
                     {subjectStats.projectedGrade.toFixed(1)}%
                   </p>
-                  <p className="text-sm text-blue-600 mt-1">
+                  <p className="text-sm text-[var(--color-primary)] dark:text-[var(--dm-text-muted)] mt-1">
                     {subjectStats.totalPoints.toFixed(2)} / {subjectStats.maxPoints} puntos obtenidos
                   </p>
                 </div>
               )}
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">Zonas de calificación</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--dm-text)]">Zonas de calificación</h2>
                 <button
                   onClick={() => { setEditingZone(null); openModal('zone') }}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full sm:w-auto"
+                  className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] w-full sm:w-auto"
                 >
                   + Nueva zona
                 </button>
               </div>
 
               {zonesLoading ? (
-                <div>Cargando zonas...</div>
+                <div className="flex min-h-[24vh] items-center justify-center text-gray-500 dark:text-[var(--dm-text-muted)]">Cargando zonas...</div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {zones?.map(zone => (
@@ -310,7 +310,7 @@ export default function Grades() {
               )}
 
               {!zones || zones.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-gray-500 dark:text-[var(--dm-text-muted)]">
                   <p>No hay zonas configuradas. Crea tu primera zona.</p>
                 </div>
               )}
@@ -318,47 +318,47 @@ export default function Grades() {
           ) : (
             <>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">Temas del curso</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--dm-text)]">Temas del curso</h2>
                 <button
                   onClick={() => { setEditingTopic(null); openModal('topic') }}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full sm:w-auto"
+                  className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] w-full sm:w-auto dark:shadow-[0_0_0_1px_var(--dm-border)]"
                 >
                   + Nuevo tema
                 </button>
               </div>
 
               {topicsLoading ? (
-                <div>Cargando temas...</div>
+                <div className="text-gray-600 dark:text-[var(--dm-text-muted)]">Cargando temas...</div>
               ) : (
                 <div className="space-y-6">
                   {partials.map(parcial => {
                     const partialTopics = getTopicsByPartial(parcial)
                     if (partialTopics.length === 0) return null
-                    
+
                     return (
-                      <div key={parcial} className="bg-white border rounded-lg p-4">
-                        <h3 className="text-lg font-semibold mb-3">{parcial}</h3>
+                      <div key={parcial} className="bg-white border rounded-lg p-4 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)]">
+                        <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-[var(--dm-text)]">{parcial}</h3>
                         <div className="space-y-3">
                           {partialTopics.map(topic => {
                             const isPendingDelete = pendingDeletes.some(
                               pd => pd.type === 'topic' && pd.itemId === topic.id
                             )
                             if (isPendingDelete) return null
-                            
+
                             return (
                               <motion.div
                                 key={topic.id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="border rounded-lg p-3 hover:bg-gray-50"
+                                className="border rounded-lg p-3 bg-white hover:bg-gray-50 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:hover:bg-[var(--dm-surface)]"
                               >
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold">{topic.nombre}</h4>
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-semibold text-gray-900 dark:text-[var(--dm-text)]">{topic.nombre}</h4>
                                     {topic.subtemas && topic.subtemas.length > 0 && (
                                       <div className="mt-2">
-                                        <p className="text-sm text-gray-600 mb-1">Subtemas:</p>
-                                        <ul className="text-sm text-gray-500 list-disc list-inside">
+                                        <p className="text-sm text-gray-600 mb-1 dark:text-[var(--dm-text-muted)]">Subtemas:</p>
+                                        <ul className="text-sm text-gray-500 list-disc list-inside dark:text-[var(--dm-text-muted)]">
                                           {topic.subtemas.map((subtema, idx) => (
                                             <li key={idx}>{subtema}</li>
                                           ))}
@@ -367,37 +367,37 @@ export default function Grades() {
                                     )}
                                     <div className="mt-2 flex flex-wrap gap-2 text-sm">
                                       {topic.dificultad && (
-                                        <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                                        <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded dark:bg-[color-mix(in_srgb,var(--color-primary)_14%,transparent)] dark:text-[var(--dm-text)]">
                                           Dificultad: {topic.dificultad}/5
                                         </span>
                                       )}
                                       {topic.tiempo_dedicado_min && (
-                                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded dark:bg-[color-mix(in_srgb,green_12%,transparent)] dark:text-[var(--dm-text)]">
                                           Tiempo: {topic.tiempo_dedicado_min} min
                                         </span>
                                       )}
                                       {topic.fecha_examen && (
-                                        <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                                        <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded dark:bg-[color-mix(in_srgb,orange_14%,transparent)] dark:text-[var(--dm-text)]">
                                           Examen: {new Date(topic.fecha_examen).toLocaleDateString('es-ES')}
                                         </span>
                                       )}
                                       {topic.visto && (
-                                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded dark:bg-[color-mix(in_srgb,var(--color-primary)_14%,transparent)] dark:text-[var(--dm-text)]">
                                           ✓ Visto
                                         </span>
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-2 shrink-0">
                                     <button
                                       onClick={() => { setEditingTopic(topic); openModal('topic') }}
-                                      className="text-blue-600 hover:text-blue-800 text-sm"
+                                      className="text-blue-600 hover:text-blue-800 dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)] text-sm"
                                     >
                                       Editar
                                     </button>
                                     <button
                                       onClick={() => handleDeleteTopic(topic)}
-                                      className="text-red-600 hover:text-red-800 text-sm"
+                                      className="text-red-600 hover:text-red-800 dark:text-[var(--dm-text-muted)] dark:hover:text-red-300 text-sm"
                                     >
                                       Eliminar
                                     </button>
@@ -414,7 +414,7 @@ export default function Grades() {
               )}
 
               {!topics || topics.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-gray-500 dark:text-[var(--dm-text-muted)]">
                   <p>No hay temas. Crea tu primer tema.</p>
                 </div>
               )}
@@ -498,19 +498,19 @@ export default function Grades() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
               onClick={e => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">
                 {editingTopic ? 'Editar tema' : 'Nuevo tema'}
               </h3>
-              
+
               <form onSubmit={(e) => {
                 e.preventDefault()
                 const formData = new FormData(e.target)
                 const subtemasText = formData.get('subtemas')
                 const subtemas = subtemasText ? subtemasText.split('\n').filter(s => s.trim()) : []
-                
+
                 const topicData = {
                   parcial: formData.get('parcial'),
                   nombre: formData.get('nombre'),
@@ -519,22 +519,22 @@ export default function Grades() {
                   tiempo_dedicado_min: formData.get('tiempo_dedicado_min') ? parseInt(formData.get('tiempo_dedicado_min')) : null,
                   fecha_examen: formData.get('fecha_examen') || null,
                 }
-                
+
                 if (editingTopic) {
                   handleUpdateTopic(editingTopic.id, topicData)
                 } else {
                   handleCreateTopic(topicData)
                 }
-              }} className="space-y-4">
+              }} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
                     Parcial *
                   </label>
                   <select
                     name="parcial"
                     required
                     defaultValue={editingTopic?.parcial || 'Parcial 1'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
                   >
                     <option value="Parcial 1">Parcial 1</option>
                     <option value="Parcial 2">Parcial 2</option>
@@ -544,7 +544,7 @@ export default function Grades() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
                     Nombre del tema *
                   </label>
                   <input
@@ -552,25 +552,25 @@ export default function Grades() {
                     type="text"
                     required
                     defaultValue={editingTopic?.nombre}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] dark:focus:ring-[var(--color-primary)]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
                     Subtemas (uno por línea)
                   </label>
                   <textarea
                     name="subtemas"
                     rows={3}
                     defaultValue={editingTopic?.subtemas?.join('\n') || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] dark:focus:ring-[var(--color-primary)]"
                     placeholder="Subtema 1&#10;Subtema 2&#10;Subtema 3"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
                     Dificultad (1-5)
                   </label>
                   <input
@@ -579,12 +579,12 @@ export default function Grades() {
                     min="1"
                     max="5"
                     defaultValue={editingTopic?.dificultad || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
                     Tiempo a dedicar (minutos)
                   </label>
                   <input
@@ -592,19 +592,19 @@ export default function Grades() {
                     type="number"
                     min="0"
                     defaultValue={editingTopic?.tiempo_dedicado_min || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
                     Fecha de examen
                   </label>
                   <input
                     name="fecha_examen"
                     type="date"
                     defaultValue={editingTopic?.fecha_examen || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
                   />
                 </div>
 
@@ -612,14 +612,14 @@ export default function Grades() {
                   <button
                     type="button"
                     onClick={() => { setEditingTopic(null); closeModal() }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-bg)]"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={editingTopic ? updateTopic.isPending : createTopic.isPending}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:opacity-50 dark:disabled:bg-[var(--dm-border)]"
                   >
                     {editingTopic ? 'Actualizar' : 'Crear'}
                   </button>

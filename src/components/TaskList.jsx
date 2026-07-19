@@ -3,7 +3,7 @@ import TaskCard from './TaskCard.jsx'
 export default function TaskList({ tasks, subjects, onToggleDone, onEdit, onDelete }) {
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
         <p>No hay tareas</p>
       </div>
     )

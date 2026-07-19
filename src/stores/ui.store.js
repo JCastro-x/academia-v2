@@ -61,6 +61,11 @@ export const useUIStore = create((set) => ({
     toasts: state.toasts.filter((t) => t.id !== id)
   })),
 
+  // Online state
+  isOnline: true,
+  setOnline: () => set({ isOnline: true }),
+  setOffline: () => set({ isOnline: false }),
+
   // Sound state
   isMuted: false,
   toggleMute: () => set((state) => ({ isMuted: !state.isMuted })),

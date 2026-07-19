@@ -76,25 +76,25 @@ export default function Overview() {
     })
   }
 
-  if (isLoading) return <div>Cargando...</div>
-  if (error) return <div>Error: {error.message}</div>
+  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center text-gray-500 dark:text-[var(--dm-text-muted)]">Cargando...</div>
+  if (error) return <div className="flex min-h-[40vh] items-center justify-center text-red-600 dark:text-red-400">Error: {error.message}</div>
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-2">{semester?.nombre || 'Semestre'}</h1>
-        <p className="text-gray-600">Resumen del semestre</p>
+        <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-[var(--dm-text)]">{semester?.nombre || 'Semestre'}</h1>
+        <p className="text-gray-600 dark:text-[var(--dm-text-muted)]">Resumen del semestre</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Tareas pendientes</h2>
-          <label className="flex items-center gap-2 text-sm text-gray-600">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-[var(--dm-text)]">Tareas pendientes</h2>
+          <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
             <input
               type="checkbox"
               checked={showEvents}
               onChange={(e) => setShowEvents(e.target.checked)}
-              className="rounded"
+              className="rounded border-gray-300 dark:border-[var(--dm-border)]"
             />
             Mostrar eventos
           </label>
@@ -123,10 +123,10 @@ export default function Overview() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md"
+              className="bg-white rounded-lg p-6 w-full max-w-md dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
               onClick={e => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
               <TaskForm
                 semesterId={semesterId}
                 subjects={subjects}
@@ -151,10 +151,10 @@ export default function Overview() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
               onClick={e => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4">Nueva materia</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Nueva materia</h3>
               <SubjectForm
                 semesterId={semesterId}
                 onSubmit={handleCreateSubject}

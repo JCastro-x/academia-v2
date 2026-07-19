@@ -21,16 +21,16 @@ export default function ConfirmDialog() {
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-white rounded-lg p-6 w-full max-w-md mx-4"
+          className="bg-white rounded-lg p-6 w-full max-w-md mx-4 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
           onClick={e => e.stopPropagation()}
         >
-          <h3 className="text-lg font-semibold mb-2">{confirmDialog.title}</h3>
-          <p className="text-gray-600 mb-6">{confirmDialog.message}</p>
+          <h3 className="text-lg font-semibold mb-2 text-[var(--dm-text)] dark:text-[var(--dm-text)]">{confirmDialog.title}</h3>
+          <p className="text-gray-600 mb-6 dark:text-[var(--dm-text-muted)]">{confirmDialog.message}</p>
           <div className="flex gap-3">
             {!isInfoOnly && (
               <button
                 onClick={closeConfirmDialog}
-                className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300"
+                className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
               >
                 Cancelar
               </button>

@@ -24,15 +24,15 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Título *</label>
         <input
           type="text"
           name="titulo"
           value={formData.titulo}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           required
           disabled={isPending}
         />
@@ -40,12 +40,12 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Materia</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Materia</label>
           <select
             name="subject_id"
             value={formData.subject_id}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             disabled={isPending}
           >
             <option value="">Sin materia</option>
@@ -56,12 +56,12 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Prioridad</label>
           <select
             name="prioridad"
             value={formData.prioridad}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             disabled={isPending}
           >
             <option value="baja">Baja</option>
@@ -72,13 +72,13 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de entrega</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Fecha de entrega</label>
         <input
           type="datetime-local"
           name="due"
           value={formData.due}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           disabled={isPending}
         />
       </div>
@@ -87,7 +87,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-[var(--dm-border)]"
         >
           {isPending ? 'Guardando...' : (initialData ? 'Guardar' : 'Crear')}
         </button>
@@ -96,7 +96,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] dark:disabled:bg-[var(--dm-border)]"
           >
             Cancelar
           </button>

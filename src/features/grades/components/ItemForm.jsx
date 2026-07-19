@@ -15,16 +15,16 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
           Nombre del ítem
         </label>
         <input
           type="text"
           value={formData.nombre}
           onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-          className="w-full border rounded-lg px-3 py-2"
+          className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           placeholder="Ej. Examen, Quiz 1, Tarea 1"
           disabled={isPending}
           required
@@ -32,7 +32,7 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
           Porcentaje obtenido (%)
         </label>
         <input
@@ -42,25 +42,25 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
           max="100"
           value={formData.porcentaje_ingresado}
           onChange={(e) => setFormData({ ...formData, porcentaje_ingresado: e.target.value })}
-          className="w-full border rounded-lg px-3 py-2"
+          className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           placeholder="Ej. 85"
           disabled={isPending}
         />
-        <p className="text-xs text-gray-500 mt-1">Dejar vacío si aún no tienes nota</p>
+        <p className="text-xs text-gray-500 mt-1 dark:text-[var(--dm-text-muted)]">Dejar vacío si aún no tienes nota</p>
       </div>
 
       <div className="flex gap-3 pt-4">
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300"
+          className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] dark:disabled:bg-[var(--dm-border)]"
           disabled={isPending}
         >
           Cancelar
         </button>
         <button
           type="submit"
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
+          className="flex-1 bg-[var(--color-primary)] text-white py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-[color-mix(in_srgb,var(--color-primary)_70%,white)] dark:disabled:bg-[var(--dm-border)]"
           disabled={isPending}
         >
           {isPending ? 'Guardando...' : 'Guardar'}

@@ -5,6 +5,7 @@ import { useProfile } from '../features/profile/hooks.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import UndoToast from '../components/UndoToast.jsx'
 import Lightbox from '../components/Lightbox.jsx'
+import TopBar from '../components/TopBar.jsx'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
@@ -14,7 +15,21 @@ export default function AppLayout() {
     isMuted, toggleMute,
     modoOscuro, tipografia, temaColor, sonidosInteraccion,
     setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setMuted,
+    setOnline, setOffline,
   } = useUIStore()
+
+  // Inicializar estado online y listeners
+  useEffect(() => {
+    const handleOnline = () => setOnline()
+    const handleOffline = () => setOffline()
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    if (!navigator.onLine) setOffline()
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [setOnline, setOffline])
 
   // Hidratación: perfil guardado → ui.store (al montar AppLayout)
   const { data: profile } = useProfile()
@@ -62,42 +77,14 @@ export default function AppLayout() {
     return location.pathname === `/s/${semesterId}/${path}`
   }
 
+  // Handlers para los botones del TopBar
+  const { openModal } = useUIStore()
+  const handleOpenClassModal = () => openModal('subject')
+  const handleOpenQuickAdd = () => openModal('quickadd')
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
-      {/* Top Bar */}
-      <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleSidebar}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg"
-            aria-label="Toggle sidebar"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Academia v2</h1>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleMute}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg"
-            aria-label={isMuted ? 'Unmute' : 'Mute'}
-          >
-            {isMuted ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-              </svg>
-            )}
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      <TopBar onOpenClassModal={handleOpenClassModal} onOpenQuickAdd={handleOpenQuickAdd} />
 
       <div className="flex relative">
         {/* Mobile Overlay */}
@@ -110,7 +97,7 @@ export default function AppLayout() {
 
         {/* Sidebar */}
         <aside
-          className={`bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-700 transition-all duration-300 fixed md:relative z-50 h-full ${
+          className={`bg-white dark:bg-[var(--dm-surface)] border-r border-gray-200 dark:border-[var(--dm-border)] transition-all duration-300 fixed md:relative z-50 h-full ${
             isSidebarCollapsed ? '-translate-x-full md:w-16 md:translate-x-0' : 'w-64 translate-x-0'
           }`}
         >
@@ -125,11 +112,12 @@ export default function AppLayout() {
                     }}
                     className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
                       isActive(item.path)
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                        : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                        ? 'text-[var(--color-primary)]'
+                        : 'text-gray-700 dark:text-[var(--dm-text-muted)] hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]'
                     }`}
+                    style={isActive(item.path) ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)' } : undefined}
                   >
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={isActive(item.path) ? { color: 'var(--color-primary)' } : undefined}>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                     </svg>
                     {!isSidebarCollapsed && <span>{item.label}</span>}
