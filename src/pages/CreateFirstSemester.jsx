@@ -1,18 +1,14 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateSemester } from '../features/semesters/hooks.js'
+import SemesterForm from '../components/SemesterForm.jsx'
 
 export default function CreateFirstSemester() {
-  const [nombre, setNombre] = useState('')
   const createSemester = useCreateSemester()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!nombre.trim()) return
-
+  const handleSubmit = async (semesterData) => {
     try {
-      const result = await createSemester.mutateAsync({ nombre })
+      const result = await createSemester.mutateAsync(semesterData)
       navigate(`/s/${result.id}`)
     } catch (error) {
       console.error('Error creating semester:', error)
@@ -20,41 +16,21 @@ export default function CreateFirstSemester() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-        <h1 className="text-2xl font-bold mb-6 text-center">Crear tu primer semestre</h1>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre del semestre
-            </label>
-            <input
-              type="text"
-              id="nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: Primer Semestre 2024"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-              autoComplete="off"
-            />
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[var(--dm-bg)]">
+      <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-[var(--dm-text)]">Crear tu primer semestre</h1>
 
-          <button
-            type="submit"
-            disabled={createSemester.isPending || !nombre.trim()}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {createSemester.isPending ? 'Creando...' : 'Crear semestre'}
-          </button>
+        <SemesterForm
+          onSubmit={handleSubmit}
+          isPending={createSemester.isPending}
+          isCreate={true}
+        />
 
-          {createSemester.isError && (
-            <p className="mt-4 text-red-600 text-center">
-              Error al crear el semestre. Inténtalo de nuevo.
-            </p>
-          )}
-        </form>
+        {createSemester.isError && (
+          <p className="mt-4 text-red-600 text-center dark:text-red-400">
+            Error al crear el semestre. Inténtalo de nuevo.
+          </p>
+        )}
       </div>
     </div>
   )

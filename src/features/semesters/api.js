@@ -9,9 +9,9 @@ export const semestersQueryKeys = {
 export const getSemesters = async () => {
   const { data, error } = await supabase
     .from('semesters')
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .order('updated_at', { ascending: false })
-  
+
   if (error) throw error
   return data
 }
@@ -19,10 +19,10 @@ export const getSemesters = async () => {
 export const getActiveSemester = async () => {
   const { data, error } = await supabase
     .from('semesters')
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .eq('activo', true)
     .single()
-  
+
   if (error) throw error
   return data
 }
@@ -30,10 +30,10 @@ export const getActiveSemester = async () => {
 export const getSemesterById = async (id) => {
   const { data, error } = await supabase
     .from('semesters')
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .eq('id', id)
     .single()
-  
+
   if (error) throw error
   return data
 }
@@ -47,10 +47,12 @@ export const createSemester = async (semester) => {
       nota_minima: semester.nota_minima,
       promedio_previo: semester.promedio_previo,
       creditos_previos: semester.creditos_previos,
+      start_date: semester.start_date,
+      end_date: semester.end_date,
     })
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .single()
-  
+
   if (error) throw error
   return data
 }
@@ -60,9 +62,9 @@ export const updateSemester = async (id, updates) => {
     .from('semesters')
     .update(updates)
     .eq('id', id)
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .single()
-  
+
   if (error) throw error
   return data
 }
@@ -90,9 +92,9 @@ export const setActiveSemester = async (id) => {
     .from('semesters')
     .update({ activo: true })
     .eq('id', id)
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .single()
-  
+
   if (error) throw error
   return data
 }

@@ -1,5 +1,97 @@
 # CHANGELOG
 
+## [2026-08-27] — Rediseño de Schedule.jsx con navegación por semanas y cruce de tareas/eventos
+
+**Tarea:** Rediseñar la vista semanal (Schedule.jsx) para mostrar materias, tareas y eventos cruzados por día, con navegación por semana calendario.
+
+**Implementado:**
+- `supabase/schema.sql` - Agregadas columnas `start_date date` y `end_date date` (nullable) a tabla semesters
+- `supabase/migrations/20260827210000_semester_dates.sql` - Script de migración con ALTER TABLE usando bloque DO $$ para verificar IF NOT EXISTS por columna
+- Migración aplicada a base de datos remota - Verificado: start_date y end_date presentes como date, nullable YES
+- `src/features/semesters/api.js` - Actualizados todos los queries para incluir start_date y end_date:
+  - getSemesters, getActiveSemester, getSemesterById, createSemester, updateSemester, setActiveSemester
+- `src/features/semesters/hooks.js` - useSemester ahora retorna start_date y end_date
+- `src/components/SemesterForm.jsx` - Nuevo componente reutilizable con campos:
+  - nombre (required)
+  - start_date (opcional, tipo date)
+  - end_date (opcional, tipo date)
+  - Helper text explicativo sobre fechas de semestre
+- `src/pages/CreateFirstSemester.jsx` - Reemplazado formulario inline con SemesterForm.jsx (reutilización)
+- `src/pages/Overview.jsx` - Agregado modal de edición de semestre:
+  - Botón "✏️ Editar semestre" en header
+  - Modal con SemesterForm.jsx para editar nombre/fechas
+  - **Nota:** Overview.jsx ahora tiene ~177 líneas (por debajo del límite de ~200 líneas)
+- `src/domain/semester-weeks.js` - Nuevo módulo de dominio puro con funciones de cálculo de semanas:
+  - `getSemesterStats(startStr, endStr)` - Calcula totalWeeks, currentWeek, pct
+    - Retorna valores null si start > end o fechas inválidas (manejo defensivo)
+  - `getWeekStartDateForWeek(startStr, week)` - Calcula fecha de inicio de semana N (lunes)
+  - `getWeekNumberForDate(startStr, dateStr)` - Obtiene número de semana para una fecha dada
+  - Reutiliza parseDate, formatDate, diffDays, clamp, todayStr desde task-stats.js
+- `src/domain/semester-weeks.test.js` - Tests de Vitest con 15 casos:
+  - Semestre normal (semana 1, semana intermedia, última semana)
+  - Semestre con start_date > end_date → retorna valores null
+  - Semestre sin fechas (null start/end) → retorna valores null
+  - Cálculo de week start date para diferentes semanas
+  - Cálculo de week number para diferentes fechas
+- `src/pages/Schedule.jsx` - Rediseño completo con navegación por semana calendario:
+  - **Decisión:** Semana calendario arranca en LUNES (siguiendo blueprint sección 3: "días Lun–Dom")
+  - Estado local para selectedWeekMonday (Date de inicio de semana - lunes)
+  - Navegación: ← Semana anterior | Hoy | Semana siguiente →
+  - Cálculo de rango de semana actual: 7 días desde selectedWeekMonday (lunes a domingo)
+  - Mostrar rango de fechas visible: "13-19 de enero 2026"
+  - Etiqueta opcional de contexto académico: si semester tiene start_date/end_date válidos, mostrar "Semana 5 de 16 del semestre"
+  - **Decisión:** Sección separada dentro de celda (bloque de horario arriba, lista compacta de tareas/eventos abajo)
+  - Cruce de datos por día:
+    - Horario fijo (subjects.horario): clases recurrentes en bloque superior
+    - Tareas del día: filtradas por due, lista compacta en bloque inferior
+    - Eventos del día: filtrados por start_at, lista compacta en bloque inferior
+  - Layout de celda: Bloque de horario → separador visual → lista compacta de tareas/eventos
+  - Día actual destacado con borde azul y fondo azul claro
+
+**Verificado:**
+- Migración aplicada a DB remota: Verificación con SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'semesters' AND column_name IN ('start_date', 'end_date'):
+  ┌─────────┬──────────────┬───────────┬─────────────┐
+  │ (index) │ column_name  │ data_type │ is_nullable │
+  ├─────────┼──────────────┼───────────┼─────────────┤
+  │ 0       │ 'end_date'   │ 'date'    │ 'YES'       │
+  │ 1       │ 'start_date' │ 'date'    │ 'YES'       │
+  └─────────┴──────────────┴───────────┴─────────────┘
+- Tests de semester-weeks.test.js: 15/15 pasando
+- Build: npm run build → compilación exitosa sin errores (bundle aumentó de 804.05 kB a 811.05 kB)
+- Dev server iniciado para pruebas manuales
+
+**Estado de la base de datos remota:** APLICADO (migración ejecutada exitosamente contra Supabase)
+
+**Desviaciones del plan original:**
+- Ninguna - implementación siguió el plan aprobado con las 3 correcciones solicitadas (archivo nuevo semester-weeks.js, semana arranca en lunes, sección separada en celdas)
+
+**Pendiente / preguntas abiertas:**
+- Ninguna - tarea completada según especificaciones
+
+---
+
+## [2026-08-26] — Fix de import faltante en Calendar.jsx (framer-motion)
+
+**Tarea:** Corregir error de runtime en Calendar.jsx donde faltaba el import de `motion` de framer-motion.
+
+**Problema:**
+- Al navegar a la vista de Calendario, la app crasheaba con: `Uncaught ReferenceError: motion is not defined at Calendar.jsx:216:16`
+- Calendar.jsx usaba `motion.button` (línea 216) y `motion.div` (línea 287) sin importar `motion` de framer-motion
+
+**Solución:**
+- `src/pages/Calendar.jsx` - Agregado `import { motion } from 'framer-motion'` (línea 3)
+- Verificado que framer-motion está instalado en el proyecto (v10.16.16)
+
+**Verificado:**
+- Build: npm run build → compilación exitosa sin errores
+- El import es correcto para los usos de motion.button y motion.div en el archivo
+
+**Estado de la base de datos remota:** NO APLICA (fix de una línea en componente UI)
+
+**Nota:** Fix independiente, no relacionado al motor de ritmo de tareas.
+
+---
+
 ## [2026-08-26] — Integración del motor de ritmo en TaskForm y TaskCard
 
 **Tarea:** Integrar el motor de ritmo (src/domain/task-stats.js) en TaskForm.jsx y TaskCard.jsx para mostrar estadísticas de progreso y ritmo en la UI de tareas.
@@ -14,7 +106,7 @@
   - Estadísticas completas para tareas existentes: metaHoy, necesitasHoy, recomendado, ritmoActual, ritmoNecesario, ritmoOriginal, diasDeAtraso, exigencia
   - Lógica condicional: usa getTaskStats solo para tareas existentes (con historial), preview simple para tareas nuevas
 - `src/components/TaskCard.jsx` - Extendido para mostrar estadísticas del motor de ritmo:
-  - Import de getTaskStats y daysRemainingLabel desde task-stats.js
+  - Import de getTaskStats y daysRemainingLabel desde task-stats.js (daysRemainingLabel es función exportada del dominio, no helper local)
   - Mapeo de status a colores según severidad:
     - Rojo: critical, overdue (atraso severo)
     - Naranja: onyellow, onattention (atraso leve/moderado - "atención")

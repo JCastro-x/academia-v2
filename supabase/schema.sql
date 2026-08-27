@@ -10,6 +10,8 @@ create table semesters (
   nota_minima numeric,
   promedio_previo numeric,
   creditos_previos int,
+  start_date date,
+  end_date date,
   updated_at timestamptz default now()
 );
 create index on semesters (user_id, activo);

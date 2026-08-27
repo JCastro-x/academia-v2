@@ -1,12 +1,13 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
-import { useSemester } from '../features/semesters/hooks.js'
+import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useSubjects, useCreateSubject } from '../features/subjects/hooks.js'
 import { usePendingTasks, useCreateTask, useToggleTaskDone, useDeleteTask } from '../features/tasks/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import TaskList from '../components/TaskList.jsx'
 import TaskForm from '../components/TaskForm.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
+import SemesterForm from '../components/SemesterForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 import QuickAdd from '../components/QuickAdd.jsx'
 
@@ -19,6 +20,7 @@ export default function Overview() {
   const toggleTaskDone = useToggleTaskDone()
   const deleteTask = useDeleteTask()
   const createSubject = useCreateSubject()
+  const updateSemester = useUpdateSemester()
   const { isModalOpen, modalContent, openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
   const [editingTask, setEditingTask] = useState(null)
   const [showEvents, setShowEvents] = useState(false)
@@ -38,6 +40,15 @@ export default function Overview() {
       closeModal()
     } catch (error) {
       console.error('Error creating subject:', error)
+    }
+  }
+
+  const handleUpdateSemester = async (semesterData) => {
+    try {
+      await updateSemester.mutateAsync({ id: semesterId, updates: semesterData })
+      closeModal()
+    } catch (error) {
+      console.error('Error updating semester:', error)
     }
   }
 
@@ -81,9 +92,17 @@ export default function Overview() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-[var(--dm-text)]">{semester?.nombre || 'Semestre'}</h1>
-        <p className="text-gray-600 dark:text-[var(--dm-text-muted)]">Resumen del semestre</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-[var(--dm-text)]">{semester?.nombre || 'Semestre'}</h1>
+          <p className="text-gray-600 dark:text-[var(--dm-text-muted)]">Resumen del semestre</p>
+        </div>
+        <button
+          onClick={() => openModal('semester')}
+          className="text-gray-500 hover:text-blue-600 text-sm dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)]"
+        >
+          ✏️ Editar semestre
+        </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
@@ -137,6 +156,20 @@ export default function Overview() {
           onSubmit={handleCreateSubject}
           onCancel={closeModal}
           isPending={createSubject.isPending}
+        />
+      </ModalWrapper>
+
+      <ModalWrapper
+        isOpen={isModalOpen && modalContent === 'semester'}
+        onClose={closeModal}
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+      >
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Editar semestre</h3>
+        <SemesterForm
+          initialData={semester}
+          onSubmit={handleUpdateSemester}
+          onCancel={closeModal}
+          isPending={updateSemester.isPending}
         />
       </ModalWrapper>
     </div>
