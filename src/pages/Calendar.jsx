@@ -346,7 +346,7 @@ export default function Calendar() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'event'}
         onClose={() => { setEditingEvent(null); setSelectedDate(null); closeModal() }}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4">
           {editingEvent ? 'Editar evento' : 'Nuevo evento'}

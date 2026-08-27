@@ -185,7 +185,7 @@ export default function Tasks() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'task'}
         onClose={() => { setEditingTask(null); closeModal() }}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
         <TaskForm

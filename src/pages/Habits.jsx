@@ -170,7 +170,7 @@ export default function Habits() {
       <ModalWrapper
         isOpen={isCreating}
         onClose={() => setIsCreating(false)}
-        className="p-6 w-full max-w-md"
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4">Nuevo hábito</h3>
         <HabitForm

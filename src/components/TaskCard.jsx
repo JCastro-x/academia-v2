@@ -25,42 +25,35 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
   // Determine if +/- controls should be shown
   const showLogControls = task.tipo === 'cantidad' && !task.done && totalUnits > 0
 
-  // Status badge configuration
+  // Status badge configuration (static classes for Tailwind detection)
   const statusBadgeConfig = {
     done: {
       label: 'Excelente',
-      light: 'bg-green-600 text-white',
-      dark: 'bg-green-700 text-white'
+      className: 'bg-green-600 text-white dark:bg-green-700 dark:text-white'
     },
     ongreen: {
       label: 'Bien',
-      light: 'bg-green-100 text-green-800',
-      dark: 'bg-green-900/30 text-green-400'
+      className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
     },
     onyellow: {
       label: 'Atención',
-      light: 'bg-yellow-100 text-yellow-800',
-      dark: 'bg-yellow-900/30 text-yellow-400'
+      className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
     },
     onattention: {
       label: 'Alerta',
-      light: 'bg-orange-100 text-orange-800',
-      dark: 'bg-orange-900/30 text-orange-400'
+      className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
     },
     critical: {
       label: 'Crítico',
-      light: 'bg-red-600 text-white',
-      dark: 'bg-red-700 text-white'
+      className: 'bg-red-600 text-white dark:bg-red-700 dark:text-white'
     },
     overdue: {
       label: 'Vencida',
-      light: 'bg-red-700 text-white',
-      dark: 'bg-red-800 text-white'
+      className: 'bg-red-700 text-white dark:bg-red-800 dark:text-white'
     },
     notstarted: {
       label: 'Por iniciar',
-      light: 'bg-gray-100 text-gray-700',
-      dark: 'bg-gray-800 text-gray-400'
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
     }
   }
 
@@ -98,7 +91,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
             <h4 className={`font-medium ${task.done ? 'line-through text-gray-500 dark:text-[var(--dm-text-muted)]' : 'text-gray-900 dark:text-[var(--dm-text)]'}`}>
               {task.titulo}
             </h4>
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeConfig.light} dark:${badgeConfig.dark}`}>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeConfig.className}`}>
               {badgeConfig.label}
             </span>
           </div>

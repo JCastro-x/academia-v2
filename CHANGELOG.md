@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## [2026-08-27] — Fix de badges dark mode y contención responsive en modales
+
+**BUG 1 - Badges no cambian en dark mode:**
+- Causa raíz: Clases `dark:` interpoladas dinámicamente desde variables no detectadas por Tailwind durante el build
+- Solución: Cambiar a objeto de mapeo con clases estáticas completas (light+dark en un solo string por estado)
+- Archivo: `src/components/TaskCard.jsx` - statusBadgeConfig ahora usa `className` con clases estáticas
+
+**BUG 2 - Modales se salen de bordes en viewports angostos:**
+- Patrón aplicado: Agregar `mx-4` (margen lateral 1rem) a todos los modales para padding en mobile
+- Archivos modificados (13 modales en total):
+  - `src/pages/Tasks.jsx` - 1 modal (tarea)
+  - `src/pages/Grades.jsx` - 3 modales (zona, ítem, tema)
+  - `src/pages/Calendar.jsx` - 1 modal (evento)
+  - `src/pages/Habits.jsx` - 1 modal (hábito)
+  - `src/pages/Notes.jsx` - 2 modales (carpeta, nota)
+  - `src/pages/Overview.jsx` - 3 modales (tarea, materia, semestre)
+  - `src/pages/Subjects.jsx` - 1 modal (materia)
+
+**Verificado:**
+- Build: npm run build → compilación exitosa sin errores (bundle 814.49 kB)
+- Clases dark: estáticas en código fuente, detectables por Tailwind
+- Patrón responsive: mx-4 + max-h-[90vh] overflow-y-auto aplicado uniformemente
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de UI)
+
+---
+
 ## [2026-08-27] — Badges de status con texto y fondo de color en TaskCard.jsx
 
 **Tarea:** Reemplazar el borde de color actual por badges/chips con texto y fondo de color para los 7 estados de tarea (done, ongreen, onyellow, onattention, critical, overdue, notstarted), mejorando la comunicabilidad visual sin requerir memorización de códigos de color.

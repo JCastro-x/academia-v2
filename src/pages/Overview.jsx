@@ -162,7 +162,7 @@ export default function Overview() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'semester'}
         onClose={closeModal}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Editar semestre</h3>
         <SemesterForm

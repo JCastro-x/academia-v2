@@ -436,7 +436,7 @@ export default function Grades() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'zone'}
         onClose={() => { setEditingZone(null); closeModal() }}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4">
           {editingZone ? 'Editar zona' : 'Nueva zona'}
@@ -455,7 +455,7 @@ export default function Grades() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'item'}
         onClose={() => { setEditingItem(null); setAddingItemToZone(null); closeModal() }}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4">
           {editingItem ? 'Editar ítem' : 'Nuevo ítem'}
@@ -474,7 +474,7 @@ export default function Grades() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'topic'}
         onClose={() => { setEditingTopic(null); closeModal() }}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">
           {editingTopic ? 'Editar tema' : 'Nuevo tema'}
