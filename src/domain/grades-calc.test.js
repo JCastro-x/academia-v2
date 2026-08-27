@@ -30,11 +30,12 @@ describe('grades-calc', () => {
   describe('calculateZoneNetPoints', () => {
     it('should calculate total net points from items', () => {
       const items = [
-        { porcentaje_ingresado: 50 },
-        { porcentaje_ingresado: 30 },
-        { porcentaje_ingresado: 20 },
+        { porcentaje_ingresado: 50, peso_pts: 10 },
+        { porcentaje_ingresado: 30, peso_pts: 10 },
+        { porcentaje_ingresado: 20, peso_pts: 5 },
       ]
-      expect(calculateZoneNetPoints(items, 25)).toBe(25)
+      // 10*0.5 + 10*0.3 + 5*0.2 = 5 + 3 + 1 = 9
+      expect(calculateZoneNetPoints(items, 25)).toBe(9)
     })
 
     it('should handle empty items array', () => {
@@ -47,20 +48,21 @@ describe('grades-calc', () => {
 
     it('should handle items with null percentages', () => {
       const items = [
-        { porcentaje_ingresado: 50 },
-        { porcentaje_ingresado: null },
-        { porcentaje_ingresado: 30 },
+        { porcentaje_ingresado: 50, peso_pts: 10 },
+        { porcentaje_ingresado: null, peso_pts: 10 },
+        { porcentaje_ingresado: 30, peso_pts: 5 },
       ]
-      expect(calculateZoneNetPoints(items, 25)).toBe(20)
+      // 10*0.5 + 10*0 + 5*0.3 = 5 + 0 + 1.5 = 6.5
+      expect(calculateZoneNetPoints(items, 25)).toBe(6.5)
     })
   })
 
   describe('calculateSubjectTotalPoints', () => {
     it('should sum net points across all zones', () => {
       const zones = [
-        { peso_pts: 25, items: [{ porcentaje_ingresado: 80 }] },
-        { peso_pts: 25, items: [{ porcentaje_ingresado: 60 }] },
-        { peso_pts: 50, items: [{ porcentaje_ingresado: 70 }] },
+        { peso_pts: 25, items: [{ porcentaje_ingresado: 80, peso_pts: 25 }] },
+        { peso_pts: 25, items: [{ porcentaje_ingresado: 60, peso_pts: 25 }] },
+        { peso_pts: 50, items: [{ porcentaje_ingresado: 70, peso_pts: 50 }] },
       ]
       expect(calculateSubjectTotalPoints(zones)).toBe(20 + 15 + 35)
     })
@@ -131,7 +133,7 @@ describe('grades-calc', () => {
 
   describe('calculateZoneStats', () => {
     it('should calculate comprehensive zone statistics', () => {
-      const items = [{ porcentaje_ingresado: 55 }]
+      const items = [{ porcentaje_ingresado: 55, peso_pts: 25 }]
       const zone = { peso_pts: 25, ganada_pct: 60 }
       
       const stats = calculateZoneStats(items, zone)
@@ -156,9 +158,9 @@ describe('grades-calc', () => {
   describe('calculateSubjectStats', () => {
     it('should calculate comprehensive subject statistics', () => {
       const zones = [
-        { peso_pts: 25, items: [{ porcentaje_ingresado: 80 }] },
-        { peso_pts: 25, items: [{ porcentaje_ingresado: 60 }] },
-        { peso_pts: 50, items: [{ porcentaje_ingresado: 70 }] },
+        { peso_pts: 25, items: [{ porcentaje_ingresado: 80, peso_pts: 25 }] },
+        { peso_pts: 25, items: [{ porcentaje_ingresado: 60, peso_pts: 25 }] },
+        { peso_pts: 50, items: [{ porcentaje_ingresado: 70, peso_pts: 50 }] },
       ]
       
       const stats = calculateSubjectStats(zones)

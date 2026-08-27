@@ -84,10 +84,10 @@ export default function AppLayout() {
   const handleOpenQuickAdd = () => openModal('quickadd')
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[var(--dm-bg)]">
+    <div className="h-screen bg-gray-50 dark:bg-[var(--dm-bg)] overflow-hidden">
       <TopBar onOpenClassModal={handleOpenClassModal} onOpenQuickAdd={handleOpenQuickAdd} />
 
-      <div className="flex relative">
+      <div className="flex relative h-full overflow-hidden">
         {/* Mobile Overlay */}
         {!isSidebarCollapsed && (
           <div 
@@ -98,7 +98,7 @@ export default function AppLayout() {
 
         {/* Sidebar */}
         <aside
-          className={`bg-white dark:bg-[var(--dm-surface)] border-r border-gray-200 dark:border-[var(--dm-border)] transition-all duration-300 fixed md:relative z-50 h-full ${
+          className={`bg-white dark:bg-[var(--dm-surface)] border-r border-gray-200 dark:border-[var(--dm-border)] transition-all duration-300 fixed md:sticky md:top-0 z-50 h-full ${
             isSidebarCollapsed ? '-translate-x-full md:w-16 md:translate-x-0' : 'w-64 translate-x-0'
           }`}
         >
@@ -114,7 +114,7 @@ export default function AppLayout() {
                     className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
                       isActive(item.path)
                         ? 'text-[var(--color-primary)]'
-                        : 'text-gray-700 dark:text-[var(--dm-text-muted)] hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]'
+                        : 'text-gray-700 dark:text-[var(--dm-text)] hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]'
                     }`}
                     style={isActive(item.path) ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)' } : undefined}
                   >
@@ -130,7 +130,7 @@ export default function AppLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-6 w-full">
+        <main className="flex-1 p-4 md:p-6 w-full h-full overflow-y-auto">
           <Outlet />
         </main>
       </div>

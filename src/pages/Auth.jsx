@@ -42,7 +42,7 @@ export default function Auth() {
           </button>
           <button
             onClick={() => setIsGuest(false)}
-            className="w-full mt-4 text-gray-600 hover:text-gray-800"
+            className="w-full mt-4 text-gray-600 hover:text-gray-800 dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)]"
           >
             Volver
           </button>

@@ -4,6 +4,7 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
   const [formData, setFormData] = useState({
     nombre: initialData?.nombre || '',
     porcentaje_ingresado: initialData?.porcentaje_ingresado || '',
+    peso_pts: initialData?.peso_pts || '',
   })
 
   const handleSubmit = (e) => {
@@ -11,6 +12,7 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
     onSubmit({
       ...formData,
       porcentaje_ingresado: formData.porcentaje_ingresado ? parseFloat(formData.porcentaje_ingresado) : null,
+      peso_pts: formData.peso_pts ? parseFloat(formData.peso_pts) : null,
     })
   }
 
@@ -28,7 +30,27 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
           placeholder="Ej. Examen, Quiz 1, Tarea 1"
           disabled={isPending}
           required
+          autoComplete="off"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
+          Peso (puntos)
+        </label>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={formData.peso_pts}
+          onChange={(e) => setFormData({ ...formData, peso_pts: e.target.value })}
+          className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+          placeholder="Ej. 1.5"
+          disabled={isPending}
+          required
+          autoComplete="off"
+        />
+        <p className="text-xs text-gray-500 mt-1 dark:text-[var(--dm-text-muted)]">Puntos máximos que vale este ítem dentro de la zona</p>
       </div>
 
       <div>
@@ -45,6 +67,7 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
           className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           placeholder="Ej. 85"
           disabled={isPending}
+          autoComplete="off"
         />
         <p className="text-xs text-gray-500 mt-1 dark:text-[var(--dm-text-muted)]">Dejar vacío si aún no tienes nota</p>
       </div>

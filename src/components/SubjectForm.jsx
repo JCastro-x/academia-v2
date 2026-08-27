@@ -38,6 +38,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           required
           disabled={isPending}
+          autoComplete="off"
         />
       </div>
 
@@ -51,6 +52,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
             disabled={isPending}
+            autoComplete="off"
           />
         </div>
 
@@ -63,6 +65,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             disabled={isPending}
+            autoComplete="off"
           />
         </div>
       </div>
@@ -76,6 +79,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
           onChange={handleChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           disabled={isPending}
+          autoComplete="off"
         />
       </div>
 
@@ -89,6 +93,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
             disabled={isPending}
+            autoComplete="off"
           />
         </div>
 
@@ -102,6 +107,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
             maxLength={2}
             disabled={isPending}
+            autoComplete="off"
           />
         </div>
       </div>
@@ -124,6 +130,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             onChange={handleChange}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             disabled={isPending}
+            autoComplete="off"
           />
         </div>
       </div>

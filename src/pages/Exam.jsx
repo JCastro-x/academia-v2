@@ -156,6 +156,7 @@ export default function Exam() {
               className="w-32 px-4 py-2 text-center text-lg border border-gray-300 dark:border-[var(--dm-border)] rounded-lg dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)]"
               min="1"
               max="300"
+              autoComplete="off"
             />
           </div>
         )}

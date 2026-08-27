@@ -5,6 +5,9 @@ export default function ZoneCard({ zone, onEdit, onDelete, onAddItem, onEditItem
   const stats = calculateZoneStats(zone.items || [], zone)
   const isPending = pendingDeletes?.some(pd => pd.type === 'zone' && pd.itemId === zone.id)
 
+  const totalItemWeight = (zone.items || []).reduce((sum, item) => sum + (item.peso_pts || 0), 0)
+  const weightDifference = totalItemWeight - zone.peso_pts
+
   if (isPending) return null
 
   const statusColors = {
@@ -30,6 +33,10 @@ export default function ZoneCard({ zone, onEdit, onDelete, onAddItem, onEditItem
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--dm-text)]">{zone.nombre}</h3>
           <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
             {stats.netPoints.toFixed(2)} / {stats.maxPoints} pts ({stats.percentageObtained.toFixed(1)}%)
+          </p>
+          <p className={`text-xs mt-1 ${weightDifference > 0 ? 'text-red-600' : weightDifference < 0 ? 'text-yellow-600' : 'text-green-600'} dark:text-[var(--dm-text-muted)]`}>
+            Ítems: {totalItemWeight.toFixed(2)} / {zone.peso_pts} pts
+            {weightDifference !== 0 && ` (${weightDifference > 0 ? '+' : ''}${weightDifference.toFixed(2)})`}
           </p>
         </div>
         <div className="flex gap-2">

@@ -1,10 +1,10 @@
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useEventsByMonth, useCreateEvent, useUpdateEvent, useDeleteEvent } from '../features/events/hooks.js'
 import { useTasks } from '../features/tasks/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
+import ModalWrapper from '../components/ModalWrapper.jsx'
 
 export default function Calendar() {
   const { semesterId } = useParams()
@@ -173,30 +173,30 @@ export default function Calendar() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Calendario</h1>
+        <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Calendario</h1>
         <div className="flex items-center gap-4">
           <button
             onClick={handlePreviousMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)]"
           >
             ←
           </button>
-          <span className="text-lg font-semibold min-w-[150px] text-center">
+          <span className="text-lg font-semibold min-w-[150px] text-center dark:text-[var(--dm-text)]">
             {monthNames[month]} {year}
           </span>
           <button
             onClick={handleNextMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)]"
           >
             →
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-4">
+      <div className="bg-white rounded-lg shadow-md p-4 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
         <div className="grid grid-cols-7 gap-2 mb-2">
           {dayNames.map(day => (
-            <div key={day} className="text-center font-semibold text-gray-600 text-sm">
+            <div key={day} className="text-center font-semibold text-gray-600 text-sm dark:text-[var(--dm-text-muted)]">
               {day}
             </div>
           ))}
@@ -219,11 +219,11 @@ export default function Calendar() {
                 whileHover={{ scale: 1.02 }}
                 className={`h-24 p-2 rounded-lg border text-left relative overflow-hidden transition-colors ${
                   isToday(day) 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-200 hover:bg-gray-50'
+                    ? 'border-blue-500 bg-blue-50 dark:border-[var(--color-primary)] dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--dm-surface))]' 
+                    : 'border-gray-200 hover:bg-gray-50 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:hover:bg-[var(--dm-border)]'
                 }`}
               >
-                <span className={`font-semibold ${isToday(day) ? 'text-blue-600' : ''}`}>
+                <span className={`font-semibold ${isToday(day) ? 'text-blue-600 dark:text-[var(--color-primary)]' : 'dark:text-[var(--dm-text)]'}`}>
                   {day}
                 </span>
                 
@@ -260,11 +260,11 @@ export default function Calendar() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <h2 className="text-lg font-semibold mb-4">Eventos y tareas del mes</h2>
+      <div className="bg-white rounded-lg shadow-md p-4 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
+        <h2 className="text-lg font-semibold mb-4 dark:text-[var(--dm-text)]">Eventos y tareas del mes</h2>
         
         {monthEventsAndTasks.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
+          <p className="text-gray-500 text-center py-8 dark:text-[var(--dm-text-muted)]">
             No hay eventos ni tareas este mes
           </p>
         ) : (
@@ -294,7 +294,7 @@ export default function Calendar() {
                       : item.done
                       ? 'border-green-200 bg-green-50'
                       : 'border-orange-200 bg-orange-50'
-                  }`}
+                  } dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -308,14 +308,14 @@ export default function Calendar() {
                         }`}>
                           {item.type === 'event' ? 'Evento' : 'Tarea'}
                         </span>
-                        <span className="text-sm text-gray-500">{formattedDate}</span>
+                        <span className="text-sm text-gray-500 dark:text-[var(--dm-text-muted)]">{formattedDate}</span>
                       </div>
-                      <h3 className="font-semibold mt-1">{item.nombre || item.titulo}</h3>
+                      <h3 className="font-semibold mt-1 dark:text-[var(--dm-text)]">{item.nombre || item.titulo}</h3>
                       {item.descripcion && (
-                        <p className="text-sm text-gray-600 mt-1">{item.descripcion}</p>
+                        <p className="text-sm text-gray-600 mt-1 dark:text-[var(--dm-text-muted)]">{item.descripcion}</p>
                       )}
                       {item.tipo && (
-                        <span className="text-xs text-gray-500 mt-1 block">
+                        <span className="text-xs text-gray-500 mt-1 block dark:text-[var(--dm-text-muted)]">
                           Tipo: {item.tipo}
                         </span>
                       )}
@@ -323,13 +323,13 @@ export default function Calendar() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setEditingEvent(item); setSelectedDate(itemDate); openModal('event') }}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
+                        className="text-blue-600 hover:text-blue-800 text-sm dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)]"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDeleteEvent(item)}
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        className="text-red-600 hover:text-red-800 text-sm dark:text-red-400 dark:hover:text-red-300"
                       >
                         Eliminar
                       </button>
@@ -342,147 +342,134 @@ export default function Calendar() {
         )}
       </div>
 
-      <AnimatePresence>
-        {isModalOpen && modalContent === 'event' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={closeModal}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
-              onClick={e => e.stopPropagation()}
+      <ModalWrapper
+        isOpen={isModalOpen && modalContent === 'event'}
+        onClose={() => { setEditingEvent(null); setSelectedDate(null); closeModal() }}
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+      >
+        <h3 className="text-lg font-semibold mb-4">
+          {editingEvent ? 'Editar evento' : 'Nuevo evento'}
+        </h3>
+        
+        <form onSubmit={(e) => {
+          e.preventDefault()
+          const formData = new FormData(e.target)
+          const eventData = {
+            subject_id: formData.get('subject_id') || null,
+            nombre: formData.get('nombre'),
+            tipo: formData.get('tipo'),
+            start_at: selectedDate ? selectedDate.toISOString() : new Date().toISOString(),
+            end_at: formData.get('end_at') ? new Date(formData.get('end_at')).toISOString() : null,
+            descripcion: formData.get('descripcion'),
+          }
+          
+          if (editingEvent) {
+            handleUpdateEvent(editingEvent.id, eventData)
+          } else {
+            handleCreateEvent(eventData)
+          }
+        }} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+              Nombre *
+            </label>
+            <input
+              name="nombre"
+              type="text"
+              required
+              defaultValue={editingEvent?.nombre}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+              autoComplete="off"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+              Materia
+            </label>
+            <select
+              name="subject_id"
+              defaultValue={editingEvent?.subject_id || ''}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             >
-              <h3 className="text-lg font-semibold mb-4">
-                {editingEvent ? 'Editar evento' : 'Nuevo evento'}
-              </h3>
-              
-              <form onSubmit={(e) => {
-                e.preventDefault()
-                const formData = new FormData(e.target)
-                const eventData = {
-                  subject_id: formData.get('subject_id') || null,
-                  nombre: formData.get('nombre'),
-                  tipo: formData.get('tipo'),
-                  start_at: selectedDate ? selectedDate.toISOString() : new Date().toISOString(),
-                  end_at: formData.get('end_at') ? new Date(formData.get('end_at')).toISOString() : null,
-                  descripcion: formData.get('descripcion'),
-                }
-                
-                if (editingEvent) {
-                  handleUpdateEvent(editingEvent.id, eventData)
-                } else {
-                  handleCreateEvent(eventData)
-                }
-              }} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre *
-                  </label>
-                  <input
-                    name="nombre"
-                    type="text"
-                    required
-                    defaultValue={editingEvent?.nombre}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <option value="">Sin materia</option>
+              {subjects?.map(subject => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Materia
-                  </label>
-                  <select
-                    name="subject_id"
-                    defaultValue={editingEvent?.subject_id || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Sin materia</option>
-                    {subjects?.map(subject => (
-                      <option key={subject.id} value={subject.id}>
-                        {subject.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+              Tipo
+            </label>
+            <select
+              name="tipo"
+              defaultValue={editingEvent?.tipo || 'otro'}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            >
+              <option value="parcial">Parcial</option>
+              <option value="tarea">Tarea</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo
-                  </label>
-                  <select
-                    name="tipo"
-                    defaultValue={editingEvent?.tipo || 'otro'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="parcial">Parcial</option>
-                    <option value="tarea">Tarea</option>
-                    <option value="otro">Otro</option>
-                  </select>
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+              Fecha y hora inicio
+            </label>
+            <input
+              name="start_at"
+              type="datetime-local"
+              defaultValue={editingEvent?.start_at ? new Date(editingEvent.start_at).toISOString().slice(0, 16) : (selectedDate ? selectedDate.toISOString().slice(0, 16) : '')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            />
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha y hora inicio
-                  </label>
-                  <input
-                    name="start_at"
-                    type="datetime-local"
-                    defaultValue={editingEvent?.start_at ? new Date(editingEvent.start_at).toISOString().slice(0, 16) : (selectedDate ? selectedDate.toISOString().slice(0, 16) : '')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+              Fecha y hora fin
+            </label>
+            <input
+              name="end_at"
+              type="datetime-local"
+              defaultValue={editingEvent?.end_at ? new Date(editingEvent.end_at).toISOString().slice(0, 16) : ''}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            />
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha y hora fin
-                  </label>
-                  <input
-                    name="end_at"
-                    type="datetime-local"
-                    defaultValue={editingEvent?.end_at ? new Date(editingEvent.end_at).toISOString().slice(0, 16) : ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+              Descripción
+            </label>
+            <textarea
+              name="descripcion"
+              rows={3}
+              defaultValue={editingEvent?.descripcion}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            />
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Descripción
-                  </label>
-                  <textarea
-                    name="descripcion"
-                    rows={3}
-                    defaultValue={editingEvent?.descripcion}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="flex gap-3 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => { setEditingEvent(null); setSelectedDate(null); closeModal() }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={editingEvent ? updateEvent.isPending : createEvent.isPending}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {editingEvent ? 'Actualizar' : 'Crear'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              onClick={() => { setEditingEvent(null); setSelectedDate(null); closeModal() }}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={editingEvent ? updateEvent.isPending : createEvent.isPending}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {editingEvent ? 'Actualizar' : 'Crear'}
+            </button>
+          </div>
+        </form>
+      </ModalWrapper>
     </div>
   )
 }

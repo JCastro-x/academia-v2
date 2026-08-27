@@ -9,7 +9,7 @@ export const subjectsQueryKeys = {
 export async function getSubjects(semesterId) {
   const { data, error } = await supabase
     .from('subjects')
-    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, updated_at')
+    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, linked_lab_id, updated_at')
     .eq('semester_id', semesterId)
     .order('nombre')
 
@@ -20,7 +20,7 @@ export async function getSubjects(semesterId) {
 export async function getSubjectById(id) {
   const { data, error } = await supabase
     .from('subjects')
-    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, updated_at')
+    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, linked_lab_id, updated_at')
     .eq('id', id)
     .single()
 
@@ -41,8 +41,9 @@ export async function createSubject(subject) {
       color: subject.color,
       icono: subject.icono,
       horario: subject.horario,
+      linked_lab_id: subject.linked_lab_id,
     })
-    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, updated_at')
+    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, linked_lab_id, updated_at')
     .single()
 
   if (error) throw error
@@ -61,9 +62,10 @@ export async function updateSubject(id, updates) {
       color: updates.color,
       icono: updates.icono,
       horario: updates.horario,
+      linked_lab_id: updates.linked_lab_id,
     })
     .eq('id', id)
-    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, updated_at')
+    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, linked_lab_id, updated_at')
     .single()
 
   if (error) throw error

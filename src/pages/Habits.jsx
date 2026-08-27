@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useHabits, useCreateHabit, useDeleteHabit, useToggleHabitCompletion } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import HabitForm from '../components/HabitForm.jsx'
+import ModalWrapper from '../components/ModalWrapper.jsx'
 
 // Helper: get today's date in YYYY-MM-DD format
 function getTodayDate() {
@@ -92,7 +92,7 @@ export default function Habits() {
     <div className="flex flex-col h-[calc(100vh-2rem)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Hábitos</h1>
+        <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Hábitos</h1>
         <button
           onClick={() => setIsCreating(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -104,7 +104,7 @@ export default function Habits() {
       {/* Habits List */}
       <div className="flex-1 overflow-y-auto">
         {filteredHabits.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
             <p>No hay hábitos aún. Crea el primero para empezar.</p>
           </div>
         ) : (
@@ -120,12 +120,12 @@ export default function Habits() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)]"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{habit.nombre}</h3>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                      <h3 className="font-semibold text-lg dark:text-[var(--dm-text)]">{habit.nombre}</h3>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
                         <span>
                           {habit.frecuencia === 'diario' ? 'Diario' : 
                            habit.dias_semana?.map(d => ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][d - 1]).join(', ')}
@@ -144,7 +144,7 @@ export default function Habits() {
                           className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-colors ${
                             completed 
                               ? 'bg-green-500 border-green-500 text-white' 
-                              : 'border-gray-300 hover:border-green-500'
+                              : 'border-gray-300 hover:border-green-500 dark:border-[var(--dm-border)]'
                           }`}
                         >
                           {completed && <span>✓</span>}
@@ -153,7 +153,7 @@ export default function Habits() {
                       
                       <button
                         onClick={() => handleDelete(habit)}
-                        className="text-red-500 hover:text-red-700 p-2"
+                        className="text-red-500 hover:text-red-700 p-2 dark:text-red-400 dark:hover:text-red-300"
                       >
                         🗑️
                       </button>
@@ -167,32 +167,18 @@ export default function Habits() {
       </div>
 
       {/* Create Habit Modal */}
-      <AnimatePresence>
-        {isCreating && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={() => setIsCreating(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md"
-              onClick={e => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold mb-4">Nuevo hábito</h3>
-              <HabitForm
-                onSubmit={handleCreate}
-                onCancel={() => setIsCreating(false)}
-                isPending={createHabit.isPending}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ModalWrapper
+        isOpen={isCreating}
+        onClose={() => setIsCreating(false)}
+        className="p-6 w-full max-w-md"
+      >
+        <h3 className="text-lg font-semibold mb-4">Nuevo hábito</h3>
+        <HabitForm
+          onSubmit={handleCreate}
+          onCancel={() => setIsCreating(false)}
+          isPending={createHabit.isPending}
+        />
+      </ModalWrapper>
     </div>
   )
 }

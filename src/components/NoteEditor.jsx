@@ -213,6 +213,7 @@ export default function NoteEditor({ noteId, onClose }) {
             className="text-xl font-semibold flex-1 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Título de la nota"
             onKeyDown={handleKeyDown}
+            autoComplete="off"
           />
           
           <div className="flex items-center gap-2">
@@ -231,7 +232,7 @@ export default function NoteEditor({ noteId, onClose }) {
             </button>
             <button
               onClick={onClose}
-              className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 text-sm"
+              className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 text-sm dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
             >
               ✕
             </button>
@@ -264,7 +265,7 @@ export default function NoteEditor({ noteId, onClose }) {
           <div className="w-px h-6 bg-gray-300 mx-2" />
           <button
             onClick={() => setShowDrawingCanvas(!showDrawingCanvas)}
-            className={`px-3 py-1 border rounded hover:bg-gray-100 ${showDrawingCanvas ? 'bg-blue-100 border-blue-500' : ''}`}
+            className={`px-3 py-1 border rounded hover:bg-gray-100 dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] ${showDrawingCanvas ? 'bg-blue-100 border-blue-500' : ''}`}
             title="Dibujar"
           >
             ✏️

@@ -10,7 +10,7 @@ export default function Clock() {
     <div className="flex flex-col h-[calc(100vh-2rem)]">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Reloj</h1>
+        <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Reloj</h1>
       </div>
 
       {/* Tabs */}
@@ -20,7 +20,7 @@ export default function Clock() {
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'pomodoro'
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]'
           }`}
         >
           Pomodoro
@@ -30,7 +30,7 @@ export default function Clock() {
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'chronometer'
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]'
           }`}
         >
           Cronómetro

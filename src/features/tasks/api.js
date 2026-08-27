@@ -11,7 +11,7 @@ export const tasksQueryKeys = {
 export async function getTasks(semesterId) {
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
     .eq('semester_id', semesterId)
     .order('due', { ascending: true, nullsFirst: false })
 
@@ -22,7 +22,7 @@ export async function getTasks(semesterId) {
 export async function getPendingTasks(semesterId) {
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
     .eq('semester_id', semesterId)
     .eq('done', false)
     .order('due', { ascending: true, nullsFirst: false })
@@ -34,7 +34,7 @@ export async function getPendingTasks(semesterId) {
 export async function getTasksBySubject(subjectId) {
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
     .eq('subject_id', subjectId)
     .order('due', { ascending: true, nullsFirst: false })
 
@@ -45,7 +45,7 @@ export async function getTasksBySubject(subjectId) {
 export async function getTaskById(id) {
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
     .eq('id', id)
     .single()
 
@@ -66,8 +66,12 @@ export async function createTask(task) {
       subtasks: task.subtasks || [],
       attachments: task.attachments || [],
       reminder_at: task.reminder_at,
+      tipo: task.tipo || 'checklist',
+      total_units: task.total_units,
+      work_days: task.work_days,
+      log: task.log || [],
     })
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
     .single()
 
   if (error) throw error
@@ -85,9 +89,13 @@ export async function updateTask(id, updates) {
       subtasks: updates.subtasks,
       attachments: updates.attachments,
       reminder_at: updates.reminder_at,
+      tipo: updates.tipo,
+      total_units: updates.total_units,
+      work_days: updates.work_days,
+      log: updates.log,
     })
     .eq('id', id)
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
     .single()
 
   if (error) throw error
@@ -99,7 +107,7 @@ export async function toggleTaskDone(id, done) {
     .from('tasks')
     .update({ done })
     .eq('id', id)
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
     .single()
 
   if (error) throw error

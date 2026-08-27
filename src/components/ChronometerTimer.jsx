@@ -59,14 +59,14 @@ export default function ChronometerTimer() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+    <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
       {/* Timer display */}
       <div className="text-center">
-        <div className="text-sm text-gray-600 mb-2">Cronómetro</div>
+        <div className="text-sm text-gray-600 mb-2 dark:text-[var(--dm-text-muted)]">Cronómetro</div>
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="text-7xl font-bold text-gray-800 bg-gray-100 rounded-2xl py-8 px-12 inline-block"
+          className="text-7xl font-bold text-gray-800 bg-gray-100 rounded-2xl py-8 px-12 inline-block dark:text-[var(--dm-text)] dark:bg-[var(--dm-surface)]"
         >
           {formatTime(chronometerState.elapsedSeconds)}
         </motion.div>
@@ -100,7 +100,7 @@ export default function ChronometerTimer() {
         )}
         <button
           onClick={resetChronometer}
-          className="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-medium"
+          className="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-medium dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
         >
           Reset
         </button>

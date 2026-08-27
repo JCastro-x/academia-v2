@@ -137,26 +137,26 @@ export default function PomodoroTimer() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+    <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
       {/* Stats panel */}
       <div className="grid grid-cols-3 gap-4 text-center">
-        <div className="bg-gray-50 rounded-lg p-3">
+        <div className="bg-gray-50 rounded-lg p-3 dark:bg-[var(--dm-bg)]">
           <div className="text-2xl font-bold text-blue-600">{stats.streakDays}</div>
-          <div className="text-xs text-gray-600">Días racha</div>
+          <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">Días racha</div>
         </div>
-        <div className="bg-gray-50 rounded-lg p-3">
+        <div className="bg-gray-50 rounded-lg p-3 dark:bg-[var(--dm-bg)]">
           <div className="text-2xl font-bold text-green-600">{stats.todaySessions}</div>
-          <div className="text-xs text-gray-600">Sesiones hoy</div>
+          <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">Sesiones hoy</div>
         </div>
-        <div className="bg-gray-50 rounded-lg p-3">
+        <div className="bg-gray-50 rounded-lg p-3 dark:bg-[var(--dm-bg)]">
           <div className="text-2xl font-bold text-purple-600">{stats.weekMinutes}</div>
-          <div className="text-xs text-gray-600">Minutos semana</div>
+          <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">Minutos semana</div>
         </div>
       </div>
 
       {/* Timer display */}
       <div className="text-center">
-        <div className="text-sm text-gray-600 mb-2">{getPhaseLabel()}</div>
+        <div className="text-sm text-gray-600 mb-2 dark:text-[var(--dm-text-muted)]">{getPhaseLabel()}</div>
         <motion.div
           key={pomodoroState.currentPhase}
           initial={{ scale: 0.9, opacity: 0 }}
@@ -165,7 +165,7 @@ export default function PomodoroTimer() {
         >
           {formatTime(pomodoroState.remainingSeconds)}
         </motion.div>
-        <div className="mt-4 text-sm text-gray-500">
+        <div className="mt-4 text-sm text-gray-500 dark:text-[var(--dm-text-muted)]">
           Sesión {pomodoroState.currentSessionCount + 1} de {pomodoroConfig.sessionsBeforeLongBreak}
         </div>
       </div>
@@ -198,13 +198,13 @@ export default function PomodoroTimer() {
         )}
         <button
           onClick={resetPomodoro}
-          className="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-medium"
+          className="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-medium dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
         >
           Reset
         </button>
         <button
           onClick={() => setShowConfig(!showConfig)}
-          className="bg-gray-200 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-300"
+          className="bg-gray-200 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
         >
           ⚙️
         </button>
@@ -218,47 +218,51 @@ export default function PomodoroTimer() {
           className="border-t pt-4 space-y-3"
         >
           <div>
-            <label className="block text-sm font-medium mb-1">Trabajo (minutos)</label>
+            <label className="block text-sm font-medium mb-1 dark:text-[var(--dm-text)]">Trabajo (minutos)</label>
             <input
               type="number"
               value={configValues.workDuration}
               onChange={(e) => setConfigValues({ ...configValues, workDuration: parseInt(e.target.value) || 25 })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
               min="1"
               max="60"
+              autoComplete="off"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Descanso corto (minutos)</label>
+            <label className="block text-sm font-medium mb-1 dark:text-[var(--dm-text)]">Descanso corto (minutos)</label>
             <input
               type="number"
               value={configValues.shortBreakDuration}
               onChange={(e) => setConfigValues({ ...configValues, shortBreakDuration: parseInt(e.target.value) || 5 })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
               min="1"
               max="30"
+              autoComplete="off"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Descanso largo (minutos)</label>
+            <label className="block text-sm font-medium mb-1 dark:text-[var(--dm-text)]">Descanso largo (minutos)</label>
             <input
               type="number"
               value={configValues.longBreakDuration}
               onChange={(e) => setConfigValues({ ...configValues, longBreakDuration: parseInt(e.target.value) || 15 })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
               min="1"
               max="60"
+              autoComplete="off"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Sesiones antes de descanso largo</label>
+            <label className="block text-sm font-medium mb-1 dark:text-[var(--dm-text)]">Sesiones antes de descanso largo</label>
             <input
               type="number"
               value={configValues.sessionsBeforeLongBreak}
               onChange={(e) => setConfigValues({ ...configValues, sessionsBeforeLongBreak: parseInt(e.target.value) || 4 })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
               min="1"
               max="10"
+              autoComplete="off"
             />
           </div>
           <button

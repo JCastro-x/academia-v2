@@ -18,18 +18,20 @@ export function percentageToNetPoints(percentage, zoneWeight) {
 
 /**
  * Calculate total net points obtained across all items in a zone.
- * @param {Array} items - Array of grade items with porcentaje_ingresado
- * @param {number} zoneWeight - The weight of the zone in points
+ * Each item calculates its own points: (porcentaje_ingresado / 100) × item.peso_pts
+ * @param {Array} items - Array of grade items with porcentaje_ingresado and peso_pts
+ * @param {number} zoneWeight - The weight of the zone in points (unused, kept for compatibility)
  * @returns {number} Total net points obtained
  */
 export function calculateZoneNetPoints(items, zoneWeight) {
   if (!items || items.length === 0) return 0
   
-  const totalPercentage = items.reduce((sum, item) => {
-    return sum + (item.porcentaje_ingresado || 0)
+  return items.reduce((sum, item) => {
+    const itemWeight = item.peso_pts || 0
+    const itemPercentage = item.porcentaje_ingresado || 0
+    const itemPoints = percentageToNetPoints(itemPercentage, itemWeight)
+    return sum + itemPoints
   }, 0)
-  
-  return percentageToNetPoints(totalPercentage, zoneWeight)
 }
 
 /**

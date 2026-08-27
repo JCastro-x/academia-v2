@@ -171,6 +171,7 @@ export default function ImportModal() {
                     onChange={(e) => setReplaceConfirm(e.target.value)}
                     placeholder="REEMPLAZAR"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-[var(--dm-border)] dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                    autoComplete="off"
                   />
                 </div>
               )}

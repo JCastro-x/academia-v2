@@ -27,7 +27,9 @@ create table subjects (
   color text,
   icono text,
   horario jsonb,
-  updated_at timestamptz default now()
+  linked_lab_id uuid references subjects(id) ON DELETE SET NULL,
+  updated_at timestamptz default now(),
+  constraint check_subjects_no_self_lab CHECK (linked_lab_id IS NULL OR linked_lab_id != id)
 );
 create index on subjects (semester_id);
 create index on subjects (user_id);
@@ -51,7 +53,8 @@ create table grade_items (
   user_id uuid not null,
   nombre text not null,
   porcentaje_ingresado numeric,
-  puntos_netos numeric
+  puntos_netos numeric,
+  peso_pts numeric
 );
 create index on grade_items (zone_id);
 create index on grade_items (user_id);
@@ -69,7 +72,12 @@ create table tasks (
   subtasks jsonb default '[]',
   attachments jsonb default '[]',
   reminder_at timestamptz,
-  updated_at timestamptz default now()
+  tipo text not null default 'checklist',
+  total_units numeric,
+  work_days int[],
+  log jsonb default '{}',
+  updated_at timestamptz default now(),
+  constraint check_tasks_tipo check (tipo IN ('checklist', 'cantidad'))
 );
 create index on tasks (semester_id, done);
 create index on tasks (user_id);
@@ -114,18 +122,6 @@ create table topics (
 );
 create index on topics (subject_id);
 create index on topics (user_id);
-
--- Flashcards table
-create table flashcards (
-  id uuid primary key default gen_random_uuid(),
-  subject_id uuid references subjects not null,
-  user_id uuid not null,
-  frente text,
-  dorso text,
-  estado text default 'nueva'
-);
-create index on flashcards (subject_id);
-create index on flashcards (user_id);
 
 -- Habits table
 create table habits (
@@ -206,9 +202,6 @@ create trigger trg_notes_user_id before insert on notes
 create trigger trg_topics_user_id before insert on topics
   for each row execute function set_user_id_from_subject();
 
-create trigger trg_flashcards_user_id before insert on flashcards
-  for each row execute function set_user_id_from_subject();
-
 create trigger trg_folders_user_id before insert on folders
   for each row execute function set_user_id_from_folder();
 
@@ -253,11 +246,6 @@ create policy "own rows" on folders
 
 alter table topics enable row level security;
 create policy "own rows" on topics
-  for all using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
-alter table flashcards enable row level security;
-create policy "own rows" on flashcards
   for all using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 

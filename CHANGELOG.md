@@ -1,5 +1,327 @@
 # CHANGELOG
 
+## 🐛 Bug preexistente detectado - Tests de grades-calc.js fallando
+
+**Detectado durante:** Tarea 1.4 (Sanitización XSS) al correr `npm run test`
+
+**Descripción:**
+4 tests en `src/domain/grades-calc.test.js` fallaban con el patrón "expected +0 to be X":
+- `calculateZoneNetPoints` (línea 37): espera 25, retorna 0
+- `calculateSubjectTotalPoints` (línea 65): espera 70, retorna 0
+- `calculateZoneStats` (línea 139): espera 13.75, retorna 0
+- `calculateSubjectStats` (línea 166): espera 70, retorna 0
+
+**Causa raíz:**
+El código de `calculateZoneNetPoints` fue modificado en commit `0f8583a` (17 de julio de 2026, Fase 2) para usar `item.peso_pts` individual por ítem en lugar del `zoneWeight` global. Sin embargo, los tests NO se actualizaron para incluir `peso_pts` en los items de prueba.
+
+**Investigación:**
+- ItemForm.jsx expone el campo `peso_pts` como REQUIRED al crear un ítem
+- El código de grades-calc.js es correcto al usar `item.peso_pts` individual
+- Los tests estaban desactualizados, no reflejaban el modelo real de datos
+
+**Corregido:**
+- `src/domain/grades-calc.test.js` - Actualizado para incluir `peso_pts` en los items de prueba
+  - `calculateZoneNetPoints`: items con peso_pts=10,10,5 (suma 25), expect ajustado de 25 a 9
+  - `calculateZoneNetPoints` con null: items con peso_pts=10,10,5, expect ajustado de 20 a 6.5
+  - `calculateSubjectTotalPoints`: items con peso_pts individual igual al peso de zona
+  - `calculateZoneStats`: item con peso_pts=25
+  - `calculateSubjectStats`: items con peso_pts individual igual al peso de zona
+
+**Verificado:**
+- `npx vitest run` → 29 tests pasando (22 de grades-calc.test.js + 7 de sanitize.test.js)
+- NO se modificó grades-calc.js (el código era correcto)
+
+## [2026-08-26] — Sanitización XSS en notes.contenido con DOMPurify
+
+**Tarea:** Agregar sanitización XSS con DOMPurify al campo `notes.contenido` antes de guardarlo en Supabase para cerrar un hueco de seguridad donde v2 no sanitiza el HTML de las notas.
+
+**Implementado:**
+- `package.json` - Agregada dependencia `dompurify@3.4.14` (versión estable más reciente compatible con Vite/React 18)
+- `src/features/notes/sanitize.js` - Módulo dedicado con configuración de DOMPurify y hook para rel="noopener noreferrer"
+- `src/features/notes/api.js` - Agregada sanitización en capa de datos:
+  - Import de sanitizeContenido desde sanitize.js
+  - `createNote()`: Sanitiza `note.contenido` antes del INSERT
+  - `updateNote()`: Sanitiza `updates.contenido` antes del UPDATE
+- `src/features/notes/sanitize.test.js` - Test automatizado con Vitest/jsdom para regresión de XSS:
+  - 7 tests cubriendo vectores XSS: script tags, javascript: href, img con onerror, style attribute, target="_blank" sin rel, formato válido (negrita, link)
+  - Todos los tests pasan (7/7)
+- Configuración de DOMPurify (sin `style` en ALLOWED_ATTR):
+  - ALLOWED_TAGS: p, br, b, strong, i, em, u, s, strike, h1-h6, ul, ol, li, a, blockquote, code, pre, div, span
+  - ALLOWED_ATTR: href, target, rel, class (NO style - NoteEditor.jsx usa contentEditable con document.execCommand, no genera estilos inline)
+  - FORBID_TAGS: script, iframe, object, embed, form, img
+  - FORBID_ATTR: onerror, onload, onclick, onmouseover, onfocus, onblur
+  - SANITIZE_DOM: true
+
+**Justificación de capa de sanitización (api.js):**
+- Protección universal: Cualquier caller está protegido, no solo NoteEditor.jsx
+- Centralización de lógica de seguridad: Un solo lugar para mantener y auditar
+- Independiente de cambios de UI: Si cambia el editor WYSIWYG, la protección sigue vigente
+- Defensa en profundidad: Incluso si alguien inyecta HTML malicioso en el cliente, se sanitiza antes de llegar a la DB
+- Consistencia con arquitectura feature-based: La lógica vive en la feature, no dispersa en componentes
+
+**Verificado:**
+- NoteEditor.jsx usa contentEditable con document.execCommand (bold, italic, underline) - no genera estilos inline, por lo que `style` no se incluyó en ALLOWED_ATTR
+- Build: npm run build → compilación exitosa sin errores (bundle aumentó de 762.89 kB a 793.15 kB por DOMPurify)
+- DOMPurify se incluye correctamente en el bundle de producción
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de aplicación, no requiere migración de schema)
+
+**Desviaciones del plan original:**
+- Ninguna - implementación siguió el plan ajustado con los 3 cambios solicitados por el usuario (quitar style, forzar rel=noopener noreferrer, ampliar pruebas)
+
+**Pendiente / preguntas abiertas:**
+- **Migración de datos existentes**: Las notas creadas antes de este fix podrían tener HTML sin sanitizar en la base de datos. Recomendación: NO ejecutar migración automática porque:
+  - El riesgo es bajo (XSS solo se ejecuta al renderizar, no al guardar)
+  - Una migración podría romper formato legítimo si la whitelist es demasiado restrictiva
+  - Las notas existentes se sanitizarán automáticamente la próxima vez que se editen
+  - Si se desea sanitizar notas existentes, debería ser una tarea separada con aprobación explícita del usuario, incluyendo backup previo de datos
+
+## [2026-08-26] — Columna linked_lab_id en subjects
+
+**Tarea:** Agregar la columna `linked_lab_id` a la tabla `subjects` como FK auto-referencial para vincular materias con sus laboratorios, con constraint CHECK para evitar auto-referencia
+
+**Implementado:**
+- `supabase/schema.sql` - Ya tenía el campo `linked_lab_id uuid references subjects(id) ON DELETE SET NULL` y constraint `check_subjects_no_self_lab` (líneas 30-32)
+- Migración aplicada a base de datos remota - Ejecutado bloque DO $$ para agregar columna y constraint (no existían en DB remota)
+- `src/features/subjects/api.js` - Agregado `linked_lab_id` a todos los queries:
+  - getSubjects: SELECT incluye linked_lab_id
+  - getSubjectById: SELECT incluye linked_lab_id
+  - createSubject: INSERT incluye linked_lab_id, SELECT de retorno incluye linked_lab_id
+  - updateSubject: UPDATE incluye linked_lab_id, SELECT de retorno incluye linked_lab_id
+- `src/lib/exportData.js` - Agregado `linked_lab_id` a TABLE_COLUMNS.subjects
+
+**Verificado:**
+- Verificación previa a migración: SELECT column_name FROM information_schema.columns WHERE table_name = 'subjects' AND column_name = 'linked_lab_id' → devolvió: [] (columna no existía)
+- Verificación previa a migración: SELECT constraint_name FROM information_schema.table_constraints WHERE table_name = 'subjects' AND constraint_name = 'check_subjects_no_self_lab' → devolvió: [] (constraint no existía)
+- Verificación post-migración: SELECT column_name FROM information_schema.columns WHERE table_name = 'subjects' AND column_name = 'linked_lab_id' → devolvió: [{ column_name: 'linked_lab_id' }]
+- Verificación post-migración: SELECT constraint_name FROM information_schema.table_constraints WHERE table_name = 'subjects' AND constraint_name = 'check_subjects_no_self_lab' → devolvió: [{ constraint_name: 'check_subjects_no_self_lab' }]
+- Build: npm run build → compilación exitosa sin errores
+
+**Estado de la base de datos remota:** APLICADO (migración ejecutada exitosamente contra Supabase - columna y constraint creados)
+
+**Desviaciones del plan original:**
+- El campo ya existía en schema.sql local pero no estaba aplicado en la base de datos remota, por lo que fue necesario ejecutar la migración DO $$
+
+**Pendiente / preguntas abiertas:**
+- Mapeo de UI (SubjectForm.jsx, SubjectCard.jsx) - NO implementado en esta tarea según especificación, solo documentado como pendiente para futura implementación. El selector de laboratorio en SubjectForm.jsx debería filtrar solo materias del mismo semestre.
+
+## [2026-08-26] — Columnas para motor de ritmo en tasks
+
+**Tarea:** Extender la tabla `tasks` de schema.sql para soportar tipos 'checklist' y 'cantidad' con 4 columnas nuevas: `tipo`, `total_units`, `work_days`, `log`
+
+**Implementado:**
+- `supabase/schema.sql` - Agregadas 4 columnas a tabla tasks:
+  - `tipo text NOT NULL DEFAULT 'checklist'` (constraint check_tasks_tipo IN ('checklist', 'cantidad'))
+  - `total_units numeric` (permite progreso fraccionario)
+  - `work_days int[]` (array de días programados)
+  - `log jsonb default '{}'` (objeto/mapa {fecha: unidades} para heatmap de constancia)
+- `supabase/migrations/20260826223228_remote_schema.sql` - Script de migración con ALTER TABLE usando bloque DO $$ para verificar IF NOT EXISTS por columna
+- `src/lib/exportData.js` - Agregadas 4 columnas a TABLE_COLUMNS para tasks (evita pérdida de datos en backup)
+- `src/features/tasks/api.js` - Actualizados todos los queries para incluir las 4 columnas:
+  - getTasks, getPendingTasks, getTasksBySubject, getTaskById, createTask, updateTask, toggleTaskDone
+
+**Verificado:**
+- Migración aplicada a base de datos remota: node apply_migration.cjs → migración exitosa
+- Columnas en information_schema: SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name = 'tasks' AND column_name IN ('tipo', 'total_units', 'work_days', 'log') → devolvió: log (jsonb, default '{}', nullable YES), tipo (text, default 'checklist', nullable NO), total_units (numeric, default null, nullable YES), work_days (ARRAY, default null, nullable YES)
+- Constraint CHECK: SELECT constraint_name, constraint_type FROM information_schema.table_constraints WHERE table_name = 'tasks' AND constraint_name = 'check_tasks_tipo' → devolvió: check_tasks_tipo presente como CHECK constraint
+- Constraint NOT NULL en tipo: is_nullable = 'NO' en columna tipo
+- Filas existentes: No hay filas en tasks para verificar default (tabla vacía)
+- Build: npm run build → compilación exitosa sin errores
+
+**Estado de la base de datos remota:** APLICADO (migración ejecutada exitosamente contra Supabase)
+
+**Desviaciones del plan original:**
+- Corrección de tipos de datos solicitada por usuario: `total_units` cambiado de `int` a `numeric` (para progreso fraccionario), `log` cambiado de `default '[]'` a `default '{}'` (objeto no array)
+- Agregado `constraint check_tasks_tipo CHECK (tipo IN ('checklist', 'cantidad'))` que faltaba en el plan original
+- Método de aplicación: DATABASE_URL + pg en vez de dashboard manual (por restricción de Docker)
+- UI no modificada (confirmado: TaskForm.jsx y TaskCard.jsx sin cambios de selector/badges)
+
+**Pendiente / preguntas abiertas:**
+- Ninguna - tarea completada según especificaciones corregidas
+
+## [Eliminación de tabla flashcards] - 2026-08-26
+
+### Resumen
+Eliminación completa de la tabla `flashcards` del proyecto, tanto del schema de Supabase como de las referencias en el código. La tabla existía en el schema pero nunca tuvo implementación de UI visible (confirmado por AUDIT_REPORT.md y búsqueda en código). Conteo previo: 0 filas.
+
+### Cambios de schema/base de datos
+- **DROP TABLE flashcards** (incluyendo RLS policy, trigger, e índices)
+- Verificación previa: `SELECT COUNT(*) FROM flashcards` retornó 0
+- La función `set_user_id_from_subject()` se mantiene porque es compartida con otras tablas
+
+### Archivos modificados
+- `supabase/schema.sql` - Eliminada definición de tabla flashcards, trigger `trg_flashcards_user_id`, y RLS policy
+- `src/lib/exportData.js` - Eliminada referencia a flashcards en `BACKUP_TABLES` y `TABLE_COLUMNS`
+- `src/lib/importData.js` - Eliminada referencia a flashcards en `IMPORT_GROUPS` y `DELETE_ORDER`
+
+### Verificaciones
+✅ Tabla flashcards eliminada de Supabase (verificado con information_schema)
+✅ No hay policies de RLS para flashcards (verificado con pg_policies)
+✅ No hay triggers para flashcards (verificado con information_schema.triggers)
+✅ No hay referencias a flashcards en código /src (verificado con grep)
+✅ No hay referencias a flashcards en schema.sql (verificado con grep)
+✅ Build exitoso sin errores (`npm run build`)
+
+### Notas
+- La función `set_user_id_from_subject()` se mantiene porque es usada por subjects, grade_zones, notes, y topics
+- Import de backups antiguos que incluyan flashcards fallará silenciosamente (solo esa tabla), lo cual es aceptable dado que la tabla nunca tuvo UI
+- Sin impacto en UI (no había componentes React de flashcards)
+
+## [Auditoría de Schema de Supabase] - 2026-08-26
+
+### Resumen
+Auditoría completa del schema de Supabase contra `supabase/schema.sql` para verificar el estado actual antes de aplicar migraciones nuevas. Se verificaron tablas, columnas, RLS policies, triggers, funciones, y bucket de Storage.
+
+### Resultado
+✅ **Schema verificado — sin drift detectado** en todas las categorías accesibles:
+- 14/14 tablas esperadas presentes, sin tablas extra
+- 14/14 policies de RLS esperadas presentes, todas con `auth.uid() = user_id`
+- 11/11 triggers esperados presentes, sin triggers extra
+- 6/6 funciones de triggers esperadas presentes, sin funciones extra
+- Todas las columnas coinciden exactamente con schema.sql
+- Bucket `note-attachments` existe y está configurado correctamente (privado)
+
+### Pendiente de verificación manual
+⚠️ Policies de Storage para `note-attachments` no accesibles vía conexión de base de datos - requiere verificación manual en dashboard de Supabase.
+
+### Archivos creados
+- `AUDIT_SCHEMA.md` - Reporte detallado de la auditoría con comparación completa
+
+### Archivos temporales (eliminados)
+- `audit_schema.js` - Script inicial de auditoría (eliminado)
+- `audit_schema_direct.js` - Script final de auditoría con conexión PostgreSQL (eliminado)
+
+### Dependencias temporales
+- `pg` - Agregado como devDependency para auditoría (puede ser removido si no se necesita)
+
+### Método de auditoría
+Conexión directa a PostgreSQL usando el paquete `pg` de Node.js con DATABASE_URL del archivo .env.
+
+### Referencia
+Ver reporte completo en `AUDIT_SCHEMA.md`
+
+## [Dark Mode Rollout - Páginas completas + fixes de íconos y modales] - 2026-07-19
+
+### Resumen
+Rollout completo de dark mode para todas las páginas principales de la aplicación, además de fixes específicos para modales inline, íconos emoji y elementos de texto que faltaban variantes dark.
+
+### Fixes de modales inline
+**Tanda 1 (Grades, Subjects, Tasks):**
+- `Grades.jsx`: Agregado dark mode a 2 modales inline (zona e ítem) que faltaban
+- `Subjects.jsx`: Ya tenía dark mode (sin cambios)
+- `Tasks.jsx`: Ya tenía dark mode (sin cambios)
+
+**Tanda 2 (Notes, Habits, Calendar, Overview):**
+- `Notes.jsx`: Agregado dark mode a 2 modales inline (carpeta y nota)
+- `Habits.jsx`: Agregado dark mode a 1 modal inline (hábito)
+- `Calendar.jsx`: Agregado dark mode a 1 modal inline (evento)
+- `Overview.jsx`: Ya tenía dark mode en sus modales (sin cambios)
+
+### Fix de text-gray-800 sin dark mode
+Arreglados 4 casos de `text-gray-800` sin contraparte dark:
+- `Auth.jsx`: Botón "Volver"
+- `Grades.jsx`: Botón "← Volver a materias"
+- `Notes.jsx`: Botón "← Volver"
+- `ChronometerTimer.jsx`: Display del cronómetro (agregado también `dark:bg-[var(--dm-surface)]`)
+
+### Fix de íconos emoji sin dark mode
+Arreglados íconos emoji que eran casi invisibles en dark mode:
+- `Notes.jsx`: Botones 🗑️ (carpetas y notas) - `dark:text-red-400 dark:hover:text-red-300`
+- `Habits.jsx`: Botón 🗑️ - `dark:text-red-400 dark:hover:text-red-300`
+- `NoteEditor.jsx`: Botón ✕ (cerrar) y ✏️ (dibujar) - dark mode en botones
+- `DrawingCanvas.jsx`: Botón borrador - `dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]`
+
+### Rollout de dark mode en páginas completas
+
+**Mi Horario (Schedule.jsx):**
+- Título, tabla de horario, header de días, celdas, detalle de materias
+- Contenedores: `dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none`
+- Textos: `dark:text-[var(--dm-text)]` y `dark:text-[var(--dm-text-muted)]`
+
+**Reloj (Clock.jsx + PomodoroTimer.jsx + ChronometerTimer.jsx):**
+- `Clock.jsx`: Título y tabs con dark mode
+- `PomodoroTimer.jsx`: Stats panel, timer display, controles, config panel completo
+- `ChronometerTimer.jsx`: Contenedor, timer display, botón Reset
+
+**Hábitos (Habits.jsx):**
+- Título, empty state, cards de hábitos, botón toggle, modal
+- Cards: `dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)]`
+- Textos: `dark:text-[var(--dm-text)]` y `dark:text-[var(--dm-text-muted)]`
+
+**Notas + Carpetas (Notes.jsx):**
+- Título, input de búsqueda, botones, lista de carpetas/notas, empty states
+- Cards: `dark:bg-[var(--dm-bg)]` (carpetas) y `dark:bg-[var(--dm-surface)]` (notas)
+- Input: `dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]`
+
+**Calendario (Calendar.jsx):**
+- Título, navegación de mes, grid de días, lista de eventos/tareas, formulario modal
+- Celdas: `dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:hover:bg-[var(--dm-border)]`
+- Formulario: labels, inputs, selects, textarea con dark mode completo
+
+### Archivos modificados
+- `src/pages/Grades.jsx` - Modales inline
+- `src/pages/Notes.jsx` - Modales inline + dark mode completo
+- `src/pages/Habits.jsx` - Modal inline + dark mode completo
+- `src/pages/Calendar.jsx` - Modal inline + dark mode completo
+- `src/pages/Auth.jsx` - Botón Volver
+- `src/pages/Schedule.jsx` - Dark mode completo
+- `src/pages/Clock.jsx` - Dark mode completo
+- `src/components/PomodoroTimer.jsx` - Dark mode completo
+- `src/components/ChronometerTimer.jsx` - Dark mode completo
+- `src/components/NoteEditor.jsx` - Botones
+- `src/components/DrawingCanvas.jsx` - Botón borrador
+
+### Validación
+✅ Todos los modales inline ahora tienen dark mode
+✅ Textos sin contraparte dark corregidos
+✅ Íconos emoji visibles en dark mode
+✅ Páginas principales con dark mode completo
+✅ Builds exitosos después de cada cambio
+
+## [Bug Fix - Cálculo de calificaciones (peso_pts por ítem)] - 2026-07-19
+
+### Resumen
+Fix crítico de bug en el cálculo de proyección de calificaciones. El sistema sumaba porcentajes de todos los ítems de una zona y multiplicaba por el peso total de la zona, permitiendo que la proyección superara 100% (ej. 33.25/25 pts = 133%). Se implementó peso individual por ítem para limitar correctamente el cálculo.
+
+### Causa raíz
+Cada ítem no tenía su propia columna de puntos máximos individuales. Solo existía `porcentaje_ingresado` y `puntos_netos` sin un tope declarado por ítem. La fórmula `calculateZoneNetPoints` sumaba todos los porcentajes de los ítems y multiplicaba por el `zoneWeight` (peso_pts de la ZONA completa), sin validar que no superaran el 100%.
+
+### Fix implementado
+
+#### Schema (supabase/schema.sql)
+- `ALTER TABLE grade_items ADD COLUMN peso_pts numeric` - Cada ítem ahora tiene su propio máximo de puntos dentro de la zona
+
+#### Lógica de cálculo (src/domain/grades-calc.js)
+- `calculateZoneNetPoints` modificado para calcular puntos por ítem individualmente:
+  - Fórmula anterior: `(sum(porcentaje_ingresado) / 100) × zoneWeight`
+  - Fórmula nueva: `sum((porcentaje_ingresado / 100) × item.peso_pts)` por cada ítem
+- Ítems con `peso_pts = null` se tratan como `0` (para datos existentes sin migración)
+
+#### UI (src/features/grades/components/)
+- `ItemForm.jsx` - Campo nuevo "Peso (puntos)" requerido al crear/editar ítem
+- `ZoneCard.jsx` - Indicador de total acumulado de ítems vs peso de la zona:
+  - Muestra "Ítems: X / Y pts" con color según diferencia (rojo si excede, amarillo si falta, verde si coincide)
+  - Permite al usuario notificar si se pasa o le falta peso sin bloqueo duro
+
+#### Export/Import (src/lib/exportData.js)
+- Agregado `peso_pts` a TABLE_COLUMNS para grade_items (evita pérdida de datos en export/import)
+
+### Archivos modificados
+- `supabase/schema.sql` - Columna peso_pts en grade_items
+- `src/domain/grades-calc.js` - Fórmula corregida en calculateZoneNetPoints
+- `src/features/grades/components/ItemForm.jsx` - Campo peso_pts
+- `src/features/grades/components/ZoneCard.jsx` - Indicador de total acumulado
+- `src/lib/exportData.js` - peso_pts en TABLE_COLUMNS
+
+### Datos existentes
+Los ítems creados antes del fix tienen `peso_pts = null` y aportan 0 puntos hasta que se editen manualmente para asignar su peso correcto. No se aplicó migración automática para evitar suposiciones incorrectas sobre distribución de pesos.
+
+### Validación
+✅ El cálculo ahora respeta el límite de 100% por zona
+✅ Ítems individuales tienen su propio peso máximo
+✅ UI muestra visualmente si los pesos de ítems suman correctamente vs peso de zona
+✅ Export/import incluye la nueva columna
+
 ## [Fase 4 - Extras (QuickAdd, Temas y base de dark mode)] - 2026-07-18
 
 ### Resumen

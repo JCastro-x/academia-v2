@@ -1,11 +1,11 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useSubjects, useCreateSubject, useUpdateSubject, useDeleteSubject } from '../features/subjects/hooks.js'
 import { countTasksBySubject } from '../features/tasks/api.js'
 import { useUIStore } from '../stores/ui.store.js'
 import SubjectCard from '../components/SubjectCard.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
+import ModalWrapper from '../components/ModalWrapper.jsx'
 
 export default function Subjects() {
   const { semesterId } = useParams()
@@ -111,39 +111,25 @@ export default function Subjects() {
         </div>
       )}
 
-      <AnimatePresence>
-        {isModalOpen && modalContent === 'subject' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={closeModal}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
-              onClick={e => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">
-                {editingSubject ? 'Editar materia' : 'Nueva materia'}
-              </h3>
-              <SubjectForm
-                semesterId={semesterId}
-                initialData={editingSubject}
-                onSubmit={editingSubject
-                  ? (data) => handleUpdateSubject(editingSubject.id, data)
-                  : handleCreateSubject
-                }
-                onCancel={() => { setEditingSubject(null); closeModal() }}
-                isPending={editingSubject ? updateSubject.isPending : createSubject.isPending}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ModalWrapper
+        isOpen={isModalOpen && modalContent === 'subject'}
+        onClose={() => { setEditingSubject(null); closeModal() }}
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+      >
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">
+          {editingSubject ? 'Editar materia' : 'Nueva materia'}
+        </h3>
+        <SubjectForm
+          semesterId={semesterId}
+          initialData={editingSubject}
+          onSubmit={editingSubject
+            ? (data) => handleUpdateSubject(editingSubject.id, data)
+            : handleCreateSubject
+          }
+          onCancel={() => { setEditingSubject(null); closeModal() }}
+          isPending={editingSubject ? updateSubject.isPending : createSubject.isPending}
+        />
+      </ModalWrapper>
     </div>
   )
 }

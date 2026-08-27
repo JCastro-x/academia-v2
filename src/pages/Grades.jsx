@@ -1,6 +1,5 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useZonesBySubject, useCreateZone, useUpdateZone, useDeleteZone, useCreateItem, useUpdateItem, useDeleteItem } from '../features/grades/hooks.js'
 import { useTopicsBySubject, useCreateTopic, useUpdateTopic, useDeleteTopic } from '../features/topics/hooks.js'
@@ -8,8 +7,9 @@ import { countItemsByZone } from '../features/grades/api.js'
 import { calculateSubjectStats } from '../domain/grades-calc.js'
 import { useUIStore } from '../stores/ui.store.js'
 import ZoneCard from '../features/grades/components/ZoneCard.jsx'
-import ZoneForm from '../features/grades/components/ZoneForm.jsx'
 import ItemForm from '../features/grades/components/ItemForm.jsx'
+import ZoneForm from '../features/grades/components/ZoneForm.jsx'
+import ModalWrapper from '../components/ModalWrapper.jsx'
 
 export default function Grades() {
   const { semesterId } = useParams()
@@ -222,17 +222,15 @@ export default function Grades() {
           <h1 className="text-2xl font-bold">Calificaciones</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {subjects?.map(subject => (
-              <motion.div
+              <div
                 key={subject.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
                 onClick={() => setSelectedSubjectId(subject.id)}
                 className="bg-white border-2 rounded-lg p-4 cursor-pointer hover:border-blue-400 transition-colors"
                 style={{ borderColor: subject.color || '#e5e7eb' }}
               >
                 <h3 className="font-semibold text-lg">{subject.nombre}</h3>
                 {subject.codigo && <p className="text-sm text-gray-600">{subject.codigo}</p>}
-              </motion.div>
+              </div>
             ))}
           </div>
           {!subjects || subjects.length === 0 && (
@@ -246,7 +244,7 @@ export default function Grades() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
             <button
               onClick={() => { setSelectedSubjectId(null); setViewMode('grades') }}
-              className="text-gray-600 hover:text-gray-800"
+              className="text-gray-600 hover:text-gray-800 dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)]"
             >
               ← Volver a materias
             </button>
@@ -435,233 +433,198 @@ export default function Grades() {
         </>
       )}
 
-      <AnimatePresence>
-        {isModalOpen && modalContent === 'zone' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={closeModal}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
-              onClick={e => e.stopPropagation()}
+      <ModalWrapper
+        isOpen={isModalOpen && modalContent === 'zone'}
+        onClose={() => { setEditingZone(null); closeModal() }}
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+      >
+        <h3 className="text-lg font-semibold mb-4">
+          {editingZone ? 'Editar zona' : 'Nueva zona'}
+        </h3>
+        <ZoneForm
+          initialData={editingZone}
+          onSubmit={editingZone
+            ? (data) => handleUpdateZone(editingZone.id, data)
+            : handleCreateZone
+          }
+          onCancel={() => { setEditingZone(null); closeModal() }}
+          isPending={editingZone ? updateZone.isPending : createZone.isPending}
+        />
+      </ModalWrapper>
+
+      <ModalWrapper
+        isOpen={isModalOpen && modalContent === 'item'}
+        onClose={() => { setEditingItem(null); setAddingItemToZone(null); closeModal() }}
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+      >
+        <h3 className="text-lg font-semibold mb-4">
+          {editingItem ? 'Editar ítem' : 'Nuevo ítem'}
+        </h3>
+        <ItemForm
+          initialData={editingItem}
+          onSubmit={editingItem
+            ? (data) => handleUpdateItem(editingItem.id, data)
+            : handleCreateItem
+          }
+          onCancel={() => { setEditingItem(null); setAddingItemToZone(null); closeModal() }}
+          isPending={editingItem ? updateItem.isPending : createItem.isPending}
+        />
+      </ModalWrapper>
+
+      <ModalWrapper
+        isOpen={isModalOpen && modalContent === 'topic'}
+        onClose={() => { setEditingTopic(null); closeModal() }}
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+      >
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">
+          {editingTopic ? 'Editar tema' : 'Nuevo tema'}
+        </h3>
+
+        <form onSubmit={(e) => {
+          e.preventDefault()
+          const formData = new FormData(e.target)
+          const subtemasText = formData.get('subtemas')
+          const subtemas = subtemasText ? subtemasText.split('\n').filter(s => s.trim()) : []
+          const subjectId = formData.get('subject_id') || selectedSubjectId
+
+          const topicData = {
+            subject_id: subjectId,
+            parcial: formData.get('parcial'),
+            nombre: formData.get('nombre'),
+            subtemas,
+            dificultad: formData.get('dificultad') ? parseInt(formData.get('dificultad')) : null,
+            tiempo_dedicado_min: formData.get('tiempo_dedicado_min') ? parseInt(formData.get('tiempo_dedicado_min')) : null,
+            fecha_examen: formData.get('fecha_examen') || null,
+          }
+
+          if (editingTopic) {
+            handleUpdateTopic(editingTopic.id, topicData)
+          } else {
+            handleCreateTopic(topicData)
+          }
+        }} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
+              Materia *
+            </label>
+            <select
+              name="subject_id"
+              required
+              defaultValue={editingTopic?.subject_id || selectedSubjectId || ''}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
             >
-              <h3 className="text-lg font-semibold mb-4">
-                {editingZone ? 'Editar zona' : 'Nueva zona'}
-              </h3>
-              <ZoneForm
-                initialData={editingZone}
-                onSubmit={editingZone
-                  ? (data) => handleUpdateZone(editingZone.id, data)
-                  : handleCreateZone
-                }
-                onCancel={() => { setEditingZone(null); closeModal() }}
-                isPending={editingZone ? updateZone.isPending : createZone.isPending}
-              />
-            </motion.div>
-          </motion.div>
-        )}
+              <option value="" disabled>Seleccionar materia</option>
+              {subjects?.map(subject => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {isModalOpen && modalContent === 'item' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={closeModal}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
-              onClick={e => e.stopPropagation()}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
+              Parcial *
+            </label>
+            <select
+              name="parcial"
+              required
+              defaultValue={editingTopic?.parcial || 'Parcial 1'}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
             >
-              <h3 className="text-lg font-semibold mb-4">
-                {editingItem ? 'Editar ítem' : 'Nuevo ítem'}
-              </h3>
-              <ItemForm
-                initialData={editingItem}
-                onSubmit={editingItem
-                  ? (data) => handleUpdateItem(editingItem.id, data)
-                  : handleCreateItem
-                }
-                onCancel={() => { setEditingItem(null); setAddingItemToZone(null); closeModal() }}
-                isPending={editingItem ? updateItem.isPending : createItem.isPending}
-              />
-            </motion.div>
-          </motion.div>
-        )}
+              <option value="Parcial 1">Parcial 1</option>
+              <option value="Parcial 2">Parcial 2</option>
+              <option value="Parcial 3">Parcial 3</option>
+              <option value="Final">Final</option>
+            </select>
+          </div>
 
-        {isModalOpen && modalContent === 'topic' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={closeModal}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
-              onClick={e => e.stopPropagation()}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
+              Nombre del tema *
+            </label>
+            <input
+              name="nombre"
+              type="text"
+              required
+              defaultValue={editingTopic?.nombre}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] dark:focus:ring-[var(--color-primary)]"
+              autoComplete="off"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
+              Subtemas (uno por línea)
+            </label>
+            <textarea
+              name="subtemas"
+              rows={3}
+              defaultValue={editingTopic?.subtemas?.join('\n') || ''}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] dark:focus:ring-[var(--color-primary)]"
+              placeholder="Subtema 1&#10;Subtema 2&#10;Subtema 3"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
+              Dificultad (1-5)
+            </label>
+            <input
+              name="dificultad"
+              type="number"
+              min="1"
+              max="5"
+              defaultValue={editingTopic?.dificultad || ''}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
+              autoComplete="off"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
+              Tiempo a dedicar (minutos)
+            </label>
+            <input
+              name="tiempo_dedicado_min"
+              type="number"
+              min="0"
+              defaultValue={editingTopic?.tiempo_dedicado_min || ''}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
+              autoComplete="off"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
+              Fecha de examen
+            </label>
+            <input
+              name="fecha_examen"
+              type="date"
+              defaultValue={editingTopic?.fecha_examen || ''}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
+            />
+          </div>
+
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              onClick={() => { setEditingTopic(null); closeModal() }}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-bg)]"
             >
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">
-                {editingTopic ? 'Editar tema' : 'Nuevo tema'}
-              </h3>
-
-              <form onSubmit={(e) => {
-                e.preventDefault()
-                const formData = new FormData(e.target)
-                const subtemasText = formData.get('subtemas')
-                const subtemas = subtemasText ? subtemasText.split('\n').filter(s => s.trim()) : []
-                const subjectId = formData.get('subject_id') || selectedSubjectId
-
-                const topicData = {
-                  subject_id: subjectId,
-                  parcial: formData.get('parcial'),
-                  nombre: formData.get('nombre'),
-                  subtemas,
-                  dificultad: formData.get('dificultad') ? parseInt(formData.get('dificultad')) : null,
-                  tiempo_dedicado_min: formData.get('tiempo_dedicado_min') ? parseInt(formData.get('tiempo_dedicado_min')) : null,
-                  fecha_examen: formData.get('fecha_examen') || null,
-                }
-
-                if (editingTopic) {
-                  handleUpdateTopic(editingTopic.id, topicData)
-                } else {
-                  handleCreateTopic(topicData)
-                }
-              }} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-                    Materia *
-                  </label>
-                  <select
-                    name="subject_id"
-                    required
-                    defaultValue={editingTopic?.subject_id || selectedSubjectId || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
-                  >
-                    <option value="" disabled>Seleccionar materia</option>
-                    {subjects?.map(subject => (
-                      <option key={subject.id} value={subject.id}>
-                        {subject.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-                    Parcial *
-                  </label>
-                  <select
-                    name="parcial"
-                    required
-                    defaultValue={editingTopic?.parcial || 'Parcial 1'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
-                  >
-                    <option value="Parcial 1">Parcial 1</option>
-                    <option value="Parcial 2">Parcial 2</option>
-                    <option value="Parcial 3">Parcial 3</option>
-                    <option value="Final">Final</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-                    Nombre del tema *
-                  </label>
-                  <input
-                    name="nombre"
-                    type="text"
-                    required
-                    defaultValue={editingTopic?.nombre}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] dark:focus:ring-[var(--color-primary)]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-                    Subtemas (uno por línea)
-                  </label>
-                  <textarea
-                    name="subtemas"
-                    rows={3}
-                    defaultValue={editingTopic?.subtemas?.join('\n') || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] dark:focus:ring-[var(--color-primary)]"
-                    placeholder="Subtema 1&#10;Subtema 2&#10;Subtema 3"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-                    Dificultad (1-5)
-                  </label>
-                  <input
-                    name="dificultad"
-                    type="number"
-                    min="1"
-                    max="5"
-                    defaultValue={editingTopic?.dificultad || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-                    Tiempo a dedicar (minutos)
-                  </label>
-                  <input
-                    name="tiempo_dedicado_min"
-                    type="number"
-                    min="0"
-                    defaultValue={editingTopic?.tiempo_dedicado_min || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-                    Fecha de examen
-                  </label>
-                  <input
-                    name="fecha_examen"
-                    type="date"
-                    defaultValue={editingTopic?.fecha_examen || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:focus:ring-[var(--color-primary)]"
-                  />
-                </div>
-
-                <div className="flex gap-3 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => { setEditingTopic(null); closeModal() }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-bg)]"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={editingTopic ? updateTopic.isPending : createTopic.isPending}
-                    className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:opacity-50 dark:disabled:bg-[var(--dm-border)]"
-                  >
-                    {editingTopic ? 'Actualizar' : 'Crear'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={editingTopic ? updateTopic.isPending : createTopic.isPending}
+              className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:opacity-50 dark:disabled:bg-[var(--dm-border)]"
+            >
+              {editingTopic ? 'Actualizar' : 'Crear'}
+            </button>
+          </div>
+        </form>
+      </ModalWrapper>
     </div>
   )
 }

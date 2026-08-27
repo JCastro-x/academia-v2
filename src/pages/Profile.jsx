@@ -118,6 +118,7 @@ export default function Profile() {
               value={formData.nombre}
               onChange={handleFieldChange('nombre')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              autoComplete="off"
             />
           </div>
           <div>
@@ -129,6 +130,7 @@ export default function Profile() {
               value={formData.registro_academico}
               onChange={handleFieldChange('registro_academico')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              autoComplete="off"
             />
           </div>
           <div>
@@ -140,6 +142,7 @@ export default function Profile() {
               value={formData.carrera}
               onChange={handleFieldChange('carrera')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              autoComplete="off"
             />
           </div>
           <div>
@@ -151,6 +154,7 @@ export default function Profile() {
               value={formData.institucion}
               onChange={handleFieldChange('institucion')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              autoComplete="off"
             />
           </div>
           <div>

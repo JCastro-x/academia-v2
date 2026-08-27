@@ -4,7 +4,7 @@ import { BACKUP_TABLES } from './exportData.js'
 const IMPORT_GROUPS = [
   ['profiles', 'semesters', 'habits'],
   ['subjects'],
-  ['folders', 'grade_zones', 'topics', 'flashcards', 'tasks', 'notes', 'events'],
+  ['folders', 'grade_zones', 'topics', 'tasks', 'notes', 'events'],
   ['grade_items'],
   ['note_attachments'],
   ['pomodoro_sessions'],
@@ -15,7 +15,6 @@ const DELETE_ORDER = [
   'pomodoro_sessions',
   'events',
   'topics',
-  'flashcards',
   'notes',
   'tasks',
   'grade_items',

@@ -10,7 +10,6 @@ export const BACKUP_TABLES = [
   'notes',
   'folders',
   'topics',
-  'flashcards',
   'habits',
   'events',
   'pomodoro_sessions',
@@ -31,17 +30,18 @@ const TABLE_COLUMNS = {
   ],
   subjects: [
     'id', 'semester_id', 'user_id', 'nombre', 'codigo', 'catedratico',
-    'seccion', 'creditos', 'color', 'icono', 'horario', 'updated_at',
+    'seccion', 'creditos', 'color', 'icono', 'horario', 'linked_lab_id', 'updated_at',
   ],
   grade_zones: [
     'id', 'subject_id', 'user_id', 'nombre', 'peso_pts', 'ganada_pct',
   ],
   grade_items: [
-    'id', 'zone_id', 'user_id', 'nombre', 'porcentaje_ingresado', 'puntos_netos',
+    'id', 'zone_id', 'user_id', 'nombre', 'porcentaje_ingresado', 'puntos_netos', 'peso_pts',
   ],
   tasks: [
     'id', 'subject_id', 'semester_id', 'user_id', 'titulo', 'prioridad',
-    'due', 'done', 'subtasks', 'attachments', 'reminder_at', 'updated_at',
+    'due', 'done', 'subtasks', 'attachments', 'reminder_at', 'tipo',
+    'total_units', 'work_days', 'log', 'updated_at',
   ],
   notes: [
     'id', 'subject_id', 'user_id', 'folder_id', 'titulo', 'contenido', 'updated_at',
@@ -52,9 +52,6 @@ const TABLE_COLUMNS = {
   topics: [
     'id', 'subject_id', 'user_id', 'parcial', 'nombre', 'subtemas',
     'dificultad', 'tiempo_dedicado_min', 'fecha_examen', 'comprension', 'visto',
-  ],
-  flashcards: [
-    'id', 'subject_id', 'user_id', 'frente', 'dorso', 'estado',
   ],
   habits: [
     'id', 'user_id', 'nombre', 'frecuencia', 'dias_semana', 'racha', 'historial',

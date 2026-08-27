@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useSemester } from '../features/semesters/hooks.js'
 import { useSubjects, useCreateSubject } from '../features/subjects/hooks.js'
 import { usePendingTasks, useCreateTask, useToggleTaskDone, useDeleteTask } from '../features/tasks/hooks.js'
@@ -8,6 +7,7 @@ import { useUIStore } from '../stores/ui.store.js'
 import TaskList from '../components/TaskList.jsx'
 import TaskForm from '../components/TaskForm.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
+import ModalWrapper from '../components/ModalWrapper.jsx'
 import QuickAdd from '../components/QuickAdd.jsx'
 
 export default function Overview() {
@@ -110,61 +110,35 @@ export default function Overview() {
 
       <QuickAdd semesterId={semesterId} subjects={subjects} />
 
-      <AnimatePresence>
-        {isModalOpen && modalContent === 'task' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            onClick={closeModal}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
-              onClick={e => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
-              <TaskForm
-                semesterId={semesterId}
-                subjects={subjects}
-                initialData={editingTask}
-                onSubmit={handleCreateTask}
-                onCancel={() => { setEditingTask(null); closeModal() }}
-                isPending={createTask.isPending}
-              />
-            </motion.div>
-          </motion.div>
-        )}
+      <ModalWrapper
+        isOpen={isModalOpen && modalContent === 'task'}
+        onClose={() => { setEditingTask(null); closeModal() }}
+        className="p-6 w-full max-w-md"
+      >
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
+        <TaskForm
+          semesterId={semesterId}
+          subjects={subjects}
+          initialData={editingTask}
+          onSubmit={handleCreateTask}
+          onCancel={() => { setEditingTask(null); closeModal() }}
+          isPending={createTask.isPending}
+        />
+      </ModalWrapper>
 
-        {isModalOpen && modalContent === 'subject' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            onClick={closeModal}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
-              onClick={e => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Nueva materia</h3>
-              <SubjectForm
-                semesterId={semesterId}
-                onSubmit={handleCreateSubject}
-                onCancel={closeModal}
-                isPending={createSubject.isPending}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ModalWrapper
+        isOpen={isModalOpen && modalContent === 'subject'}
+        onClose={closeModal}
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+      >
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Nueva materia</h3>
+        <SubjectForm
+          semesterId={semesterId}
+          onSubmit={handleCreateSubject}
+          onCancel={closeModal}
+          isPending={createSubject.isPending}
+        />
+      </ModalWrapper>
     </div>
   )
 }

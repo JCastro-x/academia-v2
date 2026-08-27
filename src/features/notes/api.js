@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase.js'
+import { sanitizeContenido } from './sanitize.js'
 
 export const notesQueryKeys = {
   all: ['notes'],
@@ -54,7 +55,7 @@ export async function createNote(note) {
       subject_id: note.subject_id,
       folder_id: note.folder_id,
       titulo: note.titulo,
-      contenido: note.contenido || '',
+      contenido: sanitizeContenido(note.contenido || ''),
     })
     .select('id, subject_id, folder_id, titulo, contenido, updated_at')
     .single()
@@ -68,7 +69,7 @@ export async function updateNote(id, updates) {
     .from('notes')
     .update({
       titulo: updates.titulo,
-      contenido: updates.contenido,
+      contenido: sanitizeContenido(updates.contenido),
       subject_id: updates.subject_id,
       folder_id: updates.folder_id,
     })

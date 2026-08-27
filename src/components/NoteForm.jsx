@@ -24,6 +24,7 @@ export default function NoteForm({ subjects, folderId, onSubmit, onCancel, isPen
           onChange={(e) => setTitulo(e.target.value)}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
+          autoComplete="off"
         />
       </div>
 

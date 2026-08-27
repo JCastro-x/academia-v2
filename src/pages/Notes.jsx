@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useFolders, useCreateFolder, useDeleteFolder } from '../features/folders/hooks.js'
 import { useNotes, useCreateNote, useDeleteNote, useSearchNotes } from '../features/notes/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
@@ -8,6 +7,7 @@ import { useUIStore } from '../stores/ui.store.js'
 import NoteEditor from '../components/NoteEditor.jsx'
 import NoteForm from '../components/NoteForm.jsx'
 import FolderForm from '../components/FolderForm.jsx'
+import ModalWrapper from '../components/ModalWrapper.jsx'
 
 export default function Notes() {
   const { semesterId } = useParams()
@@ -120,12 +120,12 @@ export default function Notes() {
           {currentFolderId && (
             <button
               onClick={() => setCurrentFolderId(null)}
-              className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
+              className="text-gray-600 hover:text-gray-800 flex items-center gap-1 dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)]"
             >
               ← Volver
             </button>
           )}
-          <h1 className="text-2xl font-bold">Notas</h1>
+          <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Notas</h1>
         </div>
         
         <div className="flex gap-2 w-full sm:w-auto">
@@ -134,13 +134,13 @@ export default function Notes() {
             placeholder="Buscar notas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 sm:flex-none px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 sm:flex-none px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           />
           {!searchQuery && (
             <>
               <button
                 onClick={() => setIsCreatingFolder(true)}
-                className="bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 text-sm"
+                className="bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 text-sm dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)] dark:text-[var(--dm-text)]"
               >
                 + Carpeta
               </button>
@@ -163,18 +163,18 @@ export default function Notes() {
             {displayFolders?.filter(folder => !pendingDeletes.some(pd => pd.type === 'folder' && pd.itemId === folder.id)).map(folder => (
               <div
                 key={folder.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer group"
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer group dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)]"
               >
                 <div
                   className="flex items-center gap-2 flex-1"
                   onClick={() => setCurrentFolderId(folder.id)}
                 >
                   <span className="text-xl">📁</span>
-                  <span className="font-medium">{folder.nombre}</span>
+                  <span className="font-medium dark:text-[var(--dm-text)]">{folder.nombre}</span>
                 </div>
                 <button
                   onClick={() => handleDeleteFolder(folder)}
-                  className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1"
+                  className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 dark:text-red-400 dark:hover:text-red-300"
                 >
                   🗑️
                 </button>
@@ -185,17 +185,17 @@ export default function Notes() {
               <div
                 key={note.id}
                 className={`flex items-center justify-between p-3 rounded-lg cursor-pointer group ${
-                  selectedNoteId === note.id ? 'bg-blue-100 border-2 border-blue-500' : 'bg-white border hover:bg-gray-50'
+                  selectedNoteId === note.id ? 'bg-blue-100 border-2 border-blue-500' : 'bg-white border hover:bg-gray-50 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:hover:bg-[var(--dm-border)]'
                 }`}
                 onClick={() => setSelectedNoteId(note.id)}
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <span className="text-xl">📝</span>
-                  <span className="font-medium truncate">{note.titulo || 'Sin título'}</span>
+                  <span className="font-medium truncate dark:text-[var(--dm-text)]">{note.titulo || 'Sin título'}</span>
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDeleteNote(note) }}
-                  className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 flex-shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 flex-shrink-0 dark:text-red-400 dark:hover:text-red-300"
                 >
                   🗑️
                 </button>
@@ -204,13 +204,13 @@ export default function Notes() {
           </div>
 
           {!searchQuery && !displayFolders?.length && !displayNotes?.length && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
               <p>{currentFolderId ? 'Carpeta vacía' : 'No hay notas ni carpetas'}</p>
             </div>
           )}
 
           {searchQuery && !displayNotes?.length && !searchLoading && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
               <p>No se encontraron notas</p>
             </div>
           )}
@@ -224,7 +224,7 @@ export default function Notes() {
               onClose={() => setSelectedNoteId(null)}
             />
           ) : (
-            <div className="h-full flex items-center justify-center text-gray-400">
+            <div className="h-full flex items-center justify-center text-gray-400 dark:text-[var(--dm-text-muted)]">
               <p>Selecciona una nota para editar</p>
             </div>
           )}
@@ -232,63 +232,35 @@ export default function Notes() {
       </div>
 
       {/* Create Folder Modal */}
-      <AnimatePresence>
-        {isCreatingFolder && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={() => setIsCreatingFolder(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md"
-              onClick={e => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold mb-4">Nueva carpeta</h3>
-              <FolderForm
-                subjects={subjects || []}
-                onSubmit={handleCreateFolder}
-                onCancel={() => setIsCreatingFolder(false)}
-                isPending={createFolder.isPending}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ModalWrapper
+        isOpen={isCreatingFolder}
+        onClose={() => setIsCreatingFolder(false)}
+        className="p-6 w-full max-w-md"
+      >
+        <h3 className="text-lg font-semibold mb-4">Nueva carpeta</h3>
+        <FolderForm
+          subjects={subjects || []}
+          onSubmit={handleCreateFolder}
+          onCancel={() => setIsCreatingFolder(false)}
+          isPending={createFolder.isPending}
+        />
+      </ModalWrapper>
 
       {/* Create Note Modal */}
-      <AnimatePresence>
-        {isCreatingNote && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={() => setIsCreatingNote(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md"
-              onClick={e => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold mb-4">Nueva nota</h3>
-              <NoteForm
-                subjects={subjects || []}
-                folderId={currentFolderId}
-                onSubmit={handleCreateNote}
-                onCancel={() => setIsCreatingNote(false)}
-                isPending={createNote.isPending}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ModalWrapper
+        isOpen={isCreatingNote}
+        onClose={() => setIsCreatingNote(false)}
+        className="p-6 w-full max-w-md"
+      >
+        <h3 className="text-lg font-semibold mb-4">Nueva nota</h3>
+        <NoteForm
+          subjects={subjects || []}
+          folderId={currentFolderId}
+          onSubmit={handleCreateNote}
+          onCancel={() => setIsCreatingNote(false)}
+          isPending={createNote.isPending}
+        />
+      </ModalWrapper>
     </div>
   )
 }

@@ -80,7 +80,7 @@ export default function DrawingCanvas({ onSave, onCancel, width = 600, height = 
         <button
           onClick={() => setIsEraser(!isEraser)}
           className={`px-3 py-1 rounded text-sm ${
-            isEraser ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            isEraser ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]'
           }`}
         >
           {isEraser ? '✏️' : '🧹'}

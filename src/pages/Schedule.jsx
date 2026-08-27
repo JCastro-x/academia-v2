@@ -31,15 +31,15 @@ export default function Schedule() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Mi Horario</h1>
+      <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Mi Horario</h1>
 
-      <div className="bg-white rounded-lg shadow-md overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+      <div className="bg-white rounded-lg shadow-md overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
         <table className="w-full min-w-[800px]">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="px-4 py-3 text-left font-semibold text-gray-700 w-20">Hora</th>
+            <tr className="bg-gray-50 dark:bg-[var(--dm-bg)]">
+              <th className="px-4 py-3 text-left font-semibold text-gray-700 w-20 dark:text-[var(--dm-text)]">Hora</th>
               {DAYS.map(day => (
-                <th key={day} className="px-4 py-3 text-center font-semibold text-gray-700">
+                <th key={day} className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-[var(--dm-text)]">
                   {day}
                 </th>
               ))}
@@ -48,7 +48,7 @@ export default function Schedule() {
           <tbody>
             {HOURS.map(hour => (
               <tr key={hour} className="border-t">
-                <td className="px-4 py-2 text-sm text-gray-600 font-medium">
+                <td className="px-4 py-2 text-sm text-gray-600 font-medium dark:text-[var(--dm-text-muted)]">
                   {hour}:00
                 </td>
                 {DAYS.map(day => {
@@ -74,20 +74,20 @@ export default function Schedule() {
         </table>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-        <h2 className="text-lg font-semibold mb-4">Detalle de Materias</h2>
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
+        <h2 className="text-lg font-semibold mb-4 dark:text-[var(--dm-text)]">Detalle de Materias</h2>
         <div className="space-y-4">
           {subjects?.map(subject => (
             <div key={subject.id} className="border-l-4 pl-4" style={{ borderLeftColor: subject.color }}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">{subject.icono}</span>
                 <div>
-                  <h3 className="font-semibold">{subject.nombre}</h3>
-                  {subject.codigo && <p className="text-sm text-gray-600">{subject.codigo}</p>}
+                  <h3 className="font-semibold dark:text-[var(--dm-text)]">{subject.nombre}</h3>
+                  {subject.codigo && <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">{subject.codigo}</p>}
                 </div>
               </div>
               {subject.horario && subject.horario.length > 0 && (
-                <div className="text-sm text-gray-600 space-y-1">
+                <div className="text-sm text-gray-600 space-y-1 dark:text-[var(--dm-text-muted)]">
                   {subject.horario.map((h, idx) => (
                     <div key={idx}>
                       {h.dia} {h.hora_inicio} - {h.hora_fin}
@@ -96,8 +96,8 @@ export default function Schedule() {
                   ))}
                 </div>
               )}
-              {subject.catedratico && <p className="text-sm text-gray-600">Catedrático: {subject.catedratico}</p>}
-              {subject.seccion && <p className="text-sm text-gray-600">Sección: {subject.seccion}</p>}
+              {subject.catedratico && <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">Catedrático: {subject.catedratico}</p>}
+              {subject.seccion && <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">Sección: {subject.seccion}</p>}
             </div>
           ))}
         </div>

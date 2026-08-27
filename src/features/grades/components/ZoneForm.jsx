@@ -30,6 +30,7 @@ export default function ZoneForm({ initialData, onSubmit, onCancel, isPending })
           placeholder="Ej. Parcial 1, Tareas, Final"
           disabled={isPending}
           required
+          autoComplete="off"
         />
       </div>
 
@@ -46,6 +47,7 @@ export default function ZoneForm({ initialData, onSubmit, onCancel, isPending })
           placeholder="Ej. 25"
           disabled={isPending}
           required
+          autoComplete="off"
         />
       </div>
 
@@ -62,6 +64,7 @@ export default function ZoneForm({ initialData, onSubmit, onCancel, isPending })
           placeholder="Ej. 60"
           disabled={isPending}
           required
+          autoComplete="off"
         />
       </div>
 
