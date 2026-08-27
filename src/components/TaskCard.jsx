@@ -1,10 +1,30 @@
 import { motion } from 'framer-motion'
+import { getTaskStats, daysRemainingLabel } from '../domain/task-stats.js'
 
 export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete }) {
   const priorityColors = {
     baja: 'bg-green-100 text-green-800',
     media: 'bg-yellow-100 text-yellow-800',
     alta: 'bg-red-100 text-red-800',
+  }
+
+  // Get task statistics
+  const stats = getTaskStats(task)
+
+  // Map status to colors
+  const getStatusColor = (status) => {
+    if (status === 'critical' || status === 'overdue') return 'red'
+    if (status === 'onyellow' || status === 'onattention') return 'orange'
+    if (status === 'ongreen' || status === 'done') return 'green'
+    return 'gray' // notstarted
+  }
+
+  const statusColor = getStatusColor(stats.status)
+  const statusColorClasses = {
+    red: 'border-red-500',
+    orange: 'border-orange-500',
+    green: 'border-green-500',
+    gray: 'border-gray-300'
   }
 
   const formatDate = (dateString) => {
@@ -24,7 +44,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`bg-white rounded-lg shadow-sm p-4 border-l-4 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] ${task.done ? 'border-gray-300 opacity-60 dark:border-[var(--dm-border)]' : isOverdue ? 'border-red-500' : 'border-[var(--color-primary)]'}`}
+      className={`bg-white rounded-lg shadow-sm p-4 border-l-4 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] ${task.done ? 'border-gray-300 opacity-60 dark:border-[var(--dm-border)]' : statusColorClasses[statusColor]}`}
     >
       <div className="flex items-start gap-3">
         <button
@@ -49,8 +69,20 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
               {task.prioridad}
             </span>
             <span className={`text-gray-600 dark:text-[var(--dm-text-muted)] ${isOverdue ? 'text-red-600 font-medium dark:text-red-400' : ''}`}>
-              {formatDate(task.due)}
+              {daysRemainingLabel(stats)}
             </span>
+            {stats.type === 'cantidad' && stats.exigencia && (
+              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--dm-surface))] dark:text-[var(--color-primary)]">
+                {stats.exigencia.toFixed(1)}x
+              </span>
+            )}
+          </div>
+
+          <div className="mt-2 text-xs text-gray-500 dark:text-[var(--dm-text-muted)]">
+            <span>{stats.progressLabel}</span>
+            {!task.done && stats.remaining > 0 && (
+              <span className="ml-2">• Ritmo: {stats.ritmoActual.toFixed(1)}/día</span>
+            )}
           </div>
         </div>
 

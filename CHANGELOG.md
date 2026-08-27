@@ -1,5 +1,51 @@
 # CHANGELOG
 
+## [2026-08-26] — Integración del motor de ritmo en TaskForm y TaskCard
+
+**Tarea:** Integrar el motor de ritmo (src/domain/task-stats.js) en TaskForm.jsx y TaskCard.jsx para mostrar estadísticas de progreso y ritmo en la UI de tareas.
+
+**Implementado:**
+- `src/components/TaskForm.jsx` - Extendido para soportar campos del motor de ritmo:
+  - Selector de tipo de tarea: 'cantidad' (unidades) o 'checklist' (subtareas)
+  - Campo total_units para tareas tipo 'cantidad'
+  - Selector de días de trabajo (work_days) con botones L M X J V S D
+  - Gestión de subtareas para tareas tipo 'checklist' (agregar, editar, eliminar)
+  - Preview en tiempo real para tareas nuevas: cálculo simple de meta diaria estimada = total_units / días de trabajo
+  - Estadísticas completas para tareas existentes: metaHoy, necesitasHoy, recomendado, ritmoActual, ritmoNecesario, ritmoOriginal, diasDeAtraso, exigencia
+  - Lógica condicional: usa getTaskStats solo para tareas existentes (con historial), preview simple para tareas nuevas
+- `src/components/TaskCard.jsx` - Extendido para mostrar estadísticas del motor de ritmo:
+  - Import de getTaskStats y daysRemainingLabel desde task-stats.js
+  - Mapeo de status a colores según severidad:
+    - Rojo: critical, overdue (atraso severo)
+    - Naranja: onyellow, onattention (atraso leve/moderado - "atención")
+    - Verde: ongreen, done (en ritmo o completado)
+    - Gris: notstarted (aún no inicia)
+  - Indicador visual de estado con borde izquierdo coloreado según status
+  - Mostrar días restantes usando daysRemainingLabel(stats)
+  - Mostrar progreso con progressLabel
+  - Mostrar ritmo actual para tareas pendientes
+  - Mostrar exigencia (solo para tareas tipo 'cantidad')
+
+**Mapeo de status validado:**
+- Verificado contra código real de statusFromProgress en task-stats.js (umbrales de diasDeAtraso)
+- Orden de severidad: ongreen (mejor) → onyellow → onattention → critical (peor)
+- Alineado con blueprint del proyecto: "Naranja = Atención"
+
+**Verificado:**
+- Build: npm run build → compilación exitosa sin errores
+- TaskForm muestra preview simple para tareas nuevas y estadísticas completas para tareas existentes
+- TaskCard muestra indicadores visuales de los 4 estados de color
+- Exigencia solo aparece en tareas tipo 'cantidad' (computeChecklistStats no retorna este campo)
+- NO se modificó TaskList.jsx (confirmado según especificación)
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de UI, no requiere migración de schema)
+
+**Desviaciones del plan original:**
+- Ninguna - implementación siguió el plan aprobado con las 2 correcciones solicitadas (preview simple para tareas nuevas, quitar exigencia si no aplica)
+
+**Pendiente / preguntas abiertas:**
+- Ninguna - tarea completada según especificaciones
+
 ## [2026-08-26] — Motor de ritmo portado a dominio puro (task-stats.js)
 
 **Tarea:** Portar el motor de "ritmo" de Ritmo (js/taskStats.js) a Academia v2 como dominio puro en src/domain/task-stats.js, siguiendo el mismo patrón que src/domain/grades-calc.js (funciones puras, sin React ni Supabase, con tests de Vitest).
