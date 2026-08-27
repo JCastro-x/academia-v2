@@ -25,21 +25,46 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
   // Determine if +/- controls should be shown
   const showLogControls = task.tipo === 'cantidad' && !task.done && totalUnits > 0
 
-  // Map status to colors
-  const getStatusColor = (status) => {
-    if (status === 'critical' || status === 'overdue') return 'red'
-    if (status === 'onyellow' || status === 'onattention') return 'orange'
-    if (status === 'ongreen' || status === 'done') return 'green'
-    return 'gray' // notstarted
+  // Status badge configuration
+  const statusBadgeConfig = {
+    done: {
+      label: 'Excelente',
+      light: 'bg-green-600 text-white',
+      dark: 'bg-green-700 text-white'
+    },
+    ongreen: {
+      label: 'Bien',
+      light: 'bg-green-100 text-green-800',
+      dark: 'bg-green-900/30 text-green-400'
+    },
+    onyellow: {
+      label: 'Atención',
+      light: 'bg-yellow-100 text-yellow-800',
+      dark: 'bg-yellow-900/30 text-yellow-400'
+    },
+    onattention: {
+      label: 'Alerta',
+      light: 'bg-orange-100 text-orange-800',
+      dark: 'bg-orange-900/30 text-orange-400'
+    },
+    critical: {
+      label: 'Crítico',
+      light: 'bg-red-600 text-white',
+      dark: 'bg-red-700 text-white'
+    },
+    overdue: {
+      label: 'Vencida',
+      light: 'bg-red-700 text-white',
+      dark: 'bg-red-800 text-white'
+    },
+    notstarted: {
+      label: 'Por iniciar',
+      light: 'bg-gray-100 text-gray-700',
+      dark: 'bg-gray-800 text-gray-400'
+    }
   }
 
-  const statusColor = getStatusColor(stats.status)
-  const statusColorClasses = {
-    red: 'border-red-500',
-    orange: 'border-orange-500',
-    green: 'border-green-500',
-    gray: 'border-gray-300'
-  }
+  const badgeConfig = statusBadgeConfig[stats.status] || statusBadgeConfig.notstarted
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Sin fecha'
@@ -58,7 +83,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`bg-white rounded-lg shadow-sm p-4 border-l-4 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] ${task.done ? 'border-gray-300 opacity-60 dark:border-[var(--dm-border)]' : statusColorClasses[statusColor]}`}
+      className={`bg-white rounded-lg shadow-sm p-4 dark:bg-[var(--dm-surface)] ${task.done ? 'opacity-60' : ''}`}
     >
       <div className="flex items-start gap-3">
         <button
@@ -69,9 +94,14 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
         </button>
 
         <div className="flex-1">
-          <h4 className={`font-medium ${task.done ? 'line-through text-gray-500 dark:text-[var(--dm-text-muted)]' : 'text-gray-900 dark:text-[var(--dm-text)]'}`}>
-            {task.titulo}
-          </h4>
+          <div className="flex items-center justify-between">
+            <h4 className={`font-medium ${task.done ? 'line-through text-gray-500 dark:text-[var(--dm-text-muted)]' : 'text-gray-900 dark:text-[var(--dm-text)]'}`}>
+              {task.titulo}
+            </h4>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeConfig.light} dark:${badgeConfig.dark}`}>
+              {badgeConfig.label}
+            </span>
+          </div>
 
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
             {subject && (
@@ -96,6 +126,16 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
             <span>{stats.progressLabel}</span>
             {!task.done && stats.remaining > 0 && (
               <span className="ml-2">• Ritmo: {stats.ritmoActual.toFixed(1)}/día</span>
+            )}
+            {showLogControls && (
+              <div className="mt-1">
+                <span>Meta hoy: <strong>{stats.metaHoy}</strong> • Necesitás: <strong>{stats.necesitasHoy}</strong> • Recomendado: <strong>{Math.ceil(stats.necesitasHoy * 1.15)}</strong></span>
+              </div>
+            )}
+            {showLogControls && (
+              <div className="mt-1">
+                <span>Falta total: <strong>{stats.remaining}</strong></span>
+              </div>
             )}
             {showLogControls && (
               <div className="mt-2 flex items-center gap-2">

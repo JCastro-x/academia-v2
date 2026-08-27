@@ -1,5 +1,37 @@
 # CHANGELOG
 
+## [2026-08-27] — Badges de status con texto y fondo de color en TaskCard.jsx
+
+**Tarea:** Reemplazar el borde de color actual por badges/chips con texto y fondo de color para los 7 estados de tarea (done, ongreen, onyellow, onattention, critical, overdue, notstarted), mejorando la comunicabilidad visual sin requerir memorización de códigos de color.
+
+**Implementado:**
+- `src/components/TaskCard.jsx` - Reemplazado borde izquierdo coloreado por badge con fondo de color y texto:
+  - Configuración statusBadgeConfig con 7 estados: label, clases light mode, clases dark mode
+  - Nombres aprobados: done="Excelente", ongreen="Bien", onyellow="Atención", onattention="Alerta", critical="Crítico", overdue="Vencida", notstarted="Por iniciar"
+  - Colores con tratamiento fuerte (fondo oscuro + texto blanco) para estados graves: done (bg-green-600), critical (bg-red-600), overdue (bg-red-700 - más fuerte que critical por precedencia en statusFromProgress)
+  - Colores con tratamiento suave (fondo claro + texto oscuro) para estados leves: ongreen (bg-green-100), onyellow (bg-yellow-100), onattention (bg-orange-100), notstarted (bg-gray-100)
+  - Dark mode con transparencia 30% para estados suaves y fondo más oscuro para estados graves
+  - Ubicación del badge: esquina superior derecha, junto al título, antes de badges de prioridad
+  - Eliminada lógica de mapeo de status a colores (getStatusColor, statusColorClasses) reemplazada por statusBadgeConfig
+  - Eliminado border-l-4 de la card (ahora usa solo badge para comunicar estado)
+
+**Verificado:**
+- Build: npm run build → compilación exitosa sin errores (bundle 814.35 kB)
+- Evidencia de precedencia en statusFromProgress (líneas 187-203 de task-stats.js): overdue (línea 190) se evalúa antes de critical (línea 191), confirmando que overdue es el estado más grave del sistema
+- Colores de overdue más fuertes que critical (bg-red-700 vs bg-red-600 en light, bg-red-800 vs bg-red-700 en dark) para reflejar precedencia
+- Badge ubicado en esquina superior derecha junto al título según mockup aprobado
+- Clases dark mode usan variables CSS existentes (--dm-surface, --dm-border, --dm-text, --dm-text-muted)
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de UI, no requiere migración de schema)
+
+**Desviaciones del plan original:**
+- Corrección solicitada por usuario: overdue usa tratamiento más fuerte que critical (bg-red-700/bg-red-800) en lugar de tratamiento suave, basado en evidencia de precedencia en statusFromProgress
+
+**Pendiente / preguntas abiertas:**
+- Ninguna - tarea completada según especificaciones
+
+---
+
 ## [2026-08-27] — Control +/- de ritmo para tareas tipo 'cantidad' (registrar avance diario en tasks.log)
 
 **Tarea:** Implementar botones +/- en TaskCard.jsx para registrar avance diario en tareas tipo='cantidad', permitiendo al usuario incrementar/decrementar el log de la fecha actual (tasks.log→dateStr) de forma rápida sin entrar al formulario de edición.
