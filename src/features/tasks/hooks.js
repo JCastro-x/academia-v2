@@ -10,6 +10,7 @@ import {
   deleteTask,
   deleteCompletedTasks,
   countTasksBySubject,
+  incrementTaskLogUnit,
   tasksQueryKeys,
 } from './api.js'
 
@@ -111,5 +112,19 @@ export function useCountTasksBySubject(subjectId) {
     queryKey: ['tasks', 'count', 'subject', subjectId],
     queryFn: () => countTasksBySubject(subjectId),
     enabled: !!subjectId,
+  })
+}
+
+export function useIncrementTaskLogUnit() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ taskId, dateStr, delta }) => incrementTaskLogUnit(taskId, dateStr, delta),
+    onSuccess: (data) => {
+      // Update cache with server-confirmed data (NOT optimistic update)
+      queryClient.setQueryData(tasksQueryKeys.byId(data.id), data)
+      queryClient.invalidateQueries({ queryKey: tasksQueryKeys.bySemester(data.semester_id) })
+      queryClient.invalidateQueries({ queryKey: tasksQueryKeys.pending(data.semester_id) })
+    },
   })
 }

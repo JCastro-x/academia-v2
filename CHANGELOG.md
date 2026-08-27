@@ -1,5 +1,50 @@
 # CHANGELOG
 
+## [2026-08-27] — Control +/- de ritmo para tareas tipo 'cantidad' (registrar avance diario en tasks.log)
+
+**Tarea:** Implementar botones +/- en TaskCard.jsx para registrar avance diario en tareas tipo='cantidad', permitiendo al usuario incrementar/decrementar el log de la fecha actual (tasks.log→dateStr) de forma rápida sin entrar al formulario de edición.
+
+**Implementado:**
+- `src/features/tasks/api.js` - Agregada nueva mutación `incrementTaskLogUnit(taskId, dateStr, delta)`:
+  - SELECT de la tarea actual (incluyendo log, total_units)
+  - Cálculo en JS: nuevo valor para log[dateStr] = (log[dateStr] || 0) + delta
+  - Capping: si el resultado es < 0, se fuerza a 0; si totalDone > total_units, se fuerza a total_units
+  - UPDATE de tasks.log con el nuevo objeto
+  - Retorna la tarea actualizada con el log modificado
+  - Fórmula de totalDone usada para capping: `Object.keys(log).reduce((sum, k) => sum + (Number(log[k]) || 0), 0)` — coincide exactamente con computeCantidadStats línea 222 (verificada con lectura real del archivo)
+- `src/features/tasks/api.js` - Agregada queryKey `incrementLog: (taskId) => ['tasks', 'increment-log', taskId]` para cache específico
+- `src/features/tasks/hooks.js` - Agregado hook `useIncrementTaskLogUnit()`:
+  - Usa la mutación incrementTaskLogUnit
+  - setQueryData se ejecuta en onSuccess (con datos del servidor, NO optimistic update)
+  - Incluye isPending durante la mutación para evitar dobles clicks
+- `src/components/TaskCard.jsx` - Extendido para mostrar control +/-:
+  - Botones "+" y "-" solo para tareas tipo='cantidad' y done=false
+  - Control oculto/deshabilitado por completo cuando total_units es null (sin meta no hay feedback visible)
+  - Layout: botones compactos con borde redondeado al lado del progressLabel
+  - Botón "-" deshabilitado si log[today] <= 0
+  - Botón "+" deshabilitado si totalDone >= total_units (fórmula coincidente con computeCantidadStats)
+  - Hook useIncrementTaskLogUnit para llamar a la mutación
+  - isPending durante la mutación para evitar dobles clicks
+
+**Verificado:**
+- Build: npm run build → compilación exitosa sin errores (bundle 813.40 kB)
+- Prueba manual: tarea tipo='cantidad' con total_units=10, registro de avances con "+", log se actualiza y TaskCard muestra progreso actualizado
+- Prueba manual: botón "+" se deshabilita cuando totalDone >= total_units (10/10)
+- Prueba manual: botón "-" se deshabilitado cuando log[today] <= 0
+- Prueba manual: tarea tipo='cantidad' con total_units=null, control +/- NO aparece (confirmada decisión de ocultar sin meta)
+- Prueba manual: getTaskStats recalcula correctamente después de modificar el log (status/ritmo/exigencia se actualizan)
+- Fórmula de totalDone verificada idéntica a computeCantidadStats línea 222: `Object.keys(log).reduce((sum, k) => sum + (Number(log[k]) || 0), 0)`
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de aplicación, no requiere migración de schema)
+
+**Desviaciones del plan original:**
+- Ninguna - implementación siguió el plan aprobado con las 3 correcciones solicitadas (fórmula verificada, setQueryData en onSuccess, control oculto sin meta)
+
+**Pendiente / preguntas abiertas:**
+- Ninguna - tarea completada según especificaciones
+
+---
+
 ## [2026-08-27] — Rediseño de Schedule.jsx con navegación por semanas y cruce de tareas/eventos
 
 **Tarea:** Rediseñar la vista semanal (Schedule.jsx) para mostrar materias, tareas y eventos cruzados por día, con navegación por semana calendario.

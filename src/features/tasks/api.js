@@ -6,6 +6,7 @@ export const tasksQueryKeys = {
   bySubject: (subjectId) => ['tasks', 'subject', subjectId],
   byId: (id) => ['tasks', id],
   pending: (semesterId) => ['tasks', 'pending', semesterId],
+  incrementLog: (taskId) => ['tasks', 'increment-log', taskId],
 }
 
 export async function getTasks(semesterId) {
@@ -141,4 +142,52 @@ export async function countTasksBySubject(subjectId) {
 
   if (error) throw error
   return count || 0
+}
+
+export async function incrementTaskLogUnit(taskId, dateStr, delta) {
+  // SELECT current task state
+  const { data: task, error: selectError } = await supabase
+    .from('tasks')
+    .select('id, log, total_units')
+    .eq('id', taskId)
+    .single()
+
+  if (selectError) throw selectError
+
+  // Calculate new log value in JS
+  const log = task.log || {}
+  const currentValue = Number(log[dateStr]) || 0
+  const newValue = currentValue + delta
+
+  // Capping: prevent negative values
+  const cappedValue = Math.max(0, newValue)
+
+  // Calculate totalDone for capping against total_units
+  const totalDone = Object.keys(log).reduce((sum, k) => sum + (Number(log[k]) || 0), 0)
+  const totalUnits = Number(task.total_units) || 0
+
+  // Capping: prevent exceeding total_units (if defined)
+  const totalDoneWithNewValue = totalDone - currentValue + cappedValue
+  const finalValue = totalUnits > 0 && totalDoneWithNewValue > totalUnits 
+    ? cappedValue - (totalDoneWithNewValue - totalUnits) 
+    : cappedValue
+
+  // Update log with new value
+  const updatedLog = { ...log }
+  if (finalValue === 0) {
+    delete updatedLog[dateStr]
+  } else {
+    updatedLog[dateStr] = finalValue
+  }
+
+  // UPDATE task with new log
+  const { data, error: updateError } = await supabase
+    .from('tasks')
+    .update({ log: updatedLog })
+    .eq('id', taskId)
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
+    .single()
+
+  if (updateError) throw updateError
+  return data
 }
