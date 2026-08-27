@@ -1,5 +1,59 @@
 # CHANGELOG
 
+## [2026-08-26] — Motor de ritmo portado a dominio puro (task-stats.js)
+
+**Tarea:** Portar el motor de "ritmo" de Ritmo (js/taskStats.js) a Academia v2 como dominio puro en src/domain/task-stats.js, siguiendo el mismo patrón que src/domain/grades-calc.js (funciones puras, sin React ni Supabase, con tests de Vitest).
+
+**Implementado:**
+- `src/domain/task-stats.js` - Módulo de dominio puro con funciones de cálculo de estadísticas de tareas:
+  - Utilidades de fecha: clamp, parseDate, formatDate, todayStr, diffDays, truncateToDate
+  - Utilidades de días de trabajo: countWorkDays (adaptada a convención Academia v2: 1=Lunes...7=Domingo)
+  - Estadísticas base de tiempo: baseTimeStats (usa created_at como start, due como end, truncando timestamps a fecha)
+  - Cálculo de estado: statusFromProgress (done, notstarted, overdue, critical, ongreen, onyellow, onattention)
+  - Estadísticas de tareas tipo 'cantidad': computeCantidadStats (usa total_units, work_days, log del schema)
+  - Estadísticas de tareas tipo 'checklist': computeChecklistStats (usa subtasks del schema)
+  - Dispatcher: getTaskStats (selecciona computeCantidadStats o computeChecklistStats según task.tipo)
+  - Utilidades de etiqueta: daysRemainingLabel
+- `src/domain/task-stats.test.js` - Tests de Vitest con 52 casos:
+  - Tests de utilidades de fecha (clamp, parseDate, formatDate, todayStr, diffDays, truncateToDate)
+  - Tests de countWorkDays con convención Academia v2 (incluye test específico para lunes=1)
+  - Tests de baseTimeStats (no iniciado, vencido, fechas inválidas)
+  - Tests de statusFromProgress (todos los estados: done, notstarted, overdue, critical, ongreen, onyellow, onattention)
+  - Tests de computeCantidadStats (caso normal, null total_units, null work_days, zero total_units, completado, truncamiento de timestamps)
+  - Tests de computeChecklistStats (caso normal, subtasks vacías, null subtasks, completado, parcial)
+  - Tests de getTaskStats (dispatcher cantidad vs checklist)
+  - Tests de daysRemainingLabel (todos los casos de etiqueta)
+
+**Documentación de convención de días:**
+- Comentado explícitamente en task-stats.js el mapeo: JavaScript Date.getDay() (0=Domingo...6=Sábado) → Academia v2 work_days (1=Lunes...7=Domingo)
+- Función jsDayToAcademiaDay implementa la conversión: domingo (JS 0) → 7, otros días sin cambio
+- Test específico verifica que lunes (work_days=[1]) se cuente correctamente
+
+**Manejo defensivo de valores null:**
+- computeCantidadStats maneja total_units=null y work_days=null sin lanzar excepción
+- Devuelve estado sensato (progressPercent=0, status='notstarted', metaHoy=0, etc.) en lugar de fallar
+- Test específico verifica tarea tipo='cantidad' con total_units=null y work_days=null
+- Truncamiento de timestamps: truncateToDate convierte timestamptz a YYYY-MM-DD antes de cálculos de diffDays
+
+**Bug detectado y corregido durante implementación:**
+- **Causa:** En computeChecklistStats, calculaba `remaining` pero no lo retornaba en el objeto final
+- **Corrección:** Agregué `remaining` al objeto de retorno en computeChecklistStats
+- **Verificación:** Tests pasaron después de la corrección (52/52 en task-stats.test.js)
+
+**Verificado:**
+- `npx vitest run` → 81 tests pasando (22 de grades-calc.test.js + 52 de task-stats.test.js + 7 de sanitize.test.js)
+- NO se modificó UI, componentes, ni API layer (solo dominio puro)
+- Funciones son puras (sin efectos secundarios, sin imports de React/Supabase)
+- Patrón consistente con grades-calc.js
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de dominio, no requiere migración de schema)
+
+**Desviaciones del plan original:**
+- Ninguna - implementación siguió el plan aprobado con las 2 confirmaciones adicionales (truncamiento de fecha y manejo de null)
+
+**Pendiente / preguntas abiertas:**
+- Ninguna - tarea completada según especificaciones
+
 ## 🐛 Bug preexistente detectado - Tests de grades-calc.js fallando
 
 **Detectado durante:** Tarea 1.4 (Sanitización XSS) al correr `npm run test`
