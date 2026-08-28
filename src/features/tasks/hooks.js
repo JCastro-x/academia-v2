@@ -120,11 +120,69 @@ export function useIncrementTaskLogUnit() {
 
   return useMutation({
     mutationFn: ({ taskId, dateStr, delta }) => incrementTaskLogUnit(taskId, dateStr, delta),
+    onMutate: async ({ taskId, dateStr, delta }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: tasksQueryKeys.byId(taskId) })
+
+      // Snapshot previous value
+      const previousTask = queryClient.getQueryData(tasksQueryKeys.byId(taskId))
+
+      // Optimistically update cache
+      queryClient.setQueryData(tasksQueryKeys.byId(taskId), (old) => {
+        if (!old) return old
+
+        const log = old.log || {}
+        const currentValue = Number(log[dateStr]) || 0
+        const newValue = currentValue + delta
+
+        // Capping: prevent negative values
+        const cappedValue = Math.max(0, newValue)
+
+        // Calculate totalDone for capping against total_units
+        const totalDone = Object.keys(log).reduce((sum, k) => sum + (Number(log[k]) || 0), 0)
+        const totalUnits = Number(old.total_units) || 0
+
+        // Capping: prevent exceeding total_units (if defined)
+        const totalDoneWithNewValue = totalDone - currentValue + cappedValue
+        const finalValue = totalUnits > 0 && totalDoneWithNewValue > totalUnits
+          ? cappedValue - (totalDoneWithNewValue - totalUnits)
+          : cappedValue
+
+        // Update log with new value
+        const updatedLog = { ...log }
+        if (finalValue === 0) {
+          delete updatedLog[dateStr]
+        } else {
+          updatedLog[dateStr] = finalValue
+        }
+
+        return {
+          ...old,
+          log: updatedLog,
+          updated_at: new Date().toISOString()
+        }
+      })
+
+      // Return context with previous task for rollback
+      return { previousTask, taskId }
+    },
+    onError: (error, variables, context) => {
+      // Rollback to previous value on error
+      if (context?.previousTask) {
+        queryClient.setQueryData(tasksQueryKeys.byId(context.taskId), context.previousTask)
+      }
+    },
     onSuccess: (data) => {
-      // Update cache with server-confirmed data (NOT optimistic update)
+      // Update cache with server-confirmed data
       queryClient.setQueryData(tasksQueryKeys.byId(data.id), data)
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.bySemester(data.semester_id) })
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.pending(data.semester_id) })
+    },
+    onSettled: (data, error, variables) => {
+      // Always refetch after error or success to ensure consistency
+      if (data) {
+        queryClient.invalidateQueries({ queryKey: tasksQueryKeys.byId(data.id) })
+      }
     },
   })
 }

@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [2026-08-27] — Optimistic update en botón +/- de registro de avance
+
+**Fix de UX - Botón +/- de tasks.log:**
+- Causa raíz: useIncrementTaskLogUnit no tenía optimistic update, esperaba roundtrip completo a Supabase
+- Solución: Implementar onMutate (actualizar cache local inmediatamente), onError (rollback), onSettled (refetch)
+- Archivo: `src/features/tasks/hooks.js` - useIncrementTaskLogUnit ahora actualiza UI instantáneamente
+- Lógica de capping (negative values, total_units) replicada en cliente para consistencia con servidor
+
+**Verificado:**
+- Build: npm run build → exitoso (bundle 868.81 kB)
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de UI/cache)
+
+---
+
 ## [2026-08-27] — Checkpoint A corregido: Rediseño visual base (tokens lila/celeste, checkboxes, flatpickr, badges)
 
 **Checkpoint A - Base del rediseño visual (corregido):**
