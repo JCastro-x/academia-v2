@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import '../styles/forms.css'
 
 export default function FolderForm({ subjects, onSubmit, onCancel, isPending }) {
   const [nombre, setNombre] = useState('')
@@ -13,29 +14,27 @@ export default function FolderForm({ subjects, onSubmit, onCancel, isPending }) 
   }
 
   return (
-    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-          Nombre de carpeta *
-        </label>
+    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
+      <div className="field">
+        <label htmlFor="nombre" className="field-label required">Nombre de carpeta</label>
         <input
+          id="nombre"
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+          className="field-input"
           required
           autoComplete="off"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-          Materia (opcional)
-        </label>
+      <div className="field">
+        <label htmlFor="subject" className="field-label">Materia (opcional)</label>
         <select
+          id="subject"
           value={subjectId}
           onChange={(e) => setSubjectId(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+          className="field-select"
         >
           <option value="">Sin materia</option>
           {subjects.map(subject => (

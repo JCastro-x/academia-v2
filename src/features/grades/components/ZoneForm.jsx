@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import '../../../styles/forms.css'
 
 export default function ZoneForm({ initialData, onSubmit, onCancel, isPending }) {
   const [formData, setFormData] = useState({
@@ -18,15 +19,14 @@ export default function ZoneForm({ initialData, onSubmit, onCancel, isPending })
 
   return (
     <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-          Nombre de la zona
-        </label>
+      <div className="field">
+        <label htmlFor="nombre" className="field-label">Nombre de la zona</label>
         <input
+          id="nombre"
           type="text"
           value={formData.nombre}
           onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-          className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+          className="field-input"
           placeholder="Ej. Parcial 1, Tareas, Final"
           disabled={isPending}
           required
@@ -34,16 +34,15 @@ export default function ZoneForm({ initialData, onSubmit, onCancel, isPending })
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-          Peso (puntos)
-        </label>
+      <div className="field">
+        <label htmlFor="peso_pts" className="field-label">Peso (puntos)</label>
         <input
+          id="peso_pts"
           type="number"
           step="0.01"
           value={formData.peso_pts}
           onChange={(e) => setFormData({ ...formData, peso_pts: e.target.value })}
-          className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+          className="field-input"
           placeholder="Ej. 25"
           disabled={isPending}
           required
@@ -51,16 +50,15 @@ export default function ZoneForm({ initialData, onSubmit, onCancel, isPending })
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-          Umbral para ganar (%)
-        </label>
+      <div className="field">
+        <label htmlFor="ganada_pct" className="field-label">Umbral para ganar (%)</label>
         <input
+          id="ganada_pct"
           type="number"
           step="0.01"
           value={formData.ganada_pct}
           onChange={(e) => setFormData({ ...formData, ganada_pct: e.target.value })}
-          className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+          className="field-input"
           placeholder="Ej. 60"
           disabled={isPending}
           required

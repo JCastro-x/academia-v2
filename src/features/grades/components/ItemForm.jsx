@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import '../../../styles/forms.css'
 
 export default function ItemForm({ initialData, onSubmit, onCancel, isPending }) {
   const [formData, setFormData] = useState({
@@ -18,15 +19,14 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
 
   return (
     <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-          Nombre del ítem
-        </label>
+      <div className="field">
+        <label htmlFor="nombre" className="field-label">Nombre del ítem</label>
         <input
+          id="nombre"
           type="text"
           value={formData.nombre}
           onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-          className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+          className="field-input"
           placeholder="Ej. Examen, Quiz 1, Tarea 1"
           disabled={isPending}
           required
@@ -34,17 +34,16 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-          Peso (puntos)
-        </label>
+      <div className="field">
+        <label htmlFor="peso_pts" className="field-label">Peso (puntos)</label>
         <input
+          id="peso_pts"
           type="number"
           step="0.01"
           min="0"
           value={formData.peso_pts}
           onChange={(e) => setFormData({ ...formData, peso_pts: e.target.value })}
-          className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+          className="field-input"
           placeholder="Ej. 1.5"
           disabled={isPending}
           required
@@ -53,18 +52,17 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
         <p className="text-xs text-gray-500 mt-1 dark:text-[var(--dm-text-muted)]">Puntos máximos que vale este ítem dentro de la zona</p>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-          Porcentaje obtenido (%)
-        </label>
+      <div className="field">
+        <label htmlFor="porcentaje" className="field-label">Porcentaje obtenido (%)</label>
         <input
+          id="porcentaje"
           type="number"
           step="0.01"
           min="0"
           max="100"
           value={formData.porcentaje_ingresado}
           onChange={(e) => setFormData({ ...formData, porcentaje_ingresado: e.target.value })}
-          className="w-full border rounded-lg px-3 py-2 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+          className="field-input"
           placeholder="Ej. 85"
           disabled={isPending}
           autoComplete="off"

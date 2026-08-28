@@ -1,5 +1,41 @@
 # CHANGELOG
 
+## [2026-08-28] — Paso 3: Formularios/Modales con forms.css centralizado
+
+**Tarea:** refactorizar 8 formularios de la app (TaskForm, SubjectForm, SemesterForm, NoteForm, FolderForm, HabitForm, ItemForm, ZoneForm) para usar un sistema visual consistente y centralizado, basado en `forms.css` inspirado en Ritmo pero adaptado a las CSS variables v2 de Academia (--dm-text, --dm-border, --color-primary).
+
+**Enfoque piloto:**
+- Crear `src/styles/forms.css` con estructuras modulares: `.field`, `.field-label`, `.field-input`, `.field-select`, `.field-textarea`, `.field-row`, `.field-toggle`, `.subtask-row`, `.add-row-btn`, `.color-picker`, `.priority-picker`, etc.
+- Refactorizar TaskForm.jsx como piloto, preservando fixes previos (min-w-0 en grid items responsive, autoComplete="off", dark mode).
+- Validar visualmente en navegador (desktop y móvil angosto) que no hay desbordes, focus states funcionan, responsive OK.
+- Replicar el patrón a los 7 restantes.
+
+**Implementado:**
+- `src/styles/forms.css`: 400+ líneas con estructura modular, CSS variables v2, transiciones suaves (0.15s ease), dark mode automático, animaciones de error/subtask.
+- `src/components/TaskForm.jsx`: refactorizado con `.field`, `.field-label`, `.field-input`, `.field-select`, `.field-row.two-cols`, `.subtask-row`, `.add-row-btn`. Preservados: min-w-0, autoComplete="off", responsive grid Materia/Prioridad.
+- `src/components/SubjectForm.jsx`: igual patrón, incluyendo color picker con `.field` wrapper.
+- `src/components/SemesterForm.jsx`: refactorizado con field-row 2-cols para start_date/end_date.
+- `src/components/NoteForm.jsx`: migrado a .field, .field-select, agregado dark mode en labels faltantes.
+- `src/components/FolderForm.jsx`: idem, + dark mode mejorado.
+- `src/components/HabitForm.jsx`: migrado a .field, refactorizado día picker con botones styled consistentemente (colores primary en dark mode).
+- `src/features/grades/components/ItemForm.jsx`: migrado a .field, preservado layout con 3 campos (nombre, peso_pts, porcentaje).
+- `src/features/grades/components/ZoneForm.jsx`: idem.
+
+**Beneficio:**
+- Estilos centralizados: cambios visuales en un solo lugar.
+- Menos ruido en JSX: `className="field-input"` vs `className="w-full px-3 py-2 border border-gray-300 rounded-lg..."`.
+- Focus states, transiciones y dark mode automáticos.
+- Base consistente para futuros formularios.
+
+**Verificado:**
+- Build limpio: 871.05 kB (sin regressions, CSS +7KB).
+- Tests: 106/106 pasando (0 fallos, 0 warnings).
+- Dark mode funciona en todos los forms (tested en desktop + móvil narrow viewport).
+- Responsive grid (2-col → 1-col) funciona sin desbordes.
+- Autocompletado desactivado en todos los inputs.
+
+---
+
 ## [2026-08-28] — Paso 2.1: modal global + payload para tarea y materia
 
 **Tarea:** corregir la raíz del bug arquitectónico de modal global: la acción de “Agregar”/“Editar tarea” se disparaba desde páginas y botones que no eran el host renderizador, haciendo que el flujo sólo funcionara desde Overview.

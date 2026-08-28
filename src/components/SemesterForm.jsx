@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import '../styles/forms.css'
 
 export default function SemesterForm({ initialData, onSubmit, onCancel, isPending, isCreate = false }) {
   const [formData, setFormData] = useState({
@@ -23,48 +24,45 @@ export default function SemesterForm({ initialData, onSubmit, onCancel, isPendin
 
   return (
     <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-          Nombre del semestre *
-        </label>
+      <div className="field">
+        <label htmlFor="nombre" className="field-label required">Nombre del semestre</label>
         <input
+          id="nombre"
           type="text"
           name="nombre"
           value={formData.nombre}
           onChange={handleChange}
           placeholder={isCreate ? "Ej: Primer Semestre 2024" : ""}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+          className="field-input"
           required
           disabled={isPending}
           autoComplete="off"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-            Fecha de inicio
-          </label>
+      <div className="field-row two-cols">
+        <div className="min-w-0">
+          <label htmlFor="start_date" className="field-label">Fecha de inicio</label>
           <input
+            id="start_date"
             type="date"
             name="start_date"
             value={formData.start_date}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="field-input"
             disabled={isPending}
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
-            Fecha de fin
-          </label>
+        <div className="min-w-0">
+          <label htmlFor="end_date" className="field-label">Fecha de fin</label>
           <input
+            id="end_date"
             type="date"
             name="end_date"
             value={formData.end_date}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="field-input"
             disabled={isPending}
           />
         </div>

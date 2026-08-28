@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import '../styles/forms.css'
 
 export default function HabitForm({ onSubmit, onCancel, isPending }) {
   const [nombre, setNombre] = useState('')
@@ -34,26 +35,28 @@ export default function HabitForm({ onSubmit, onCancel, isPending }) {
   ]
 
   return (
-    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-1">Nombre del hábito</label>
+    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
+      <div className="field">
+        <label htmlFor="nombre" className="field-label required">Nombre del hábito</label>
         <input
+          id="nombre"
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="field-input"
           placeholder="Ej. Leer 30 minutos"
           autoFocus
           autoComplete="off"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Frecuencia</label>
+      <div className="field">
+        <label htmlFor="frecuencia" className="field-label">Frecuencia</label>
         <select
+          id="frecuencia"
           value={frecuencia}
           onChange={(e) => setFrecuencia(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="field-select"
         >
           <option value="diario">Diario</option>
           <option value="semanal">Semanal</option>
@@ -61,18 +64,18 @@ export default function HabitForm({ onSubmit, onCancel, isPending }) {
       </div>
 
       {frecuencia === 'semanal' && (
-        <div>
-          <label className="block text-sm font-medium mb-1">Días de la semana</label>
+        <div className="field">
+          <label className="field-label">Días de la semana</label>
           <div className="flex gap-2 flex-wrap">
             {dias.map((dia) => (
               <button
                 key={dia.value}
                 type="button"
                 onClick={() => toggleDia(dia.value)}
-                className={`px-3 py-2 rounded-lg border ${
+                className={`px-3 py-2 rounded-lg border transition-all ${
                   diasSemana.includes(dia.value)
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:border-[var(--dm-border)] dark:hover:bg-[var(--dm-surface)]'
                 }`}
               >
                 {dia.label}

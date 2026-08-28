@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Flatpickr from 'react-flatpickr'
 import 'flatpickr/dist/flatpickr.css'
+import '../styles/forms.css'
 import { getTaskStats, countWorkDays, todayStr, parseDate } from '../domain/task-stats.js'
 
 export default function TaskForm({ semesterId, subjects, initialData, onSubmit, onCancel, isPending }) {
@@ -91,28 +92,32 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
 
   return (
     <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Título *</label>
+      {/* Título */}
+      <div className="field">
+        <label htmlFor="titulo" className="field-label required">Título</label>
         <input
+          id="titulo"
           type="text"
           name="titulo"
           value={formData.titulo}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+          className="field-input"
           required
           disabled={isPending}
           autoComplete="off"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Materia + Prioridad */}
+      <div className="field-row two-cols">
         <div className="min-w-0">
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Materia</label>
+          <label htmlFor="subject_id" className="field-label">Materia</label>
           <select
+            id="subject_id"
             name="subject_id"
             value={formData.subject_id}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="field-select"
             disabled={isPending}
           >
             <option value="">Sin materia</option>
@@ -123,12 +128,13 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </div>
 
         <div className="min-w-0">
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Prioridad</label>
+          <label htmlFor="prioridad" className="field-label">Prioridad</label>
           <select
+            id="prioridad"
             name="prioridad"
             value={formData.prioridad}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="field-select"
             disabled={isPending}
           >
             <option value="baja">Baja</option>
@@ -138,9 +144,11 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Fecha de entrega</label>
+      {/* Fecha de entrega */}
+      <div className="field">
+        <label htmlFor="due" className="field-label">Fecha de entrega</label>
         <Flatpickr
+          id="due"
           value={formData.due}
           onChange={(dates) => {
             const dateStr = dates[0] ? dates[0].toISOString().slice(0, 16) : ''
@@ -154,18 +162,20 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
             theme: 'light',
             static: true
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+          className="field-input"
           disabled={isPending}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Tipo de tarea</label>
+      {/* Tipo de tarea */}
+      <div className="field">
+        <label htmlFor="tipo" className="field-label">Tipo de tarea</label>
         <select
+          id="tipo"
           name="tipo"
           value={formData.tipo}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+          className="field-select"
           disabled={isPending}
         >
           <option value="cantidad">Por cantidad (unidades)</option>
@@ -173,33 +183,36 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </select>
       </div>
 
+      {/* Total de unidades (solo si tipo === cantidad) */}
       {formData.tipo === 'cantidad' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Total de unidades</label>
+        <div className="field">
+          <label htmlFor="total_units" className="field-label">Total de unidades</label>
           <input
+            id="total_units"
             type="number"
             name="total_units"
             value={formData.total_units}
             onChange={handleChange}
             min="1"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="field-input"
             disabled={isPending}
           />
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Días de trabajo</label>
+      {/* Días de trabajo */}
+      <div className="field">
+        <label className="field-label">Días de trabajo</label>
         <div className="flex gap-2 flex-wrap">
           {[1, 2, 3, 4, 5, 6, 7].map(day => (
             <button
               key={day}
               type="button"
               onClick={() => handleWorkDayToggle(day)}
-              className={`w-10 h-10 rounded-lg border-2 ${
+              className={`w-10 h-10 rounded-lg border-2 font-semibold text-sm transition-all ${
                 formData.work_days.includes(day)
-                  ? 'bg-blue-500 border-blue-500 text-white'
-                  : 'border-gray-300 hover:border-blue-500 dark:border-[var(--dm-border)] dark:hover:border-[var(--color-primary)] dark:text-[var(--dm-text)]'
+                  ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                  : 'border-gray-300 hover:border-[var(--color-primary)] dark:border-[var(--dm-border)] dark:hover:border-[var(--color-primary)] dark:text-[var(--dm-text)]'
               }`}
               disabled={isPending}
             >
@@ -209,24 +222,25 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </div>
       </div>
 
+      {/* Subtareas (solo si tipo === checklist) */}
       {formData.tipo === 'checklist' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Subtareas</label>
+        <div className="field">
+          <label className="field-label">Subtareas</label>
           <div className="space-y-2">
             {formData.subtasks.map((subtask, index) => (
-              <div key={subtask.id} className="flex gap-2">
+              <div key={subtask.id} className="subtask-row">
                 <input
                   type="text"
                   value={subtask.titulo}
                   onChange={(e) => handleSubtaskChange(index, 'titulo', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+                  className="field-input"
                   disabled={isPending}
                   placeholder="Subtarea..."
                 />
                 <button
                   type="button"
                   onClick={() => handleSubtaskRemove(index)}
-                  className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg dark:text-red-400 dark:hover:bg-[color-mix(in_srgb,red_12%,transparent)]"
+                  className="subtask-remove-btn"
                   disabled={isPending}
                 >
                   ✕
@@ -236,7 +250,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
             <button
               type="button"
               onClick={handleSubtaskAdd}
-              className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 dark:border-[var(--dm-border)] dark:text-[var(--dm-text-muted)] dark:hover:border-[var(--color-primary)] dark:hover:text-[var(--color-primary)]"
+              className="add-row-btn"
               disabled={isPending}
             >
               + Agregar subtarea
@@ -245,9 +259,9 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </div>
       )}
 
-      {/* Preview for new tasks */}
+      {/* Preview para nuevas tareas */}
       {isNewTask && previewStats && (
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 dark:bg-[color-mix(in_srgb,var(--color-primary)_12%,var(--dm-surface))] dark:border-[var(--dm-border)]">
+        <div className="bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-primary)_12%,var(--dm-surface))] rounded-lg p-4 border border-blue-200 dark:border-[var(--dm-border)]">
           <h4 className="font-medium text-blue-900 dark:text-[var(--color-primary)] mb-2">📊 Preview de ritmo</h4>
           <div className="text-sm text-blue-800 dark:text-[var(--dm-text)] space-y-1">
             <p>Meta diaria estimada: <strong>{previewStats.metaDiariaEstimada}</strong> unidades/día</p>
@@ -257,9 +271,9 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </div>
       )}
 
-      {/* Full stats for existing tasks */}
+      {/* Estadísticas para tareas existentes */}
       {!isNewTask && fullStats && (
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)]">
+        <div className="bg-gray-50 dark:bg-[var(--dm-bg)] rounded-lg p-4 border border-gray-200 dark:border-[var(--dm-border)]">
           <h4 className="font-medium text-gray-900 dark:text-[var(--dm-text)] mb-2">📊 Estadísticas de ritmo</h4>
           <div className="text-sm text-gray-700 dark:text-[var(--dm-text-muted)] space-y-1">
             {fullStats.type === 'cantidad' && (
@@ -278,11 +292,12 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </div>
       )}
 
+      {/* Buttons */}
       <div className="flex gap-3 pt-4">
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-[var(--dm-border)]"
+          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-[var(--dm-border)] transition-colors"
         >
           {isPending ? 'Guardando...' : (initialData ? 'Guardar' : 'Crear')}
         </button>
@@ -291,7 +306,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] dark:disabled:bg-[var(--dm-border)]"
+            className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] dark:disabled:bg-[var(--dm-border)] transition-colors"
           >
             Cancelar
           </button>

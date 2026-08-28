@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import '../styles/forms.css'
 
 export default function SubjectForm({ semesterId, initialData, onSubmit, onCancel, isPending }) {
   const [formData, setFormData] = useState({
@@ -28,83 +29,89 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
 
   return (
     <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Nombre *</label>
+      <div className="field">
+        <label htmlFor="nombre" className="field-label required">Nombre</label>
         <input
+          id="nombre"
           type="text"
           name="nombre"
           value={formData.nombre}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+          className="field-input"
           required
           disabled={isPending}
           autoComplete="off"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Código</label>
+      <div className="field-row two-cols">
+        <div className="min-w-0">
+          <label htmlFor="codigo" className="field-label">Código</label>
           <input
+            id="codigo"
             type="text"
             name="codigo"
             value={formData.codigo}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+            className="field-input"
             disabled={isPending}
             autoComplete="off"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Créditos</label>
+        <div className="min-w-0">
+          <label htmlFor="creditos" className="field-label">Créditos</label>
           <input
+            id="creditos"
             type="number"
             name="creditos"
             value={formData.creditos}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="field-input"
             disabled={isPending}
             autoComplete="off"
           />
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Catedrático</label>
+      <div className="field">
+        <label htmlFor="catedratico" className="field-label">Catedrático</label>
         <input
+          id="catedratico"
           type="text"
           name="catedratico"
           value={formData.catedratico}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+          className="field-input"
           disabled={isPending}
           autoComplete="off"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Sección</label>
+      <div className="field-row two-cols">
+        <div className="min-w-0">
+          <label htmlFor="seccion" className="field-label">Sección</label>
           <input
+            id="seccion"
             type="text"
             name="seccion"
             value={formData.seccion}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+            className="field-input"
             disabled={isPending}
             autoComplete="off"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Ícono</label>
+        <div className="min-w-0">
+          <label htmlFor="icono" className="field-label">Ícono</label>
           <input
+            id="icono"
             type="text"
             name="icono"
             value={formData.icono}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+            className="field-input"
             maxLength={2}
             disabled={isPending}
             autoComplete="off"
@@ -112,12 +119,11 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Color</label>
+      <div className="field">
+        <label className="field-label">Color</label>
         <div className="flex items-center gap-2">
           <input
             type="color"
-            name="color"
             value={formData.color}
             onChange={handleChange}
             className="w-12 h-10 border border-gray-300 rounded cursor-pointer dark:border-[var(--dm-border)]"
@@ -125,10 +131,9 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
           />
           <input
             type="text"
-            name="color"
             value={formData.color}
-            onChange={handleChange}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
+            className="flex-1 field-input"
             disabled={isPending}
             autoComplete="off"
           />
