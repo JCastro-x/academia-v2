@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import Flatpickr from 'react-flatpickr'
+import 'flatpickr/dist/flatpickr.css'
 import { getTaskStats, countWorkDays, todayStr, parseDate } from '../domain/task-stats.js'
 
 export default function TaskForm({ semesterId, subjects, initialData, onSubmit, onCancel, isPending }) {
@@ -137,11 +139,19 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Fecha de entrega</label>
-        <input
-          type="datetime-local"
-          name="due"
+        <Flatpickr
           value={formData.due}
-          onChange={handleChange}
+          onChange={(dates) => {
+            const dateStr = dates[0] ? dates[0].toISOString().slice(0, 16) : ''
+            setFormData(prev => ({ ...prev, due: dateStr }))
+          }}
+          options={{
+            enableTime: true,
+            dateFormat: 'Y-m-d H:i',
+            altInput: true,
+            altFormat: 'd/m/Y H:i',
+            theme: 'light'
+          }}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           disabled={isPending}
         />

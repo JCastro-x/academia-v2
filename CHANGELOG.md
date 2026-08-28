@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## [2026-08-27] — Checkpoint A corregido: Rediseño visual base (tokens lila/celeste, checkboxes, flatpickr, badges)
+
+**Checkpoint A - Base del rediseño visual (corregido):**
+- Tokens de color lila/celeste como acento en `src/styles/index.css`:
+  - Claro: --dm-bg #f9fafb (revertido), --color-primary #8B5CF6, --color-accent #0EA5E9
+  - Oscuro: --dm-bg #16171B (revertido), --color-primary #A78BFA, --color-accent #38BDF8
+  - Nota: Fondo general revertido a valores originales, paleta lila/celeste solo para acentos
+- Checkboxes rediseñados (CSS puro): círculo con borde lila, checkmark blanco cuando activo
+- Flatpickr instalado (flatpickr@4.6.13 + react-flatpickr@4.0.11) y aplicado en TaskForm.jsx como prueba
+- ModalWrapper.jsx usa nuevos tokens CSS (ya usaba variables, solo se actualizan valores)
+- Badges de prioridad corregidos (TaskCard.jsx): clases dark: estáticas agregadas
+- Badge de exigencia corregido (TaskCard.jsx): reemplazado color-mix() por clases estáticas
+- Grep por patrón dark:${ interpolado: 0 ocurrencias encontradas en src/
+
+**Verificado:**
+- Build: npm run build → exitoso (bundle 868.18 kB, CSS 52.61 kB)
+- Flatpickr: funcionando en TaskForm.jsx con formato d/m/Y H:i
+- Badges: prioridad (baja/media/alta) y exigencia ahora con clases estáticas
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de UI)
+
+---
+
 ## [2026-08-27] — Fix de badges dark mode y contención responsive en modales
 
 **BUG 1 - Badges no cambian en dark mode:**

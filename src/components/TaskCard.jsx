@@ -4,9 +4,9 @@ import { useIncrementTaskLogUnit } from '../features/tasks/hooks.js'
 
 export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete }) {
   const priorityColors = {
-    baja: 'bg-green-100 text-green-800',
-    media: 'bg-yellow-100 text-yellow-800',
-    alta: 'bg-red-100 text-red-800',
+    baja: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    media: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    alta: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   }
 
   // Get task statistics
@@ -109,7 +109,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
               {daysRemainingLabel(stats)}
             </span>
             {stats.type === 'cantidad' && stats.exigencia && (
-              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--dm-surface))] dark:text-[var(--color-primary)]">
+              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded dark:bg-purple-900/30 dark:text-purple-400">
                 {stats.exigencia.toFixed(1)}x
               </span>
             )}

@@ -3,23 +3,26 @@
 @tailwind utilities;
 
 :root {
-  /* Dark mode palette variables - light mode defaults */
-  --dm-bg: #f9fafb;           /* fondo base claro (gray-50) */
+  /* Light mode palette - lila/celeste pastel (accent only) */
+  --dm-bg: #f9fafb;           /* fondo base claro (gray-50) - REVERTIDO */
   --dm-surface: #ffffff;       /* tarjetas/superficies elevadas claro */
   --dm-border: #e5e7eb;       /* bordes claro (gray-200) */
   --dm-text: #111827;         /* texto principal claro (gray-900) */
   --dm-text-muted: #6b7280;   /* texto secundario claro (gray-500) */
-
-  --color-primary: #84cc16;
+  --color-primary: #8B5CF6;   /* lila vibrante para acciones (purple-500) */
+  --color-accent: #0EA5E9;    /* celeste/azul cielo acento (sky-500) */
   --font-family: 'Inter', system-ui, sans-serif;
 }
 
 html.dark {
-  --dm-bg: #16171B;           /* fondo base */
+  /* Dark mode palette - lila/celeste oscuro (accent only) */
+  --dm-bg: #16171B;           /* fondo base - REVERTIDO */
   --dm-surface: #1E2025;      /* tarjetas/superficies elevadas */
   --dm-border: #2A2D33;       /* bordes */
   --dm-text: #E8E9EB;         /* texto principal */
   --dm-text-muted: #9A9DA6;   /* texto secundario */
+  --color-primary: #A78BFA;   /* lila vibrante para acciones (purple-400) */
+  --color-accent: #38BDF8;    /* celeste/azul cielo acento (sky-400) */
 }
 
 body {
@@ -32,4 +35,45 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Custom checkbox styling - lila/celeste theme */
+input[type="checkbox"] {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--dm-border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--color-primary);
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+input[type="checkbox"]:disabled {
+  border-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+html.dark input[type="checkbox"]:disabled {
+  border-color: #4b5563;
 }
