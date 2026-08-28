@@ -69,7 +69,7 @@ export default function AppLayout() {
     { path: 'notes', label: 'Notas', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
     { path: 'habits', label: 'Hábitos', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
     { path: 'clock', label: 'Reloj', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { path: 'schedule', label: 'Mi Horario', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+    { path: 'schedule', label: 'Plan Semestral', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
     { path: 'profile', label: 'Perfil', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
   ]
 
@@ -87,7 +87,7 @@ export default function AppLayout() {
     <div className="h-screen bg-gray-50 dark:bg-[var(--dm-bg)] overflow-hidden">
       <TopBar onOpenClassModal={handleOpenClassModal} onOpenQuickAdd={handleOpenQuickAdd} />
 
-      <div className="flex relative h-full overflow-hidden">
+      <div className="flex relative h-full overflow-visible">
         {/* Mobile Overlay */}
         {!isSidebarCollapsed && (
           <div 
@@ -130,7 +130,7 @@ export default function AppLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-6 w-full h-full overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 w-full h-full overflow-y-auto min-w-0">
           <Outlet />
         </main>
       </div>

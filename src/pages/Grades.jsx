@@ -225,11 +225,11 @@ export default function Grades() {
               <div
                 key={subject.id}
                 onClick={() => setSelectedSubjectId(subject.id)}
-                className="bg-white border-2 rounded-lg p-4 cursor-pointer hover:border-blue-400 transition-colors"
+                className="bg-white border-2 rounded-lg p-4 cursor-pointer hover:border-blue-400 transition-colors dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:hover:border-[var(--color-primary)]"
                 style={{ borderColor: subject.color || '#e5e7eb' }}
               >
-                <h3 className="font-semibold text-lg">{subject.nombre}</h3>
-                {subject.codigo && <p className="text-sm text-gray-600">{subject.codigo}</p>}
+                <h3 className="font-semibold text-lg dark:text-[var(--dm-text)]">{subject.nombre}</h3>
+                {subject.codigo && <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">{subject.codigo}</p>}
               </div>
             ))}
           </div>

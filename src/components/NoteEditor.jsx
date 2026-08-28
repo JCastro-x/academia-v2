@@ -210,7 +210,7 @@ export default function NoteEditor({ noteId, onClose }) {
             type="text"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
-            className="text-xl font-semibold flex-1 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-xl font-semibold flex-1 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             placeholder="Título de la nota"
             onKeyDown={handleKeyDown}
             autoComplete="off"

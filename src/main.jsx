@@ -11,7 +11,7 @@ import Overview from './pages/Overview.jsx'
 import CreateFirstSemester from './pages/CreateFirstSemester.jsx'
 import Subjects from './pages/Subjects.jsx'
 import Tasks from './pages/Tasks.jsx'
-import Schedule from './pages/Schedule.jsx'
+import ScheduleTable from './pages/ScheduleTable.jsx'
 import Grades from './pages/Grades.jsx'
 import Calendar from './pages/Calendar.jsx'
 import Notes from './pages/Notes.jsx'
@@ -83,7 +83,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route index element={<Overview />} />
             <Route path="subjects" element={<Subjects />} />
             <Route path="tasks" element={<Tasks />} />
-            <Route path="schedule" element={<Schedule />} />
+            <Route path="schedule" element={<ScheduleTable />} />
             <Route path="grades" element={<Grades />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="notes" element={<Notes />} />

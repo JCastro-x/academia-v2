@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
+import { useUpsertProfile } from '../features/profile/hooks.js'
 import { signOut } from '../lib/supabase.js'
 import { exportAllUserData, downloadJSON } from '../lib/exportData.js'
 
@@ -34,6 +35,7 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
   const navigate = useNavigate()
   const { semesterId } = useParams()
   const now = useCurrentDateTime()
+  const upsertProfile = useUpsertProfile()
 
   const {
     isSidebarCollapsed, toggleSidebar,
@@ -41,6 +43,7 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
     isOnline,
     modoOscuro, setModoOscuro,
     openModal,
+    addToast,
   } = useUIStore()
 
   // Dropdown de ajustes
@@ -89,6 +92,24 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
       console.error('[TopBar] Error logging out:', error)
     }
     setDropdownOpen(false)
+  }
+
+  const handleToggleDarkMode = async () => {
+    const newValue = !modoOscuro
+    // Optimistic update: cambiar estado local inmediatamente
+    setModoOscuro(newValue)
+    
+    // Guardar en Supabase en paralelo
+    try {
+      await upsertProfile.mutateAsync({ modo_oscuro: newValue })
+    } catch (error) {
+      console.error('[TopBar] Error saving dark mode preference:', error)
+      // Mostrar toast de error, pero NO hacer rollback del estado visual
+      addToast({
+        type: 'error',
+        message: 'Error al guardar preferencia de tema. El cambio visual se mantiene pero no persistirá al refrescar.'
+      })
+    }
   }
 
   return (
@@ -150,7 +171,7 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
 
         {/* Toggle claro/oscuro */}
         <button
-          onClick={() => setModoOscuro(!modoOscuro)}
+          onClick={handleToggleDarkMode}
           className="p-2 hover:bg-gray-100 dark:hover:bg-[var(--dm-border)] rounded-lg"
           aria-label={modoOscuro ? 'Modo claro' : 'Modo oscuro'}
           title={modoOscuro ? 'Modo claro' : 'Modo oscuro'}

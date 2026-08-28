@@ -105,7 +105,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
+        <div className="min-w-0">
           <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Materia</label>
           <select
             name="subject_id"
@@ -121,7 +121,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
           </select>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Prioridad</label>
           <select
             name="prioridad"
