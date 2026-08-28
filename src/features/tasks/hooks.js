@@ -121,13 +121,14 @@ export function useIncrementTaskLogUnit() {
   return useMutation({
     mutationFn: ({ taskId, dateStr, delta }) => incrementTaskLogUnit(taskId, dateStr, delta),
     onMutate: async ({ taskId, dateStr, delta }) => {
-      // Cancel outgoing refetches
+      // Cancel outgoing refetches for all relevant query keys
       await queryClient.cancelQueries({ queryKey: tasksQueryKeys.byId(taskId) })
 
-      // Snapshot previous value
+      // Snapshot previous values
       const previousTask = queryClient.getQueryData(tasksQueryKeys.byId(taskId))
+      const previousSemesterId = previousTask?.semester_id
 
-      // Optimistically update cache
+      // Optimistically update byId cache
       queryClient.setQueryData(tasksQueryKeys.byId(taskId), (old) => {
         if (!old) return old
 
@@ -163,13 +164,41 @@ export function useIncrementTaskLogUnit() {
         }
       })
 
-      // Return context with previous task for rollback
-      return { previousTask, taskId }
+      // Optimistically update bySemester cache
+      if (previousSemesterId) {
+        queryClient.setQueryData(tasksQueryKeys.bySemester(previousSemesterId), (old) => {
+          if (!old) return old
+          return old.map(task => 
+            task.id === taskId 
+              ? { ...task, log: queryClient.getQueryData(tasksQueryKeys.byId(taskId))?.log, updated_at: new Date().toISOString() }
+              : task
+          )
+        })
+      }
+
+      // Optimistically update pending cache
+      if (previousSemesterId) {
+        queryClient.setQueryData(tasksQueryKeys.pending(previousSemesterId), (old) => {
+          if (!old) return old
+          return old.map(task =>
+            task.id === taskId
+              ? { ...task, log: queryClient.getQueryData(tasksQueryKeys.byId(taskId))?.log, updated_at: new Date().toISOString() }
+              : task
+          )
+        })
+      }
+
+      // Return context with previous values for rollback
+      return { previousTask, taskId, previousSemesterId }
     },
     onError: (error, variables, context) => {
-      // Rollback to previous value on error
+      // Rollback to previous values on error
       if (context?.previousTask) {
         queryClient.setQueryData(tasksQueryKeys.byId(context.taskId), context.previousTask)
+      }
+      if (context?.previousSemesterId) {
+        queryClient.invalidateQueries({ queryKey: tasksQueryKeys.bySemester(context.previousSemesterId) })
+        queryClient.invalidateQueries({ queryKey: tasksQueryKeys.pending(context.previousSemesterId) })
       }
     },
     onSuccess: (data) => {

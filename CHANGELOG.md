@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [2026-08-27] — Fix de overflow en modal de edición de tarea (Flatpickr)
+
+**Fix de UI - Modal de edición de tarea:**
+- Causa raíz: Flatpickr (agregado en Checkpoint A) posiciona el calendario fuera del flujo normal del DOM, ignorando restricciones de overflow del modal
+- Evidencia: git diff a6896c1 645ad36 muestra reemplazo de input datetime-local por Flatpickr en TaskForm.jsx
+- Solución: Agregar `static: true` a opciones de Flatpickr para posicionar calendario dentro del flujo normal del modal
+- Archivo: `src/components/TaskForm.jsx` - Flatpickr ahora respeta contenedor del modal
+
+**Verificado:**
+- Build: npm run build → exitoso (bundle 868.82 kB)
+- Verificación visual: calendario de Flatpickr contenido dentro del modal en viewports angostos (~500-550px)
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de UI)
+
+---
+
 ## [2026-08-27] — Optimistic update en botón +/- de registro de avance
 
 **Fix de UX - Botón +/- de tasks.log:**
