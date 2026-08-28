@@ -65,40 +65,40 @@ export const playSound = (type = 'click') => {
 
   switch (type) {
     case 'click':
-      playTone({ frequency: 760, duration: 0.1, type: 'sine', volume: 0.08 })
+      playTone({ frequency: 760, duration: 0.1, type: 'sine', volume: 0.24 })
       break
     case 'success':
-      playTone({ frequency: 523.25, duration: 0.24, type: 'sine', volume: 0.09 })
+      playTone({ frequency: 523.25, duration: 0.24, type: 'sine', volume: 0.28 })
       break
     case 'error':
-      playTone({ frequency: 220, duration: 0.18, type: 'sawtooth', volume: 0.07, endFrequency: 120 })
+      playTone({ frequency: 220, duration: 0.18, type: 'sawtooth', volume: 0.22, endFrequency: 120 })
       break
     case 'nav':
-      playTone({ frequency: 440, duration: 0.08, type: 'triangle', volume: 0.05, endFrequency: 620 })
+      playTone({ frequency: 440, duration: 0.08, type: 'triangle', volume: 0.18, endFrequency: 620 })
       break
     case 'modal-open':
-      playTone({ frequency: 420, duration: 0.12, type: 'triangle', volume: 0.06, endFrequency: 720 })
+      playTone({ frequency: 420, duration: 0.12, type: 'triangle', volume: 0.2, endFrequency: 720 })
       break
     case 'modal-close':
-      playTone({ frequency: 720, duration: 0.12, type: 'triangle', volume: 0.06, endFrequency: 360 })
+      playTone({ frequency: 720, duration: 0.12, type: 'triangle', volume: 0.2, endFrequency: 360 })
       break
     case 'task-done':
-      playTone({ frequency: 392, duration: 0.12, type: 'sine', volume: 0.08, endFrequency: 660 })
-      playTone({ frequency: 660, duration: 0.18, type: 'triangle', volume: 0.06, startTime: 0.08, endFrequency: 880 })
+      playTone({ frequency: 392, duration: 0.12, type: 'sine', volume: 0.24, endFrequency: 660 })
+      playTone({ frequency: 660, duration: 0.18, type: 'triangle', volume: 0.18, startTime: 0.08, endFrequency: 880 })
       break
     case 'task-undone':
-      playTone({ frequency: 420, duration: 0.1, type: 'sawtooth', volume: 0.05, endFrequency: 260 })
+      playTone({ frequency: 420, duration: 0.1, type: 'sawtooth', volume: 0.18, endFrequency: 260 })
       break
     case 'save':
-      playTone({ frequency: 540, duration: 0.09, type: 'triangle', volume: 0.06, endFrequency: 760 })
-      playTone({ frequency: 760, duration: 0.11, type: 'sine', volume: 0.05, startTime: 0.08, endFrequency: 980 })
+      playTone({ frequency: 540, duration: 0.09, type: 'triangle', volume: 0.2, endFrequency: 760 })
+      playTone({ frequency: 760, duration: 0.11, type: 'sine', volume: 0.18, startTime: 0.08, endFrequency: 980 })
       break
     case 'delete':
-      playTone({ frequency: 260, duration: 0.12, type: 'sawtooth', volume: 0.07, endFrequency: 140 })
-      playTone({ frequency: 180, duration: 0.14, type: 'square', volume: 0.04, startTime: 0.08, endFrequency: 90 })
+      playTone({ frequency: 260, duration: 0.12, type: 'sawtooth', volume: 0.22, endFrequency: 140 })
+      playTone({ frequency: 180, duration: 0.14, type: 'square', volume: 0.14, startTime: 0.08, endFrequency: 90 })
       break
     default:
-      playTone({ frequency: 760, duration: 0.1, type: 'sine', volume: 0.08 })
+      playTone({ frequency: 760, duration: 0.1, type: 'sine', volume: 0.24 })
       break
   }
 }

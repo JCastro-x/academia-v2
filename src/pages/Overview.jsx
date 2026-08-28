@@ -6,10 +6,8 @@ import { usePendingTasks, useCreateTask, useToggleTaskDone, useDeleteTask } from
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import TaskList from '../components/TaskList.jsx'
-import TaskForm from '../components/TaskForm.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
 import SemesterForm from '../components/SemesterForm.jsx'
-import ModalWrapper from '../components/ModalWrapper.jsx'
 import QuickAdd from '../components/QuickAdd.jsx'
 
 export default function Overview() {
@@ -22,8 +20,7 @@ export default function Overview() {
   const deleteTask = useDeleteTask()
   const createSubject = useCreateSubject()
   const updateSemester = useUpdateSemester()
-  const { isModalOpen, modalContent, openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
-  const [editingTask, setEditingTask] = useState(null)
+  const { openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
   const [showEvents, setShowEvents] = useState(false)
 
   const handleCreateTask = async (taskData) => {
@@ -129,57 +126,13 @@ export default function Overview() {
             tasks={pendingTasks?.filter(t => !t.done && !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)) || []}
             subjects={subjects}
             onToggleDone={handleToggleDone}
-            onEdit={(task) => { setEditingTask(task); openModal('task') }}
+            onEdit={(task) => openModal('task', { editingTask: task })}
             onDelete={handleDeleteTask}
           />
         </div>
       </div>
 
       <QuickAdd semesterId={semesterId} subjects={subjects} />
-
-      <ModalWrapper
-        isOpen={isModalOpen && modalContent === 'task'}
-        onClose={() => { setEditingTask(null); closeModal() }}
-        className="p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
-      >
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
-        <TaskForm
-          semesterId={semesterId}
-          subjects={subjects}
-          initialData={editingTask}
-          onSubmit={handleCreateTask}
-          onCancel={() => { setEditingTask(null); closeModal() }}
-          isPending={createTask.isPending}
-        />
-      </ModalWrapper>
-
-      <ModalWrapper
-        isOpen={isModalOpen && modalContent === 'subject'}
-        onClose={closeModal}
-        className="p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
-      >
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Nueva materia</h3>
-        <SubjectForm
-          semesterId={semesterId}
-          onSubmit={handleCreateSubject}
-          onCancel={closeModal}
-          isPending={createSubject.isPending}
-        />
-      </ModalWrapper>
-
-      <ModalWrapper
-        isOpen={isModalOpen && modalContent === 'semester'}
-        onClose={closeModal}
-        className="p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
-      >
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Editar semestre</h3>
-        <SemesterForm
-          initialData={semester}
-          onSubmit={handleUpdateSemester}
-          onCancel={closeModal}
-          isPending={updateSemester.isPending}
-        />
-      </ModalWrapper>
     </div>
   )
 }

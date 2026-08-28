@@ -22,7 +22,7 @@ export default function SemesterForm({ initialData, onSubmit, onCancel, isPendin
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
+    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
           Nombre del semestre *

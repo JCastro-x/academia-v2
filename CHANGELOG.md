@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## [2026-08-28] — Paso 2.1: modal global + payload para tarea y materia
+
+**Tarea:** corregir la raíz del bug arquitectónico de modal global: la acción de “Agregar”/“Editar tarea” se disparaba desde páginas y botones que no eran el host renderizador, haciendo que el flujo sólo funcionara desde Overview.
+
+**Implementado:**
+- `src/stores/ui.store.js`: agregado `modalPayload` y soporte a `openModal(content, payload)` / `closeModal()` con limpieza de payload.
+- `src/components/GlobalModalHost.jsx`: nuevo host global que renderiza `quickadd`, `task` y `subject` desde una única ubicación.
+- `src/layouts/AppLayout.jsx`: montaje del `GlobalModalHost` dentro del shell principal de la app.
+- `src/components/TaskCard.jsx`: confirmación explícita del disparo de edición desde el botón ✏️, invocando `onEdit(task)` para que el caller abra el modal global con payload `{ editingTask: task }`.
+- `src/pages/Overview.jsx` y `src/pages/Tasks.jsx`: removido el render local de pestañas de tarea y reemplazado por `openModal('task', { editingTask: task })` / `openModal('task', { editingTask: null })` sin duplicar el modal.
+- `src/components/QuickAdd.jsx`: “Nueva Tarea” y “Nueva Clase” ahora abren el host global con payloads correctos.
+- `src/stores/ui.store.test.js`: agregar prueba de regresión para verificar que modalPayload se guarda junto con `modalContent`.
+
+**Verificado:**
+- `npx vitest run src/stores/ui.store.test.js` → 1 test pasando.
+- `npm test -- --run` → suite completa en verde.
+- `npm run build` → compilación exitosa.
+
+**Validación funcional recomendada por QA:**
+- Abrir la app desde una ruta distinta a Overview y probar “Agregar” y “Editar tarea” desde una página distinta para confirmar que el modal se renderiza globalmente sin depender de la página actual.
+- Confirmar que un task editado conserva `task.subject_id` y que el modal de creación mantiene `subject_id` en `null` cuando no se selecciona materia.
+
+---
+
 ## [2026-08-28] — Paso 2: sonidos de interacción + integración en páginas
 
 **Tarea:** cerrar el patrón de sonido de Academia con Web Audio API sintetizada, sin sonidos ambientales ni Pomodoro, manteniendo compatibilidad con los tipos existentes `click`, `success`, `error` y extendiendo el repertorio para navegación, modal, tareas y guardado.

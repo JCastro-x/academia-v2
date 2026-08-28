@@ -512,7 +512,7 @@ export default function Grades() {
           } else {
             handleCreateTopic(topicData)
           }
-        }} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
+        }} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">
               Materia *

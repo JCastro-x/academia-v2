@@ -20,8 +20,9 @@ export const useUIStore = create((set) => ({
   // Modal state
   isModalOpen: false,
   modalContent: null,
-  openModal: (content) => set({ isModalOpen: true, modalContent: content }),
-  closeModal: () => set({ isModalOpen: false, modalContent: null }),
+  modalPayload: null,
+  openModal: (content, payload = null) => set({ isModalOpen: true, modalContent: content, modalPayload: payload }),
+  closeModal: () => set({ isModalOpen: false, modalContent: null, modalPayload: null }),
 
   // Confirm dialog state
   confirmDialog: null,

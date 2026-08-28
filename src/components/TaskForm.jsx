@@ -90,7 +90,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
+    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text-muted)]">Título *</label>
         <input
@@ -101,6 +101,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           required
           disabled={isPending}
+          autoComplete="off"
         />
       </div>
 

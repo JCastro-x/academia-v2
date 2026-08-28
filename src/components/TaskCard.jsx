@@ -166,6 +166,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
           <button
             onClick={() => onEdit(task)}
             className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]"
+            aria-label={`Editar tarea ${task.titulo}`}
           >
             ✏️
           </button>

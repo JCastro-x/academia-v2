@@ -17,8 +17,7 @@ export default function Tasks() {
   const toggleTaskDone = useToggleTaskDone()
   const deleteTask = useDeleteTask()
   const deleteCompletedTasks = useDeleteCompletedTasks()
-  const { isModalOpen, modalContent, openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
-  const [editingTask, setEditingTask] = useState(null)
+  const { openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
   const [filterSubject, setFilterSubject] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -120,7 +119,7 @@ export default function Tasks() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Tareas</h1>
         <button
-          onClick={() => { setEditingTask(null); openModal('task') }}
+          onClick={() => openModal('task', { editingTask: null })}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full sm:w-auto"
         >
           + Nueva tarea
@@ -134,6 +133,7 @@ export default function Tasks() {
             placeholder="Buscar tareas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            autoComplete="off"
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           />
 
@@ -185,29 +185,10 @@ export default function Tasks() {
           tasks={filteredTasks}
           subjects={subjects}
           onToggleDone={handleToggleDone}
-          onEdit={(task) => { setEditingTask(task); openModal('task') }}
+          onEdit={(task) => openModal('task', { editingTask: task })}
           onDelete={handleDeleteTask}
         />
       </div>
-
-      <ModalWrapper
-        isOpen={isModalOpen && modalContent === 'task'}
-        onClose={() => { setEditingTask(null); closeModal() }}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
-      >
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
-        <TaskForm
-          semesterId={semesterId}
-          subjects={subjects}
-          initialData={editingTask}
-          onSubmit={editingTask
-            ? (data) => handleUpdateTask(editingTask.id, data)
-            : handleCreateTask
-          }
-          onCancel={() => { setEditingTask(null); closeModal() }}
-          isPending={editingTask ? updateTask.isPending : createTask.isPending}
-        />
-      </ModalWrapper>
     </div>
   )
 }
