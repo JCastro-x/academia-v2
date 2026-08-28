@@ -7,6 +7,7 @@ import ImportModal from '../components/ImportModal.jsx'
 import UndoToast from '../components/UndoToast.jsx'
 import Lightbox from '../components/Lightbox.jsx'
 import TopBar from '../components/TopBar.jsx'
+import { playSound } from '../lib/sound.js'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
@@ -87,7 +88,7 @@ export default function AppLayout() {
     <div className="h-screen bg-gray-50 dark:bg-[var(--dm-bg)] overflow-hidden">
       <TopBar onOpenClassModal={handleOpenClassModal} onOpenQuickAdd={handleOpenQuickAdd} />
 
-      <div className="flex relative h-full overflow-visible">
+      <div className="flex relative h-full min-h-0 overflow-visible">
         {/* Mobile Overlay */}
         {!isSidebarCollapsed && (
           <div 
@@ -109,6 +110,7 @@ export default function AppLayout() {
                   <Link
                     to={`/s/${semesterId}/${item.path}`}
                     onClick={() => {
+                      playSound('nav')
                       if (window.innerWidth < 768) toggleSidebar()
                     }}
                     className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
@@ -130,7 +132,7 @@ export default function AppLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-6 w-full h-full overflow-y-auto min-w-0">
+        <main className="flex-1 min-w-0 w-full h-full overflow-y-auto overscroll-contain p-4 md:p-6 pb-20">
           <Outlet />
         </main>
       </div>

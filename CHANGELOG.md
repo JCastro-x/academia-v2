@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## [2026-08-28] — Paso 1: sistema visual base unificado
+
+**Tarea:** Adaptar patrones visuales de Academia y Ritmo a los tokens y componentes React actuales.
+
+**Implementado:**
+- `src/styles/index.css`: aliases visuales sobre `--dm-*`, radios, sombras, easing, transiciones y focus visible.
+- `src/components/ModalWrapper.jsx`: overlay con blur y panel con `rounded-2xl` y sombra compartida.
+- `src/components/SubjectCard.jsx` y `src/components/TaskCard.jsx`: superficies y sombras visuales consistentes.
+- `--border2` usa `color-mix(in srgb, var(--dm-border) 80%, var(--dm-text) 20%)`; no se duplicaron tokens de color.
+
+**Verificado:**
+- `npm test -- --run` → 5 archivos y 105 tests pasando.
+- `npm run build` → compilación exitosa.
+- Checkpoint visual local → shell cargado; el contenido autenticado quedó bloqueado por el problema preexistente del modo invitado (`guest` no es un UUID válido para Supabase).
+
+**Estado de la base de datos remota:** NO APLICA.
+
+**Desviaciones del plan original:** Ninguna; se preservó la paleta lila/celeste existente y no se copiaron CSS legacy completos.
+
+**Pendiente / preguntas abiertas:** Revisar visualmente Overview, TaskCard y modal con una sesión autenticada o después de corregir el modo invitado.
+
 ## [2026-08-27] — metaHoyRestante: meta decreciente para tareas tipo 'cantidad'
 
 **Cambio de comportamiento - Tareas tipo 'cantidad':**

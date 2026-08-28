@@ -101,7 +101,7 @@ export default function Profile() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="max-w-2xl mx-auto"
+      className="max-w-2xl mx-auto pb-16"
     >
       <h1 className="text-2xl font-bold mb-6 dark:text-[var(--dm-text)]">Mi Perfil</h1>
 

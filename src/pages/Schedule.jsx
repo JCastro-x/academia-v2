@@ -113,7 +113,7 @@ export default function Schedule() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Mi Horario</h1>
@@ -123,19 +123,19 @@ export default function Schedule() {
         <div className="flex items-center gap-2">
           <button
             onClick={goToPreviousWeek}
-            className="p-2 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)]"
+            className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
           >
             ←
           </button>
           <button
             onClick={goToCurrentWeek}
-            className="px-3 py-1 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)] text-sm"
+            className="px-3 py-1 text-gray-700 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] text-sm"
           >
             Hoy
           </button>
           <button
             onClick={goToNextWeek}
-            className="p-2 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)]"
+            className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
           >
             →
           </button>

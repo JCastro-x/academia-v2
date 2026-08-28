@@ -172,13 +172,13 @@ export default function Calendar() {
   const monthEventsAndTasks = getEventsAndTasksForMonth()
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Calendario</h1>
         <div className="flex items-center gap-4">
           <button
             onClick={handlePreviousMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)]"
+            className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
           >
             ←
           </button>
@@ -187,7 +187,7 @@ export default function Calendar() {
           </span>
           <button
             onClick={handleNextMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)]"
+            className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
           >
             →
           </button>
@@ -218,7 +218,7 @@ export default function Calendar() {
                 key={day}
                 onClick={() => handleDayClick(day)}
                 whileHover={{ scale: 1.02 }}
-                className={`h-24 p-2 rounded-lg border text-left relative overflow-hidden transition-colors ${
+                className={`h-24 min-w-0 p-2 rounded-lg border text-left relative overflow-hidden transition-colors ${
                   isToday(day) 
                     ? 'border-blue-500 bg-blue-50 dark:border-[var(--color-primary)] dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--dm-surface))]' 
                     : 'border-gray-200 hover:bg-gray-50 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:hover:bg-[var(--dm-border)]'
@@ -232,7 +232,7 @@ export default function Calendar() {
                   {dayEvents.slice(0, 2).map(event => (
                     <div
                       key={event.id}
-                      className="text-xs bg-purple-100 text-purple-800 px-1 rounded truncate"
+                      className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200 px-1 rounded min-w-0 break-words overflow-hidden truncate"
                     >
                       {event.nombre}
                     </div>
@@ -240,10 +240,10 @@ export default function Calendar() {
                   {dayTasks.slice(0, 1).map(task => (
                     <div
                       key={task.id}
-                      className={`text-xs px-1 rounded truncate ${
+                      className={`text-xs px-1 rounded min-w-0 break-words overflow-hidden truncate ${
                         task.done 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-orange-100 text-orange-800'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+                          : 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200'
                       }`}
                     >
                       {task.titulo}
@@ -261,7 +261,7 @@ export default function Calendar() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-4 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
+      <div className="bg-white rounded-lg shadow-md p-4 min-w-0 overflow-visible pb-16 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
         <h2 className="text-lg font-semibold mb-4 dark:text-[var(--dm-text)]">Eventos y tareas del mes</h2>
         
         {monthEventsAndTasks.length === 0 ? (
@@ -269,7 +269,7 @@ export default function Calendar() {
             No hay eventos ni tareas este mes
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             {monthEventsAndTasks.map(item => {
               const isPendingDelete = pendingDeletes.some(
                 pd => pd.type === 'event' && pd.itemId === item.id
@@ -289,7 +289,9 @@ export default function Calendar() {
                   key={item.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`p-3 rounded-lg border ${
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.995 }}
+                  className={`p-3 rounded-lg border min-w-0 ${
                     item.type === 'event'
                       ? 'border-purple-200 bg-purple-50'
                       : item.done
@@ -297,19 +299,19 @@ export default function Calendar() {
                       : 'border-orange-200 bg-orange-50'
                   } dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                  <div className="flex items-start justify-between gap-3 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
                         <span className={`text-xs font-semibold px-2 py-1 rounded ${
                           item.type === 'event'
-                            ? 'bg-purple-200 text-purple-800'
+                            ? 'bg-purple-200 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200'
                             : item.done
-                            ? 'bg-green-200 text-green-800'
-                            : 'bg-orange-200 text-orange-800'
+                            ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+                            : 'bg-orange-200 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200'
                         }`}>
                           {item.type === 'event' ? 'Evento' : 'Tarea'}
                         </span>
-                        <span className="text-sm text-gray-500 dark:text-[var(--dm-text-muted)]">{formattedDate}</span>
+                        <span className="text-sm text-gray-500 dark:text-[var(--dm-text-muted)] truncate">{formattedDate}</span>
                       </div>
                       <h3 className="font-semibold mt-1 dark:text-[var(--dm-text)]">{item.nombre || item.titulo}</h3>
                       {item.descripcion && (
@@ -321,7 +323,7 @@ export default function Calendar() {
                         </span>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-shrink-0">
                       <button
                         onClick={() => { setEditingEvent(item); setSelectedDate(itemDate); openModal('event') }}
                         className="text-blue-600 hover:text-blue-800 text-sm dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)]"

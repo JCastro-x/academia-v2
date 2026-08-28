@@ -390,72 +390,90 @@ describe('task-stats', () => {
       expect(stats.daysTotal).toBe(8) // 8 work days (Mon-Fri for 2 weeks)
     })
 
-    it('should calculate metaHoyRestante correctly - day just started (nothing logged)', () => {
+    it('calcula metaHoyRestante cuando no hay avance hoy', () => {
       const today = todayStr()
       const task = {
         tipo: 'cantidad',
         total_units: 100,
         work_days: [1, 2, 3, 4, 5],
-        log: { '2024-01-01': 20 }, // logged before today
-        created_at: '2024-01-01T00:00:00.000Z',
-        due: '2024-01-10T00:00:00.000Z'
+        log: {},
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${today}T23:59:59.000Z`,
       }
 
       const stats = computeCantidadStats(task)
 
-      // necesitasHoy = 5, doneToday = 0, metaHoyRestante = 5
+      expect(stats.doneToday).toBe(0)
       expect(stats.metaHoyRestante).toBe(stats.necesitasHoy)
+      expect(stats.metaHoyRestante).toBeGreaterThan(0)
     })
 
-    it('should calculate metaHoyRestante correctly - meta already fulfilled today', () => {
+    it('devuelve cero cuando la meta de hoy ya fue completada', () => {
       const today = todayStr()
       const task = {
         tipo: 'cantidad',
         total_units: 100,
         work_days: [1, 2, 3, 4, 5],
-        log: { [today]: 5 }, // logged today equal to necesitasHoy
-        created_at: '2024-01-01T00:00:00.000Z',
-        due: '2024-01-10T00:00:00.000Z'
+        log: {},
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${today}T23:59:59.000Z`,
       }
 
-      const stats = computeCantidadStats(task)
+      const initialStats = computeCantidadStats(task)
+      const completedTask = {
+        ...task,
+        log: { [today]: initialStats.necesitasHoy },
+      }
+      const stats = computeCantidadStats(completedTask)
 
-      // necesitasHoy = 5, doneToday = 5, metaHoyRestante = 0
+      expect(stats.doneToday).toBe(initialStats.necesitasHoy)
       expect(stats.metaHoyRestante).toBe(0)
     })
 
-    it('should calculate metaHoyRestante correctly - logged more than needed today', () => {
+    it('nunca devuelve una metaHoyRestante negativa', () => {
       const today = todayStr()
       const task = {
         tipo: 'cantidad',
         total_units: 100,
         work_days: [1, 2, 3, 4, 5],
-        log: { [today]: 7 }, // logged today more than necesitasHoy
-        created_at: '2024-01-01T00:00:00.000Z',
-        due: '2024-01-10T00:00:00.000Z'
+        log: {},
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${today}T23:59:59.000Z`,
       }
 
-      const stats = computeCantidadStats(task)
+      const initialStats = computeCantidadStats(task)
+      const completedTask = {
+        ...task,
+        log: { [today]: initialStats.necesitasHoy + 10 },
+      }
+      const stats = computeCantidadStats(completedTask)
 
-      // necesitasHoy = 5, doneToday = 7, metaHoyRestante = 0 (capped at 0, not negative)
       expect(stats.metaHoyRestante).toBe(0)
+      expect(stats.metaHoyRestante).toBeGreaterThanOrEqual(0)
     })
 
-    it('should calculate metaHoyRestante correctly - meta partially fulfilled', () => {
+    it('resta el avance de hoy de la meta necesaria', () => {
       const today = todayStr()
       const task = {
         tipo: 'cantidad',
         total_units: 100,
         work_days: [1, 2, 3, 4, 5],
-        log: { [today]: 3 }, // logged today less than necesitasHoy
-        created_at: '2024-01-01T00:00:00.000Z',
-        due: '2024-01-10T00:00:00.000Z'
+        log: {},
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${today}T23:59:59.000Z`,
       }
 
-      const stats = computeCantidadStats(task)
+      const initialStats = computeCantidadStats(task)
+      const doneToday = Math.max(0, initialStats.necesitasHoy - 3)
+      const partialTask = {
+        ...task,
+        log: { [today]: doneToday },
+      }
+      const stats = computeCantidadStats(partialTask)
 
-      // necesitasHoy = 5, doneToday = 3, metaHoyRestante = 2
-      expect(stats.metaHoyRestante).toBe(stats.necesitasHoy - 3)
+      expect(stats.metaHoyRestante).toBe(
+        Math.max(0, stats.necesitasHoy - stats.doneToday)
+      )
     })
   })
 

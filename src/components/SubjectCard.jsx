@@ -7,7 +7,9 @@ export default function SubjectCard({ subject, onEdit, onDelete }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-lg shadow-md p-4 border-l-4 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)]"
+      whileHover={{ y: -3, boxShadow: '0 10px 24px rgba(15, 23, 42, 0.12)' }}
+      whileTap={{ scale: 0.99 }}
+      className="bg-white rounded-xl shadow-[var(--shadow-sm)] p-4 border-l-4 transition-shadow dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)]"
       style={{ borderLeftColor: subject.color }}
     >
       <div className="flex items-start justify-between">

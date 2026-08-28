@@ -94,7 +94,7 @@ export default function ScheduleTable() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Plan Semestral</h1>
         {semesterContext && (
@@ -106,8 +106,8 @@ export default function ScheduleTable() {
         )}
       </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-y-auto dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-lg shadow-md overflow-y-visible pb-16 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
+        <div className="overflow-x-auto pb-16">
           <table className="min-w-full">
             <thead>
               <tr className="bg-gray-50 dark:bg-[var(--dm-bg)]">
@@ -147,13 +147,13 @@ export default function ScheduleTable() {
                   {subjects?.map(subject => {
                     const items = getItemsForWeekAndSubject(week, subject.id)
                     return (
-                      <td key={subject.id} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-[var(--dm-text)]">
+                      <td key={subject.id} className="px-4 py-3 min-w-0 text-sm text-gray-900 dark:text-[var(--dm-text)]">
                         {items.length > 0 ? (
                           <div className="space-y-1">
                             {items.map(item => (
                               <div
                                 key={item.id}
-                                className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] truncate"
+                                className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded min-w-0 max-w-full overflow-hidden text-ellipsis break-words dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
                               >
                                 {item.titulo || item.nombre}
                               </div>

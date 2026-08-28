@@ -6,6 +6,7 @@ import { useUIStore } from '../stores/ui.store.js'
 import TaskList from '../components/TaskList.jsx'
 import TaskForm from '../components/TaskForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
+import { playSound } from '../lib/sound.js'
 
 export default function Tasks() {
   const { semesterId } = useParams()
@@ -26,6 +27,7 @@ export default function Tasks() {
   const handleCreateTask = async (taskData) => {
     try {
       await createTask.mutateAsync(taskData)
+      playSound('save')
       closeModal()
     } catch (error) {
       console.error('Error creating task:', error)
@@ -35,6 +37,7 @@ export default function Tasks() {
   const handleUpdateTask = async (id, updates) => {
     try {
       await updateTask.mutateAsync({ id, updates })
+      playSound('save')
       closeModal()
       setEditingTask(null)
     } catch (error) {
@@ -45,6 +48,7 @@ export default function Tasks() {
   const handleToggleDone = async (id, done) => {
     try {
       await toggleTaskDone.mutateAsync({ id, done })
+      playSound(done ? 'task-done' : 'task-undone')
     } catch (error) {
       console.error('Error toggling task:', error)
     }
@@ -63,6 +67,7 @@ export default function Tasks() {
           onTimeout: async () => {
             try {
               await deleteTask.mutateAsync(task.id)
+              playSound('delete')
               removePendingDelete(pendingDeleteId)
             } catch (error) {
               console.error('Error deleting task:', error)
@@ -87,6 +92,7 @@ export default function Tasks() {
       onConfirm: async () => {
         try {
           await deleteCompletedTasks.mutateAsync(semesterId)
+          playSound('delete')
         } catch (error) {
           console.error('Error deleting completed tasks:', error)
         }
@@ -110,7 +116,7 @@ export default function Tasks() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Tareas</h1>
         <button
@@ -174,13 +180,15 @@ export default function Tasks() {
         </div>
       </div>
 
-      <TaskList
-        tasks={filteredTasks}
-        subjects={subjects}
-        onToggleDone={handleToggleDone}
-        onEdit={(task) => { setEditingTask(task); openModal('task') }}
-        onDelete={handleDeleteTask}
-      />
+      <div className="min-w-0 pb-16">
+        <TaskList
+          tasks={filteredTasks}
+          subjects={subjects}
+          onToggleDone={handleToggleDone}
+          onEdit={(task) => { setEditingTask(task); openModal('task') }}
+          onDelete={handleDeleteTask}
+        />
+      </div>
 
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'task'}

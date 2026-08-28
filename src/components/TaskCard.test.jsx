@@ -22,7 +22,7 @@ describe('TaskCard', () => {
   })
 
   describe('tipo="cantidad" con meta definida', () => {
-    it('muestra Meta hoy, Necesitás, Recomendado y Falta total con valores correctos en estado inicial', () => {
+    it('muestra Meta hoy, Recomendado y Falta total', () => {
       const task = {
         id: 'task-1',
         tipo: 'cantidad',
@@ -50,9 +50,9 @@ describe('TaskCard', () => {
       )
 
       expect(screen.getByText(/Meta hoy:/i)).toBeInTheDocument()
-      expect(screen.getByText(/Necesitás:/i)).toBeInTheDocument()
       expect(screen.getByText(/Recomendado:/i)).toBeInTheDocument()
       expect(screen.getByText(/Falta total:/i)).toBeInTheDocument()
+      expect(screen.queryByText(/Necesitás:/i)).not.toBeInTheDocument()
     })
 
     it('simula click en "+" y verifica valores exactos sin doble conteo (total_units=10, workDaysRemaining=4, log[today]=2)', () => {
@@ -85,9 +85,9 @@ describe('TaskCard', () => {
 
       // Verificar valores iniciales
       expect(screen.getByText(/Meta hoy:/i)).toBeInTheDocument()
-      expect(screen.getByText(/Necesitás:/i)).toBeInTheDocument()
       expect(screen.getByText(/Recomendado:/i)).toBeInTheDocument()
       expect(screen.getByText(/Falta total:/i)).toBeInTheDocument()
+      expect(screen.queryByText(/Necesitás:/i)).not.toBeInTheDocument()
 
       // El test verifica que getTaskStats (función real del dominio) calcula correctamente
       // y que TaskCard muestra esos valores sin doble conteo
@@ -130,7 +130,6 @@ describe('TaskCard', () => {
       )
 
       expect(screen.queryByText(/Meta hoy:/i)).not.toBeInTheDocument()
-      expect(screen.queryByText(/Necesitás:/i)).not.toBeInTheDocument()
       expect(screen.queryByText(/Recomendado:/i)).not.toBeInTheDocument()
       expect(screen.queryByText(/Falta total:/i)).not.toBeInTheDocument()
     })
@@ -162,7 +161,6 @@ describe('TaskCard', () => {
       )
 
       expect(screen.queryByText(/Meta hoy:/i)).not.toBeInTheDocument()
-      expect(screen.queryByText(/Necesitás:/i)).not.toBeInTheDocument()
       expect(screen.queryByText(/Recomendado:/i)).not.toBeInTheDocument()
       expect(screen.queryByText(/Falta total:/i)).not.toBeInTheDocument()
     })

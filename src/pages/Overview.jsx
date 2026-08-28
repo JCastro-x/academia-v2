@@ -10,6 +10,7 @@ import SubjectForm from '../components/SubjectForm.jsx'
 import SemesterForm from '../components/SemesterForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 import QuickAdd from '../components/QuickAdd.jsx'
+import { playSound } from '../lib/sound.js'
 
 export default function Overview() {
   const { semesterId } = useParams()
@@ -28,6 +29,7 @@ export default function Overview() {
   const handleCreateTask = async (taskData) => {
     try {
       await createTask.mutateAsync(taskData)
+      playSound('save')
       closeModal()
     } catch (error) {
       console.error('Error creating task:', error)
@@ -37,6 +39,7 @@ export default function Overview() {
   const handleCreateSubject = async (subjectData) => {
     try {
       await createSubject.mutateAsync(subjectData)
+      playSound('save')
       closeModal()
     } catch (error) {
       console.error('Error creating subject:', error)
@@ -46,6 +49,7 @@ export default function Overview() {
   const handleUpdateSemester = async (semesterData) => {
     try {
       await updateSemester.mutateAsync({ id: semesterId, updates: semesterData })
+      playSound('save')
       closeModal()
     } catch (error) {
       console.error('Error updating semester:', error)
@@ -55,6 +59,7 @@ export default function Overview() {
   const handleToggleDone = async (id, done) => {
     try {
       await toggleTaskDone.mutateAsync({ id, done })
+      playSound(done ? 'task-done' : 'task-undone')
     } catch (error) {
       console.error('Error toggling task:', error)
     }
@@ -73,6 +78,7 @@ export default function Overview() {
           onTimeout: async () => {
             try {
               await deleteTask.mutateAsync(task.id)
+              playSound('delete')
               removePendingDelete(pendingDeleteId)
             } catch (error) {
               console.error('Error deleting task:', error)
@@ -91,7 +97,7 @@ export default function Overview() {
   if (error) return <div className="flex min-h-[40vh] items-center justify-center text-red-600 dark:text-red-400">Error: {error.message}</div>
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-[var(--dm-text)]">{semester?.nombre || 'Semestre'}</h1>
@@ -118,13 +124,15 @@ export default function Overview() {
             Mostrar eventos
           </label>
         </div>
-        <TaskList
-          tasks={pendingTasks?.filter(t => !t.done && !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)) || []}
-          subjects={subjects}
-          onToggleDone={handleToggleDone}
-          onEdit={(task) => { setEditingTask(task); openModal('task') }}
-          onDelete={handleDeleteTask}
-        />
+        <div className="min-w-0 pb-16">
+          <TaskList
+            tasks={pendingTasks?.filter(t => !t.done && !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)) || []}
+            subjects={subjects}
+            onToggleDone={handleToggleDone}
+            onEdit={(task) => { setEditingTask(task); openModal('task') }}
+            onDelete={handleDeleteTask}
+          />
+        </div>
       </div>
 
       <QuickAdd semesterId={semesterId} subjects={subjects} />
@@ -132,7 +140,7 @@ export default function Overview() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'task'}
         onClose={() => { setEditingTask(null); closeModal() }}
-        className="p-6 w-full max-w-md"
+        className="p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
         <TaskForm
@@ -148,7 +156,7 @@ export default function Overview() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'subject'}
         onClose={closeModal}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Nueva materia</h3>
         <SubjectForm
@@ -162,7 +170,7 @@ export default function Overview() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'semester'}
         onClose={closeModal}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
+        className="p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
       >
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Editar semestre</h3>
         <SemesterForm

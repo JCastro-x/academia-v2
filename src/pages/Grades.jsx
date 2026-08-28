@@ -219,13 +219,13 @@ export default function Grades() {
     <div className="space-y-6">
       {!selectedSubjectId ? (
         <>
-          <h1 className="text-2xl font-bold">Calificaciones</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Calificaciones</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {subjects?.map(subject => (
               <div
                 key={subject.id}
                 onClick={() => setSelectedSubjectId(subject.id)}
-                className="bg-white border-2 rounded-lg p-4 cursor-pointer hover:border-blue-400 transition-colors dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:hover:border-[var(--color-primary)]"
+                className="bg-white border-2 rounded-lg p-4 cursor-pointer hover:border-blue-400 hover:-translate-y-0.5 hover:shadow-md transition-all dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:hover:border-[var(--color-primary)]"
                 style={{ borderColor: subject.color || '#e5e7eb' }}
               >
                 <h3 className="font-semibold text-lg dark:text-[var(--dm-text)]">{subject.nombre}</h3>
@@ -248,7 +248,7 @@ export default function Grades() {
             >
               ← Volver a materias
             </button>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">
               {subjects?.find(s => s.id === selectedSubjectId)?.nombre}
             </h1>
           </div>
@@ -259,7 +259,7 @@ export default function Grades() {
               className={`px-4 py-2 rounded-lg ${
                 viewMode === 'grades' 
                   ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]'
               }`}
             >
               Calificaciones
@@ -269,7 +269,7 @@ export default function Grades() {
               className={`px-4 py-2 rounded-lg ${
                 viewMode === 'topics' 
                   ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]'
               }`}
             >
               Temas
