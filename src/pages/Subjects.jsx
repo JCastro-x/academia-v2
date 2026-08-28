@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useSubjects, useCreateSubject, useUpdateSubject, useDeleteSubject } from '../features/subjects/hooks.js'
 import { countTasksBySubject } from '../features/tasks/api.js'
 import { useUIStore } from '../stores/ui.store.js'
+import { playSound } from '../lib/sound.js'
 import SubjectCard from '../components/SubjectCard.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
@@ -19,6 +20,7 @@ export default function Subjects() {
   const handleCreateSubject = async (subjectData) => {
     try {
       await createSubject.mutateAsync(subjectData)
+      playSound('save')
       closeModal()
     } catch (error) {
       console.error('Error creating subject:', error)
@@ -28,6 +30,7 @@ export default function Subjects() {
   const handleUpdateSubject = async (id, updates) => {
     try {
       await updateSubject.mutateAsync({ id, updates })
+      playSound('save')
       closeModal()
       setEditingSubject(null)
     } catch (error) {
@@ -60,6 +63,7 @@ export default function Subjects() {
             message: `Materia "${subject.nombre}" eliminada`,
             onTimeout: async () => {
               try {
+                playSound('delete')
                 await deleteSubject.mutateAsync(subject.id)
                 removePendingDelete(pendingDeleteId)
               } catch (error) {

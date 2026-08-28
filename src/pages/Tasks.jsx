@@ -3,10 +3,10 @@ import { useState } from 'react'
 import { useTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useDeleteTask, useDeleteCompletedTasks } from '../features/tasks/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
+import { playSound } from '../lib/sound.js'
 import TaskList from '../components/TaskList.jsx'
 import TaskForm from '../components/TaskForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
-import { playSound } from '../lib/sound.js'
 
 export default function Tasks() {
   const { semesterId } = useParams()
@@ -66,8 +66,8 @@ export default function Tasks() {
           message: `Tarea "${task.titulo}" eliminada`,
           onTimeout: async () => {
             try {
-              await deleteTask.mutateAsync(task.id)
               playSound('delete')
+              await deleteTask.mutateAsync(task.id)
               removePendingDelete(pendingDeleteId)
             } catch (error) {
               console.error('Error deleting task:', error)

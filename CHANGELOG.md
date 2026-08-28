@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## [2026-08-28] — Paso 2: sonidos de interacción + integración en páginas
+
+**Tarea:** cerrar el patrón de sonido de Academia con Web Audio API sintetizada, sin sonidos ambientales ni Pomodoro, manteniendo compatibilidad con los tipos existentes `click`, `success`, `error` y extendiendo el repertorio para navegación, modal, tareas y guardado.
+
+**Implementado:**
+- `src/lib/sound.js`: centralización de audio context, bloqueo de mute, tonos reutilizables y soporte a `nav`, `modal-open`, `modal-close`, `task-done`, `task-undone`, `save`, `delete`.
+- `src/components/ModalWrapper.jsx`: disparo de `modal-open` / `modal-close` al abrir y cerrar cada modal.
+- `src/layouts/AppLayout.jsx`: activación de `nav` al cambiar de ruta y sincronización con el estado de mute del UI store.
+- Páginas integradas con sonidos: `Overview.jsx`, `Tasks.jsx`, `Calendar.jsx`, `Grades.jsx`, `Habits.jsx`, `Notes.jsx`, `Subjects.jsx`.
+- Mantener compatibilidad total con `playSound('click'|'success'|'error')` y sin duplicar `audioContext` ni `isMuted`.
+
+**Verificado:**
+- `npm test -- --run` → 5 archivos, 105 tests pasando.
+- `npm run build` → compilación exitosa con Vite.
+
+**Estado de la base de datos remota:** NO APLICA.
+
+---
+
 ## [2026-08-28] — Paso 1: sistema visual base unificado
 
 **Tarea:** Adaptar patrones visuales de Academia y Ritmo a los tokens y componentes React actuales.

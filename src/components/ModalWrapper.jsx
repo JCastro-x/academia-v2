@@ -3,14 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { playSound } from '../lib/sound.js'
 
 export default function ModalWrapper({ isOpen, onClose, children, className = '' }) {
-  const hasMounted = useRef(false)
+  const prevOpenRef = useRef(false)
 
   useEffect(() => {
-    if (!hasMounted.current) {
-      hasMounted.current = true
-      return
+    if (isOpen && !prevOpenRef.current) {
+      playSound('modal-open')
     }
-    playSound(isOpen ? 'modal-open' : 'modal-close')
+
+    if (!isOpen && prevOpenRef.current) {
+      playSound('modal-close')
+    }
+
+    prevOpenRef.current = isOpen
   }, [isOpen])
 
   return (

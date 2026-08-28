@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useHabits, useCreateHabit, useDeleteHabit, useToggleHabitCompletion } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
+import { playSound } from '../lib/sound.js'
 import HabitForm from '../components/HabitForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 
@@ -31,6 +32,7 @@ export default function Habits() {
   const handleCreate = async (habitData) => {
     try {
       await createHabit.mutateAsync(habitData)
+      playSound('save')
       setIsCreating(false)
     } catch (error) {
       console.error('Error creating habit:', error)
@@ -49,6 +51,7 @@ export default function Habits() {
           message: `Hábito "${habit.nombre}" eliminado`,
           onTimeout: async () => {
             try {
+              playSound('delete')
               await deleteHabit.mutateAsync(habit.id)
               removePendingDelete(pendingDeleteId)
             } catch (error) {
@@ -67,6 +70,7 @@ export default function Habits() {
   const handleToggle = async (habit) => {
     try {
       await toggleCompletion.mutateAsync({ id: habit.id, date: today })
+      playSound(isCompletedToday(habit) ? 'task-undone' : 'task-done')
     } catch (error) {
       console.error('Error toggling habit:', error)
     }

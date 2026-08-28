@@ -1,17 +1,18 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Outlet, useParams, Link, useLocation } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
 import { useProfile } from '../features/profile/hooks.js'
+import { playSound } from '../lib/sound.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import ImportModal from '../components/ImportModal.jsx'
 import UndoToast from '../components/UndoToast.jsx'
 import Lightbox from '../components/Lightbox.jsx'
 import TopBar from '../components/TopBar.jsx'
-import { playSound } from '../lib/sound.js'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
   const location = useLocation()
+  const prevPathRef = useRef(location.pathname)
   const {
     isSidebarCollapsed, toggleSidebar,
     isMuted, toggleMute,
@@ -19,6 +20,13 @@ export default function AppLayout() {
     setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setMuted,
     setOnline, setOffline,
   } = useUIStore()
+
+  useEffect(() => {
+    if (prevPathRef.current !== location.pathname) {
+      playSound('nav')
+    }
+    prevPathRef.current = location.pathname
+  }, [location.pathname])
 
   // Inicializar estado online y listeners
   useEffect(() => {
@@ -110,7 +118,6 @@ export default function AppLayout() {
                   <Link
                     to={`/s/${semesterId}/${item.path}`}
                     onClick={() => {
-                      playSound('nav')
                       if (window.innerWidth < 768) toggleSidebar()
                     }}
                     className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${

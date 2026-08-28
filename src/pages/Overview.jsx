@@ -4,13 +4,13 @@ import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useSubjects, useCreateSubject } from '../features/subjects/hooks.js'
 import { usePendingTasks, useCreateTask, useToggleTaskDone, useDeleteTask } from '../features/tasks/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
+import { playSound } from '../lib/sound.js'
 import TaskList from '../components/TaskList.jsx'
 import TaskForm from '../components/TaskForm.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
 import SemesterForm from '../components/SemesterForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 import QuickAdd from '../components/QuickAdd.jsx'
-import { playSound } from '../lib/sound.js'
 
 export default function Overview() {
   const { semesterId } = useParams()
@@ -77,8 +77,8 @@ export default function Overview() {
           message: `Tarea "${task.titulo}" eliminada`,
           onTimeout: async () => {
             try {
-              await deleteTask.mutateAsync(task.id)
               playSound('delete')
+              await deleteTask.mutateAsync(task.id)
               removePendingDelete(pendingDeleteId)
             } catch (error) {
               console.error('Error deleting task:', error)

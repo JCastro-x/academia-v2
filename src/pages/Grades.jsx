@@ -6,6 +6,7 @@ import { useTopicsBySubject, useCreateTopic, useUpdateTopic, useDeleteTopic } fr
 import { countItemsByZone } from '../features/grades/api.js'
 import { calculateSubjectStats } from '../domain/grades-calc.js'
 import { useUIStore } from '../stores/ui.store.js'
+import { playSound } from '../lib/sound.js'
 import ZoneCard from '../features/grades/components/ZoneCard.jsx'
 import ItemForm from '../features/grades/components/ItemForm.jsx'
 import ZoneForm from '../features/grades/components/ZoneForm.jsx'
@@ -50,6 +51,7 @@ export default function Grades() {
   const handleCreateZone = async (zoneData) => {
     try {
       await createZone.mutateAsync({ ...zoneData, subject_id: selectedSubjectId })
+      playSound('save')
       closeModal()
     } catch (error) {
       console.error('Error creating zone:', error)
@@ -59,6 +61,7 @@ export default function Grades() {
   const handleUpdateZone = async (id, updates) => {
     try {
       await updateZone.mutateAsync({ id, updates })
+      playSound('save')
       closeModal()
       setEditingZone(null)
     } catch (error) {
@@ -91,6 +94,7 @@ export default function Grades() {
             message: `Zona "${zone.nombre}" eliminada`,
             onTimeout: async () => {
               try {
+                playSound('delete')
                 await deleteZone.mutateAsync(zone.id)
                 removePendingDelete(pendingDeleteId)
               } catch (error) {
@@ -112,6 +116,7 @@ export default function Grades() {
   const handleCreateItem = async (itemData) => {
     try {
       await createItem.mutateAsync({ ...itemData, zone_id: addingItemToZone.id })
+      playSound('save')
       closeModal()
       setAddingItemToZone(null)
     } catch (error) {
@@ -122,6 +127,7 @@ export default function Grades() {
   const handleUpdateItem = async (id, updates) => {
     try {
       await updateItem.mutateAsync({ id, updates })
+      playSound('save')
       closeModal()
       setEditingItem(null)
     } catch (error) {
@@ -141,6 +147,7 @@ export default function Grades() {
           message: `Ítem "${item.nombre}" eliminado`,
           onTimeout: async () => {
             try {
+              playSound('delete')
               await deleteItem.mutateAsync(item.id)
               removePendingDelete(pendingDeleteId)
             } catch (error) {
@@ -163,6 +170,7 @@ export default function Grades() {
         setSelectedSubjectId(topicData.subject_id)
         setViewMode('topics')
       }
+      playSound('save')
       closeModal()
     } catch (error) {
       console.error('Error creating topic:', error)
@@ -172,6 +180,7 @@ export default function Grades() {
   const handleUpdateTopic = async (id, updates) => {
     try {
       await updateTopic.mutateAsync({ id, updates })
+      playSound('save')
       closeModal()
       setEditingTopic(null)
     } catch (error) {
@@ -191,6 +200,7 @@ export default function Grades() {
           message: `Tema "${topic.nombre}" eliminado`,
           onTimeout: async () => {
             try {
+              playSound('delete')
               await deleteTopic.mutateAsync(topic.id)
               removePendingDelete(pendingDeleteId)
             } catch (error) {

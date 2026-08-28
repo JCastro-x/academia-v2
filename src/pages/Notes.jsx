@@ -4,6 +4,7 @@ import { useFolders, useCreateFolder, useDeleteFolder } from '../features/folder
 import { useNotes, useCreateNote, useDeleteNote, useSearchNotes } from '../features/notes/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
+import { playSound } from '../lib/sound.js'
 import NoteEditor from '../components/NoteEditor.jsx'
 import NoteForm from '../components/NoteForm.jsx'
 import FolderForm from '../components/FolderForm.jsx'
@@ -34,6 +35,7 @@ export default function Notes() {
         ...folderData,
         parent_id: currentFolderId,
       })
+      playSound('save')
       setIsCreatingFolder(false)
     } catch (error) {
       console.error('Error creating folder:', error)
@@ -52,6 +54,7 @@ export default function Notes() {
           message: `Carpeta "${folder.nombre}" eliminada`,
           onTimeout: async () => {
             try {
+              playSound('delete')
               await deleteFolder.mutateAsync(folder.id)
               removePendingDelete(pendingDeleteId)
             } catch (error) {
@@ -73,6 +76,7 @@ export default function Notes() {
         ...noteData,
         folder_id: currentFolderId,
       })
+      playSound('save')
       setIsCreatingNote(false)
     } catch (error) {
       console.error('Error creating note:', error)
@@ -91,6 +95,7 @@ export default function Notes() {
           message: `Nota "${note.titulo}" eliminada`,
           onTimeout: async () => {
             try {
+              playSound('delete')
               await deleteNote.mutateAsync(note.id)
               removePendingDelete(pendingDeleteId)
               if (selectedNoteId === note.id) setSelectedNoteId(null)

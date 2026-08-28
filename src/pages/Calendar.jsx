@@ -5,6 +5,7 @@ import { useEventsByMonth, useCreateEvent, useUpdateEvent, useDeleteEvent } from
 import { useTasks } from '../features/tasks/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
+import { playSound } from '../lib/sound.js'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 
 export default function Calendar() {
@@ -122,6 +123,7 @@ export default function Calendar() {
         ...eventData,
         semester_id: semesterId,
       })
+      playSound('save')
       closeModal()
       setSelectedDate(null)
     } catch (error) {
@@ -132,6 +134,7 @@ export default function Calendar() {
   const handleUpdateEvent = async (id, updates) => {
     try {
       await updateEvent.mutateAsync({ id, updates })
+      playSound('save')
       closeModal()
       setEditingEvent(null)
       setSelectedDate(null)
@@ -152,6 +155,7 @@ export default function Calendar() {
           message: `Evento "${event.nombre}" eliminado`,
           onTimeout: async () => {
             try {
+              playSound('delete')
               await deleteEvent.mutateAsync(event.id)
               removePendingDelete(pendingDeleteId)
             } catch (error) {
