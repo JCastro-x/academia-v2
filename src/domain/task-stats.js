@@ -268,7 +268,10 @@ export function computeCantidadStats(task) {
   const necesitasHoy = Math.ceil(remaining / Math.max(1, workDaysRemaining))
   const recomendado = Math.ceil(necesitasHoy * 1.15)
   const exigencia = metaDiariaOriginal > 0 ? necesitasHoy / metaDiariaOriginal : 1
-  
+
+  // metaHoyRestante: decreciente conforme se registra avance hoy
+  const metaHoyRestante = Math.max(0, necesitasHoy - doneToday)
+
   let metaHoy
   if (isDone) {
     metaHoy = 0
@@ -325,6 +328,7 @@ export function computeCantidadStats(task) {
     doneToday,
     metaHoy,
     necesitasHoy,
+    metaHoyRestante,
     recomendado,
     ritmoActual,
     ritmoNecesario,

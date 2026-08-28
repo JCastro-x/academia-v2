@@ -122,7 +122,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
             )}
             {showLogControls && (
               <div className="mt-1">
-                <span>Meta hoy: <strong>{stats.metaHoy}</strong> • Necesitás: <strong>{stats.necesitasHoy}</strong> • Recomendado: <strong>{Math.ceil(stats.necesitasHoy * 1.15)}</strong></span>
+                <span>Meta hoy: <strong>{stats.metaHoyRestante}</strong> • Recomendado: <strong>{stats.recomendado}</strong></span>
               </div>
             )}
             {showLogControls && (

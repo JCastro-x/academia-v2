@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## [2026-08-27] — metaHoyRestante: meta decreciente para tareas tipo 'cantidad'
+
+**Cambio de comportamiento - Tareas tipo 'cantidad':**
+- Nuevo valor derivado metaHoyRestante: arranca en necesitasHoy y baja conforme se registra avance hoy
+- Fórmula: Math.max(0, necesitasHoy - doneToday) donde doneToday = log[todayStr()]
+- Recomendado (necesitasHoy * 1.15) se queda fijo como referencia estática
+- UI actualizada: "Meta hoy: X • Recomendado: Y" (quitado "Necesitás" redundante)
+- Archivos: `src/domain/task-stats.js` (computeCantidadStats), `src/components/TaskCard.jsx`, `src/domain/task-stats.test.js`
+- Tests agregados: 4 casos (día recién empezado, meta cumplida, exceso, parcial)
+
+**Confirmado:**
+- NO afecta diasDeAtraso, statusFromProgress, ni otros cálculos existentes
+- metaHoyRestante es valor nuevo, aditivo, calculado a partir de valores existentes
+
+**Verificado:**
+- Build: npm run build → exitoso (bundle 869.35 kB)
+- Tests: npm test → 4 nuevos tests de metaHoyRestante pasando
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de lógica de dominio/UI)
+
+---
+
 ## [2026-08-27] — Fix de overflow en modal de edición de tarea (Flatpickr)
 
 **Fix de UI - Modal de edición de tarea:**

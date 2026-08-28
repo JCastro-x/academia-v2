@@ -383,11 +383,79 @@ describe('task-stats', () => {
         created_at: '2024-01-01T14:30:00.000Z', // Time component should be ignored
         due: '2024-01-10T23:59:59.000Z' // Time component should be ignored
       }
-      
+
       const stats = computeCantidadStats(task)
-      
+
       // Should calculate 10 days total regardless of time components
       expect(stats.daysTotal).toBe(8) // 8 work days (Mon-Fri for 2 weeks)
+    })
+
+    it('should calculate metaHoyRestante correctly - day just started (nothing logged)', () => {
+      const today = todayStr()
+      const task = {
+        tipo: 'cantidad',
+        total_units: 100,
+        work_days: [1, 2, 3, 4, 5],
+        log: { '2024-01-01': 20 }, // logged before today
+        created_at: '2024-01-01T00:00:00.000Z',
+        due: '2024-01-10T00:00:00.000Z'
+      }
+
+      const stats = computeCantidadStats(task)
+
+      // necesitasHoy = 5, doneToday = 0, metaHoyRestante = 5
+      expect(stats.metaHoyRestante).toBe(stats.necesitasHoy)
+    })
+
+    it('should calculate metaHoyRestante correctly - meta already fulfilled today', () => {
+      const today = todayStr()
+      const task = {
+        tipo: 'cantidad',
+        total_units: 100,
+        work_days: [1, 2, 3, 4, 5],
+        log: { [today]: 5 }, // logged today equal to necesitasHoy
+        created_at: '2024-01-01T00:00:00.000Z',
+        due: '2024-01-10T00:00:00.000Z'
+      }
+
+      const stats = computeCantidadStats(task)
+
+      // necesitasHoy = 5, doneToday = 5, metaHoyRestante = 0
+      expect(stats.metaHoyRestante).toBe(0)
+    })
+
+    it('should calculate metaHoyRestante correctly - logged more than needed today', () => {
+      const today = todayStr()
+      const task = {
+        tipo: 'cantidad',
+        total_units: 100,
+        work_days: [1, 2, 3, 4, 5],
+        log: { [today]: 7 }, // logged today more than necesitasHoy
+        created_at: '2024-01-01T00:00:00.000Z',
+        due: '2024-01-10T00:00:00.000Z'
+      }
+
+      const stats = computeCantidadStats(task)
+
+      // necesitasHoy = 5, doneToday = 7, metaHoyRestante = 0 (capped at 0, not negative)
+      expect(stats.metaHoyRestante).toBe(0)
+    })
+
+    it('should calculate metaHoyRestante correctly - meta partially fulfilled', () => {
+      const today = todayStr()
+      const task = {
+        tipo: 'cantidad',
+        total_units: 100,
+        work_days: [1, 2, 3, 4, 5],
+        log: { [today]: 3 }, // logged today less than necesitasHoy
+        created_at: '2024-01-01T00:00:00.000Z',
+        due: '2024-01-10T00:00:00.000Z'
+      }
+
+      const stats = computeCantidadStats(task)
+
+      // necesitasHoy = 5, doneToday = 3, metaHoyRestante = 2
+      expect(stats.metaHoyRestante).toBe(stats.necesitasHoy - 3)
     })
   })
 
