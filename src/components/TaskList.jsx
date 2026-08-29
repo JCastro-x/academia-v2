@@ -12,7 +12,7 @@ export default function TaskList({ tasks, subjects, onToggleDone, onEdit, onDele
   const getSubject = (subjectId) => subjects?.find(s => s.id === subjectId)
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {tasks.map(task => (
         <TaskCard
           key={task.id}
