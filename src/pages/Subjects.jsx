@@ -1,7 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { useSubjects, useCreateSubject, useUpdateSubject, useDeleteSubject } from '../features/subjects/hooks.js'
-import { countTasksBySubject } from '../features/tasks/api.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import SubjectCard from '../components/SubjectCard.jsx'
@@ -40,21 +39,9 @@ export default function Subjects() {
 
   const handleDeleteSubject = async (subject) => {
     try {
-      const taskCount = await countTasksBySubject(subject.id)
-
-      if (taskCount > 0) {
-        openConfirmDialog({
-          title: 'No se puede eliminar',
-          message: `Esta materia tiene ${taskCount} tarea(s) asociada(s). Elimínalas primero o edítalas para quitarles la materia.`,
-          confirmText: 'Entendido',
-          infoOnly: true,
-        })
-        return
-      }
-
       openConfirmDialog({
         title: 'Eliminar materia',
-        message: `¿Estás seguro de eliminar "${subject.nombre}"?`,
+        message: `¿Estás seguro de eliminar "${subject.nombre}"? También se eliminarán sus tareas, eventos y calificaciones asociadas.`,
         confirmText: 'Eliminar',
         onConfirm: () => {
           const pendingDeleteId = Date.now()
@@ -92,13 +79,17 @@ export default function Subjects() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Materias</h1>
         <button
           onClick={() => { setEditingSubject(null); openModal('subject') }}
-          className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] w-full sm:w-auto"
+          className="bg-[var(--color-primary)] text-black px-4 py-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] w-full sm:w-auto"
+          style={{ color: '#000000' }}
         >
           + Nueva materia
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div
+        className="subjects-grid grid gap-5 min-w-0 w-full max-w-full px-1"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))' }}
+      >
         {subjects?.filter(subject => !pendingDeletes.some(pd => pd.type === 'subject' && pd.itemId === subject.id)).map(subject => (
           <SubjectCard
             key={subject.id}

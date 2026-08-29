@@ -31,10 +31,11 @@ export async function getNoteById(id) {
     .from('notes')
     .select('id, subject_id, folder_id, titulo, contenido, updated_at')
     .eq('id', id)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export async function searchNotes(query) {

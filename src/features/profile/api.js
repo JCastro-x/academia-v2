@@ -11,8 +11,10 @@ export async function getProfile() {
     .from('profiles')
     .select('user_id, nombre, registro_academico, carrera, institucion, cursos_ganados, tipografia, tema_color, sonidos_interaccion, modo_oscuro, updated_at')
     .eq('user_id', user.id)
-    .single()
-  
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
   if (error) {
     // Si no existe perfil, retornar null (el cliente decidirá si crear uno)
     if (error.code === 'PGRST116') {
@@ -20,7 +22,7 @@ export async function getProfile() {
     }
     throw error
   }
-  
+
   return data
 }
 

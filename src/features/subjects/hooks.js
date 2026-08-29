@@ -7,6 +7,7 @@ import {
   deleteSubject,
   subjectsQueryKeys,
 } from './api.js'
+import { scheduleTableQueryKeys } from '../schedule-table/api.js'
 
 export function useSubjects(semesterId) {
   return useQuery({
@@ -54,6 +55,7 @@ export function useDeleteSubject() {
     mutationFn: deleteSubject,
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: subjectsQueryKeys.all })
+      queryClient.invalidateQueries({ queryKey: scheduleTableQueryKeys.all })
     },
   })
 }

@@ -14,6 +14,8 @@ export const BACKUP_TABLES = [
   'events',
   'pomodoro_sessions',
   'note_attachments',
+  'schedule_notes',
+  'schedule_flags',
 ]
 
 const TABLES_BY_USER = BACKUP_TABLES
@@ -66,6 +68,12 @@ const TABLE_COLUMNS = {
   ],
   note_attachments: [
     'id', 'note_id', 'user_id', 'tipo', 'nombre', 'storage_path', 'metadata', 'created_at',
+  ],
+  schedule_notes: [
+    'id', 'semester_id', 'subject_id', 'user_id', 'week_number', 'note_text', 'note_color', 'updated_at',
+  ],
+  schedule_flags: [
+    'id', 'semester_id', 'user_id', 'week_number', 'flag_type', 'updated_at',
   ],
 }
 

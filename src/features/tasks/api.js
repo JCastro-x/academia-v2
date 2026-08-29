@@ -48,10 +48,11 @@ export async function getTaskById(id) {
     .from('tasks')
     .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
     .eq('id', id)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export async function createTask(task) {

@@ -1,21 +1,25 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useSubjects } from '../features/subjects/hooks.js'
+import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useCreateSubject, useUpdateSubject } from '../features/subjects/hooks.js'
 import { useCreateTask, useUpdateTask } from '../features/tasks/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import TaskForm from './TaskForm.jsx'
 import SubjectForm from './SubjectForm.jsx'
+import SemesterForm from './SemesterForm.jsx'
 
 export default function GlobalModalHost() {
   const navigate = useNavigate()
   const { semesterId } = useParams()
   const { data: subjects } = useSubjects(semesterId)
+  const { data: semester } = useSemester(semesterId)
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
   const createSubject = useCreateSubject()
   const updateSubject = useUpdateSubject()
+  const updateSemester = useUpdateSemester()
   const {
     isModalOpen,
     modalContent,
@@ -63,6 +67,16 @@ export default function GlobalModalHost() {
       closeModal()
     } catch (error) {
       console.error('Error updating subject:', error)
+    }
+  }
+
+  const handleUpdateSemester = async (updates) => {
+    try {
+      await updateSemester.mutateAsync({ id: semesterId, updates })
+      playSound('save')
+      closeModal()
+    } catch (error) {
+      console.error('Error updating semester:', error)
     }
   }
 
@@ -117,7 +131,7 @@ export default function GlobalModalHost() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-end justify-center z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-[3px] flex items-end justify-center z-50"
             onClick={closeModal}
           >
             <motion.div
@@ -157,6 +171,34 @@ export default function GlobalModalHost() {
       </AnimatePresence>
 
       <AnimatePresence>
+        {isModalOpen && modalContent === 'semester' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-50 p-4"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ scale: 0.96, y: 12, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.96, y: 12, opacity: 0 }}
+              className="modal-panel bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] w-full max-w-md p-6"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Editar semestre</h3>
+              <SemesterForm
+                initialData={semester}
+                onSubmit={handleUpdateSemester}
+                onCancel={closeModal}
+                isPending={updateSemester.isPending}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {isModalOpen && modalContent === 'task' && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -170,7 +212,7 @@ export default function GlobalModalHost() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.96, y: 12, opacity: 0 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
-              className="bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
+              className="modal-panel bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
@@ -201,7 +243,7 @@ export default function GlobalModalHost() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.96, y: 12, opacity: 0 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
-              className="bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
+              className="modal-panel bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingSubject ? 'Editar materia' : 'Nueva materia'}</h3>

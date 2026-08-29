@@ -81,6 +81,8 @@ export function diffDays(a, b) {
  */
 export function truncateToDate(timestamp) {
   if (!timestamp) return todayStr()
+  const value = String(timestamp).trim()
+  if (/^-?\d{4}-\d{2}-\d{2}$/.test(value)) return value
   const date = new Date(timestamp)
   return formatDate(date)
 }
@@ -188,6 +190,13 @@ export function statusFromProgress(stats) {
   if (stats.isDone) return 'done'
   if (stats.notStarted) return 'notstarted'
   if (stats.isOverdue) return 'overdue'
+  if (stats.urgencyRatio != null) {
+    if (stats.urgencyRatio <= 1.25) return 'ongreen'
+    if (stats.urgencyRatio <= 1.75) return 'onyellow'
+    if (stats.urgencyRatio <= 2.5) return 'onattention'
+    return 'critical'
+  }
+  if (stats.progressPercent >= 80 && stats.daysRemainingDisplay > 2) return 'ongreen'
   if (stats.daysRemainingDisplay <= 2 && stats.remaining > 0) return 'critical'
   
   if (stats.remaining > 0 && stats.ritmoActual === 0 && stats.daysRemainingDisplay > 2) return 'notstarted'
@@ -213,7 +222,11 @@ export function statusFromProgress(stats) {
  */
 export function computeCantidadStats(task) {
   // Handle null/undefined values defensively
-  const startStr = task.created_at ? truncateToDate(task.created_at) : todayStr()
+  const logDates = Object.keys(task.log || {}).filter((date) => parseDate(date))
+  const earliestLogDate = logDates.sort()[0]
+  const startStr = task.created_at
+    ? truncateToDate(task.created_at)
+    : earliestLogDate || todayStr()
   const endStr = task.due ? truncateToDate(task.due) : todayStr()
   const bt = baseTimeStats(startStr, endStr)
   
@@ -255,13 +268,16 @@ export function computeCantidadStats(task) {
   const remaining = Math.max(0, totalUnits - totalDone)
   
   const tKey = todayStr()
+  const tomorrow = parseDate(tKey)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const remainingStart = formatDate(tomorrow)
   const doneToday = Number(log[tKey]) || 0
   const doneBeforeToday = totalDone - doneToday
   const remainingBeforeToday = Math.max(0, totalUnits - doneBeforeToday)
   
   const workDays = task.work_days && task.work_days.length > 0 ? task.work_days : [1, 2, 3, 4, 5]
   const workDaysTotal = countWorkDays(startStr, endStr, workDays)
-  const workDaysRemaining = countWorkDays(tKey, endStr, workDays)
+  const workDaysRemaining = countWorkDays(remainingStart, endStr, workDays)
   const workDaysElapsed = countWorkDays(startStr, tKey, workDays)
   
   const metaDiariaOriginal = Math.ceil(totalUnits / Math.max(1, workDaysTotal))
@@ -300,6 +316,8 @@ export function computeCantidadStats(task) {
   
   const statsForStatus = {
     isDone,
+    progressPercent,
+    urgencyRatio: exigencia,
     notStarted: bt.notStarted,
     isOverdue: bt.isOverdue,
     daysRemainingDisplay: Math.max(0, workDaysRemaining),

@@ -29,10 +29,11 @@ export async function getFolderById(id) {
     .from('folders')
     .select('id, user_id, subject_id, parent_id, nombre')
     .eq('id', id)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export async function createFolder(folder) {

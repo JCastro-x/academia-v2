@@ -92,6 +92,18 @@ export default function Overview() {
 
   if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center text-gray-500 dark:text-[var(--dm-text-muted)]">Cargando...</div>
   if (error) return <div className="flex min-h-[40vh] items-center justify-center text-red-600 dark:text-red-400">Error: {error.message}</div>
+  if (!semester) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-center px-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-[var(--dm-text)]">Semestre no disponible</h1>
+          <p className="text-gray-600 dark:text-[var(--dm-text-muted)]">
+            El semestre actual no existe o ya no está asociado a tu usuario.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 pb-16">

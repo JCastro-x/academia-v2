@@ -25,7 +25,7 @@ export async function getZonesBySubject(subjectId) {
     zones.map(async (zone) => {
       const { data: items, error: itemsError } = await supabase
         .from('grade_items')
-        .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos')
+        .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos, peso_pts')
         .eq('zone_id', zone.id)
         .order('nombre')
 
@@ -49,10 +49,11 @@ export async function getZoneById(id) {
     .from('grade_zones')
     .select('id, subject_id, user_id, nombre, peso_pts, ganada_pct')
     .eq('id', id)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 /**
@@ -61,7 +62,7 @@ export async function getZoneById(id) {
 export async function getItemsByZone(zoneId) {
   const { data, error } = await supabase
     .from('grade_items')
-    .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos')
+    .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos, peso_pts')
     .eq('zone_id', zoneId)
     .order('nombre')
 
@@ -75,12 +76,13 @@ export async function getItemsByZone(zoneId) {
 export async function getItemById(id) {
   const { data, error } = await supabase
     .from('grade_items')
-    .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos')
+    .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos, peso_pts')
     .eq('id', id)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 /**
@@ -145,7 +147,7 @@ export async function createItem(item) {
       porcentaje_ingresado: item.porcentaje_ingresado || null,
       puntos_netos: item.puntos_netos || null,
     })
-    .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos')
+    .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos, peso_pts')
     .single()
 
   if (error) throw error
@@ -164,7 +166,7 @@ export async function updateItem(id, updates) {
       puntos_netos: updates.puntos_netos,
     })
     .eq('id', id)
-    .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos')
+    .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos, peso_pts')
     .single()
 
   if (error) throw error

@@ -151,7 +151,10 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
           id="due"
           value={formData.due}
           onChange={(dates) => {
-            const dateStr = dates[0] ? dates[0].toISOString().slice(0, 16) : ''
+            const selectedDate = dates[0]
+            const dateStr = selectedDate
+              ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}T${String(selectedDate.getHours()).padStart(2, '0')}:${String(selectedDate.getMinutes()).padStart(2, '0')}`
+              : ''
             setFormData(prev => ({ ...prev, due: dateStr }))
           }}
           options={{

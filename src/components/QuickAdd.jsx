@@ -17,7 +17,8 @@ export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject
     <>
       <button
         onClick={() => openModal('quickadd')}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-[var(--color-primary)] text-white rounded-full shadow-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] flex items-center justify-center text-2xl z-40"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-[var(--color-primary)] text-black rounded-full shadow-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] flex items-center justify-center text-2xl z-40"
+        style={{ color: '#000000' }}
       >
         +
       </button>
@@ -35,7 +36,7 @@ export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject
               initial={{ y: 100 }}
               animate={{ y: 0 }}
               exit={{ y: 100 }}
-              className="bg-white rounded-t-2xl p-6 w-full max-w-md dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
+              className="modal-panel bg-white rounded-t-2xl p-6 w-full max-w-md dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
               onClick={e => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Agregar rápido</h3>

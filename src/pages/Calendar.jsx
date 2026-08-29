@@ -38,6 +38,15 @@ export default function Calendar() {
   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
+  const eventColorClasses = {
+    parcial: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+    tarea: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+    otro: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+    proyecto: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200',
+  }
+
+  const getEventColorClass = (eventType) => eventColorClasses[eventType] || eventColorClasses.otro
+
   const getDaysInMonth = (year, month) => {
     return new Date(year, month + 1, 0).getDate()
   }
@@ -117,6 +126,11 @@ export default function Calendar() {
     openModal('event')
   }
 
+  const toLocalDateTimeValue = (date) => {
+    if (!date) return ''
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  }
+
   const handleCreateEvent = async (eventData) => {
     try {
       await createEvent.mutateAsync({
@@ -174,6 +188,7 @@ export default function Calendar() {
   const daysInMonth = getDaysInMonth(year, month)
   const firstDay = getFirstDayOfMonth(year, month)
   const monthEventsAndTasks = getEventsAndTasksForMonth()
+  const selectedDayEvents = selectedDate ? getEventsForDay(selectedDate.getDate()) : []
 
   return (
     <div className="space-y-6 pb-16">
@@ -236,7 +251,7 @@ export default function Calendar() {
                   {dayEvents.slice(0, 2).map(event => (
                     <div
                       key={event.id}
-                      className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200 px-1 rounded min-w-0 break-words overflow-hidden truncate"
+                      className={`text-xs px-1 rounded min-w-0 break-words overflow-hidden truncate ${getEventColorClass(event.tipo)}`}
                     >
                       {event.nombre}
                     </div>
@@ -297,18 +312,18 @@ export default function Calendar() {
                   whileTap={{ scale: 0.995 }}
                   className={`p-3 rounded-lg border min-w-0 ${
                     item.type === 'event'
-                      ? 'border-purple-200 bg-purple-50'
+                      ? `border-transparent ${getEventColorClass(item.tipo)}`
                       : item.done
                       ? 'border-green-200 bg-green-50'
                       : 'border-orange-200 bg-orange-50'
-                  } dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]`}
+                  } ${item.type === 'event' ? '' : 'dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]'}`}
                 >
                   <div className="flex items-start justify-between gap-3 min-w-0">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className={`text-xs font-semibold px-2 py-1 rounded ${
                           item.type === 'event'
-                            ? 'bg-purple-200 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200'
+                            ? getEventColorClass(item.tipo)
                             : item.done
                             ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-200'
                             : 'bg-orange-200 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200'
@@ -352,20 +367,23 @@ export default function Calendar() {
       <ModalWrapper
         isOpen={isModalOpen && modalContent === 'event'}
         onClose={() => { setEditingEvent(null); setSelectedDate(null); closeModal() }}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
+        className="p-5 w-full max-w-4xl max-h-[calc(100vh-2rem)] overflow-y-auto mx-4"
       >
-        <h3 className="text-lg font-semibold mb-4">
-          {editingEvent ? 'Editar evento' : 'Nuevo evento'}
-        </h3>
-        
-        <form onSubmit={(e) => {
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(220px,0.7fr)] gap-5 items-start">
+          <div className="min-w-0">
+            <h3 className="text-lg font-semibold mb-3">
+              {editingEvent ? 'Editar evento' : 'Nuevo evento'}
+            </h3>
+
+            <form key={editingEvent?.id || `new-${selectedDate?.getTime() || 'event'}`} onSubmit={(e) => {
           e.preventDefault()
           const formData = new FormData(e.target)
+          const startAtInput = formData.get('start_at')
           const eventData = {
             subject_id: formData.get('subject_id') || null,
             nombre: formData.get('nombre'),
             tipo: formData.get('tipo'),
-            start_at: selectedDate ? selectedDate.toISOString() : new Date().toISOString(),
+            start_at: startAtInput ? new Date(startAtInput).toISOString() : (selectedDate ? selectedDate.toISOString() : new Date().toISOString()),
             end_at: formData.get('end_at') ? new Date(formData.get('end_at')).toISOString() : null,
             descripcion: formData.get('descripcion'),
           }
@@ -375,7 +393,7 @@ export default function Calendar() {
           } else {
             handleCreateEvent(eventData)
           }
-        }} autoComplete="off" className="space-y-4">
+        }} autoComplete="off" className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
               Nombre *
@@ -420,6 +438,7 @@ export default function Calendar() {
               <option value="parcial">Parcial</option>
               <option value="tarea">Tarea</option>
               <option value="otro">Otro</option>
+              <option value="proyecto">Proyecto</option>
             </select>
           </div>
 
@@ -430,7 +449,7 @@ export default function Calendar() {
             <input
               name="start_at"
               type="datetime-local"
-              defaultValue={editingEvent?.start_at ? new Date(editingEvent.start_at).toISOString().slice(0, 16) : (selectedDate ? selectedDate.toISOString().slice(0, 16) : '')}
+              defaultValue={editingEvent?.start_at ? toLocalDateTimeValue(new Date(editingEvent.start_at)) : toLocalDateTimeValue(selectedDate)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             />
           </div>
@@ -442,7 +461,7 @@ export default function Calendar() {
             <input
               name="end_at"
               type="datetime-local"
-              defaultValue={editingEvent?.end_at ? new Date(editingEvent.end_at).toISOString().slice(0, 16) : ''}
+              defaultValue={editingEvent?.end_at ? toLocalDateTimeValue(new Date(editingEvent.end_at)) : ''}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
             />
           </div>
@@ -475,7 +494,34 @@ export default function Calendar() {
               {editingEvent ? 'Actualizar' : 'Crear'}
             </button>
           </div>
-        </form>
+            </form>
+          </div>
+
+          <aside className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-[var(--dm-border)] dark:bg-[var(--dm-bg)]">
+            <h4 className="font-semibold text-gray-900 dark:text-[var(--dm-text)]">
+              {selectedDate ? `Eventos del ${selectedDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}` : 'Eventos del día'}
+            </h4>
+            {selectedDayEvents.length === 0 ? (
+              <p className="mt-2 text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">No hay eventos guardados este día.</p>
+            ) : (
+              <div className="mt-3 space-y-2 max-h-64 overflow-y-auto pr-1">
+                {selectedDayEvents.map((event) => (
+                  <div key={event.id} className="rounded-md border border-gray-200 bg-white p-2 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]">
+                    <p className="text-sm font-medium text-gray-900 dark:text-[var(--dm-text)] break-words">{event.nombre}</p>
+                    <p className="mt-1 text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">{event.tipo || 'otro'}</p>
+                    <button
+                      type="button"
+                      onClick={() => { setEditingEvent(event); setSelectedDate(new Date(event.start_at)) }}
+                      className="mt-2 text-xs font-medium text-blue-700 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-100"
+                    >
+                      Editar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </aside>
+        </div>
       </ModalWrapper>
     </div>
   )

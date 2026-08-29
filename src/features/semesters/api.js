@@ -21,10 +21,12 @@ export const getActiveSemester = async () => {
     .from('semesters')
     .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .eq('activo', true)
-    .single()
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export const getSemesterById = async (id) => {
@@ -32,10 +34,11 @@ export const getSemesterById = async (id) => {
     .from('semesters')
     .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .eq('id', id)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export const createSemester = async (semester) => {
@@ -63,10 +66,11 @@ export const updateSemester = async (id, updates) => {
     .update(updates)
     .eq('id', id)
     .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export const deleteSemester = async (id) => {
@@ -93,8 +97,9 @@ export const setActiveSemester = async (id) => {
     .update({ activo: true })
     .eq('id', id)
     .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }

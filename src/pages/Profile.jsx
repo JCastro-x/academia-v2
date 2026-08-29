@@ -10,6 +10,10 @@ const THEME_COLORS = [
   { name: 'Púrpura', value: '#a855f7' },
   { name: 'Naranja', value: '#f97316' },
   { name: 'Rojo', value: '#ef4444' },
+  { name: 'Rosa pastel', value: '#EBCBD5' },
+  { name: 'Azul pastel', value: '#B3CEE8' },
+  { name: 'Verde menta', value: '#B9D7C8' },
+  { name: 'Lavanda suave', value: '#DFE0F0' },
 ]
 
 const FONT_OPTIONS = [
@@ -190,8 +194,8 @@ export default function Profile() {
                   onClick={() => setTipografia(font.value)}
                   className={`px-4 py-2 rounded-lg border transition-colors ${
                     tipografia === font.value
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] bg-opacity-10 text-[var(--color-primary)]'
-                      : 'border-gray-300 dark:border-[var(--dm-border)] dark:text-[var(--dm-text-muted)] hover:border-gray-400 dark:hover:border-[var(--dm-text-muted)]'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] bg-opacity-20 text-black dark:text-black'
+                      : 'border-gray-300 text-black dark:border-[var(--dm-border)] dark:text-white hover:border-gray-400 dark:hover:border-white'
                   }`}
                   style={{ fontFamily: font.value }}
                 >
@@ -206,7 +210,7 @@ export default function Profile() {
             <label className="block text-sm font-medium text-gray-700 dark:text-[var(--dm-text-muted)] mb-2">
               Color de tema
             </label>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               {THEME_COLORS.map(color => (
                 <button
                   key={color.value}
@@ -276,7 +280,8 @@ export default function Profile() {
       <button
         onClick={handleSave}
         disabled={upsertProfile.isPending}
-        className="w-full bg-[var(--color-primary)] text-white py-3 px-6 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+        className="w-full bg-[var(--color-primary)] text-black py-3 px-6 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+        style={{ color: '#000000' }}
       >
         {upsertProfile.isPending ? 'Guardando...' : 'Guardar cambios'}
       </button>

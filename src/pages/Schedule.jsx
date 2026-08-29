@@ -82,10 +82,10 @@ export default function Schedule() {
     if (!subjects) return []
 
     return subjects
-      .filter(subject => subject.horario)
+      .filter(subject => Array.isArray(subject.horario) && subject.horario.length > 0)
       .map(subject => ({
         subject,
-        schedules: subject.horario.filter(h => h.dia.toLowerCase() === dayName.toLowerCase())
+        schedules: subject.horario.filter(h => h.dia?.toLowerCase() === dayName.toLowerCase())
       }))
       .filter(item => item.schedules.length > 0)
   }

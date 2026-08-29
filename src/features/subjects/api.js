@@ -22,10 +22,11 @@ export async function getSubjectById(id) {
     .from('subjects')
     .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, linked_lab_id, updated_at')
     .eq('id', id)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export async function createSubject(subject) {
@@ -73,6 +74,40 @@ export async function updateSubject(id, updates) {
 }
 
 export async function deleteSubject(id) {
+  const optionalDelete = async (table) => {
+    const { error } = await supabase.from(table).delete().eq('subject_id', id)
+    if (error && error.code !== 'PGRST205') throw error
+  }
+
+  await optionalDelete('schedule_notes')
+  await optionalDelete('pomodoro_sessions')
+  await optionalDelete('events')
+  await optionalDelete('topics')
+  await optionalDelete('tasks')
+
+  const { data: notes, error: notesError } = await supabase
+    .from('notes')
+    .select('id')
+    .eq('subject_id', id)
+  if (notesError && notesError.code !== 'PGRST205') throw notesError
+  for (const note of notes || []) {
+    const { error } = await supabase.from('note_attachments').delete().eq('note_id', note.id)
+    if (error && error.code !== 'PGRST205') throw error
+  }
+  await optionalDelete('notes')
+
+  const { data: zones, error: zonesError } = await supabase
+    .from('grade_zones')
+    .select('id')
+    .eq('subject_id', id)
+  if (zonesError && zonesError.code !== 'PGRST205') throw zonesError
+  for (const zone of zones || []) {
+    const { error } = await supabase.from('grade_items').delete().eq('zone_id', zone.id)
+    if (error && error.code !== 'PGRST205') throw error
+  }
+  await optionalDelete('grade_zones')
+  await optionalDelete('folders')
+
   const { error } = await supabase
     .from('subjects')
     .delete()

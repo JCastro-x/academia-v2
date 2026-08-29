@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useTasks } from '../features/tasks/hooks.js'
 import { useEvents } from '../features/events/hooks.js'
+import { useScheduleNotes, useScheduleFlags } from '../features/schedule-table/hooks.js'
 import { useSemester } from '../features/semesters/hooks.js'
 import { getSemesterStats, getWeekStartDateForWeek, getWeekNumberForDate } from '../domain/semester-weeks.js'
 import { parseDate, formatDate, diffDays } from '../domain/task-stats.js'
@@ -13,6 +14,8 @@ export default function ScheduleTable() {
   const { data: subjects, isLoading: subjectsLoading } = useSubjects(semesterId)
   const { data: tasks } = useTasks(semesterId)
   const { data: events } = useEvents(semesterId)
+  const { data: scheduleNotes } = useScheduleNotes(semesterId)
+  const { data: scheduleFlags } = useScheduleFlags(semesterId)
   const { data: semester } = useSemester(semesterId)
 
   // Calculate semester context
@@ -51,7 +54,7 @@ export default function ScheduleTable() {
 
   // Get tasks/events for a specific week and subject
   const getItemsForWeekAndSubject = (week, subjectId) => {
-    if (!tasks && !events) return []
+    if (!tasks && !events && !scheduleNotes) return []
 
     const weekStartStr = formatDate(week.start)
     const weekEndStr = formatDate(week.end)
@@ -70,7 +73,9 @@ export default function ScheduleTable() {
       return eventDateStr >= weekStartStr && eventDateStr <= weekEndStr
     }) || []
 
-    return [...weekTasks, ...weekEvents]
+    const notes = scheduleNotes?.filter(note => note.week_number === week.number && note.subject_id === subjectId) || []
+
+    return [...weekTasks, ...weekEvents, ...notes]
   }
 
   if (subjectsLoading) {
@@ -136,6 +141,16 @@ export default function ScheduleTable() {
                 >
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-[var(--dm-text)] sticky left-0 z-10">
                     <div className="flex items-center gap-2">
+                      {scheduleFlags?.find(flag => flag.week_number === week.number)?.flag_type && (
+                        <span
+                          className={`inline-block w-2.5 h-2.5 rounded-full ${
+                            {
+                              red: 'bg-red-500', yellow: 'bg-yellow-400', green: 'bg-green-500', blue: 'bg-blue-500',
+                            }[scheduleFlags.find(flag => flag.week_number === week.number).flag_type] || 'bg-gray-400'
+                          }`}
+                          aria-label="Estado de la semana"
+                        />
+                      )}
                       {week.isPast && <span className="text-green-500">✓</span>}
                       {week.isCurrent && <span className="text-blue-500">●</span>}
                       <span>Semana {week.number}</span>
@@ -155,7 +170,7 @@ export default function ScheduleTable() {
                                 key={item.id}
                                 className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded min-w-0 max-w-full overflow-hidden text-ellipsis break-words dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
                               >
-                                {item.titulo || item.nombre}
+                                {item.note_text || item.titulo || item.nombre}
                               </div>
                             ))}
                           </div>

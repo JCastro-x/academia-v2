@@ -14,6 +14,7 @@ export async function getScheduleNotes(semesterId) {
     .select('id, semester_id, subject_id, week_number, note_text, note_color, updated_at')
     .eq('semester_id', semesterId)
 
+  if (error?.code === 'PGRST205') return []
   if (error) throw error
   return data
 }
@@ -65,6 +66,7 @@ export async function getScheduleFlags(semesterId) {
     .select('id, semester_id, week_number, flag_type, updated_at')
     .eq('semester_id', semesterId)
 
+  if (error?.code === 'PGRST205') return []
   if (error) throw error
   return data
 }

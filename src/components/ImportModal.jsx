@@ -1,10 +1,12 @@
 import { useState, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useQueryClient } from '@tanstack/react-query'
 import { useUIStore } from '../stores/ui.store.js'
 import { importUserBackup, validateBackupPayload } from '../lib/importData.js'
 
 export default function ImportModal() {
   const { isModalOpen, modalContent, closeModal, addToast } = useUIStore()
+  const queryClient = useQueryClient()
   const fileInputRef = useRef(null)
   const [fileName, setFileName] = useState('')
   const [backupData, setBackupData] = useState(null)
@@ -80,6 +82,7 @@ export default function ImportModal() {
 
     try {
       await importUserBackup(backupData, { replaceAll })
+      await queryClient.invalidateQueries()
       addToast({ type: 'success', message: `Importación ${replaceAll ? 'con reemplazo total' : 'fusionada'} completada.` })
       closeAndReset()
     } catch (error) {
@@ -104,7 +107,7 @@ export default function ImportModal() {
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 p-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
+          className="modal-panel bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 p-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-4">

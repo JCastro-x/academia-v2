@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { Outlet, useParams, Link, useLocation } from 'react-router-dom'
+import { Outlet, useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
 import { useProfile } from '../features/profile/hooks.js'
+import { useSemesters } from '../features/semesters/hooks.js'
 import { playSound } from '../lib/sound.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import ImportModal from '../components/ImportModal.jsx'
@@ -12,6 +13,7 @@ import GlobalModalHost from '../components/GlobalModalHost.jsx'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
+  const navigate = useNavigate()
   const location = useLocation()
   const prevPathRef = useRef(location.pathname)
   const {
@@ -44,6 +46,22 @@ export default function AppLayout() {
 
   // Hidratación: perfil guardado → ui.store (al montar AppLayout)
   const { data: profile } = useProfile()
+  const { data: semesters, isLoading: semestersLoading, error: semestersError } = useSemesters()
+
+  useEffect(() => {
+    if (semestersLoading || semestersError || !semesters) return
+
+    const currentSemester = semesters.find((semester) => semester.id === semesterId)
+    if (currentSemester) return
+
+    if (semesters.length > 0) {
+      const nextSemester = semesters.find((semester) => semester.activo) || semesters[0]
+      navigate(`/s/${nextSemester.id}`, { replace: true })
+      return
+    }
+
+    navigate('/create-first-semester', { replace: true })
+  }, [semesterId, semesters, semestersLoading, semestersError, navigate])
 
   useEffect(() => {
     if (!profile) return // null o undefined → no hay perfil, mantener defaults del store
@@ -66,7 +84,7 @@ export default function AppLayout() {
     console.log('[AppLayout] aplicando tema', { modoOscuro, tipografia, temaColor, sonidosInteraccion })
     document.documentElement.classList.toggle('dark', modoOscuro)
     document.documentElement.style.setProperty('--color-primary', temaColor)
-    document.documentElement.style.fontFamily = FONT_MAP[tipografia] || 'Inter, system-ui, sans-serif'
+    document.documentElement.style.setProperty('--font-family', FONT_MAP[tipografia] || 'Inter, system-ui, sans-serif')
     setMuted(sonidosInteraccion === 'off')
   }, [modoOscuro, tipografia, temaColor, sonidosInteraccion, setMuted])
 
@@ -94,10 +112,10 @@ export default function AppLayout() {
   const handleOpenQuickAdd = () => openModal('quickadd')
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-[var(--dm-bg)] overflow-hidden">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-[var(--dm-bg)] overflow-hidden">
       <TopBar onOpenClassModal={handleOpenClassModal} onOpenQuickAdd={handleOpenQuickAdd} />
 
-      <div className="flex relative h-full min-h-0 overflow-visible">
+      <div className="flex relative flex-1 min-h-0 overflow-visible">
         {/* Mobile Overlay */}
         {!isSidebarCollapsed && (
           <div 
@@ -140,7 +158,7 @@ export default function AppLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 w-full h-full overflow-y-auto overscroll-contain p-4 md:p-6 pb-20">
+        <main className="flex-1 basis-0 min-w-0 max-w-full h-full overflow-x-hidden overflow-y-auto overscroll-contain p-4 md:p-6 pb-20">
           <Outlet />
         </main>
       </div>

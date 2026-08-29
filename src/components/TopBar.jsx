@@ -154,14 +154,14 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
           </button>
           <button
             onClick={onOpenQuickAdd}
-            className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-[var(--dm-border)] text-gray-700 dark:text-[var(--dm-text-muted)] rounded-lg hover:bg-gray-300 dark:hover:bg-[var(--dm-border)] transition-colors"
+            className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-[var(--dm-border)] text-black dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-[var(--dm-border)] transition-colors"
           >
             Agregar
           </button>
           <button
             onClick={() => navigate(`/s/${semesterId}/exam`)}
-            className="px-3 py-1.5 text-sm text-white rounded-lg transition-colors"
-            style={{ backgroundColor: 'var(--color-primary)' }}
+            className="px-3 py-1.5 text-sm text-black rounded-lg transition-colors"
+            style={{ backgroundColor: 'var(--color-primary)', color: '#000000' }}
           >
             Examen
           </button>

@@ -32,15 +32,15 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
       className: 'bg-green-600 text-white dark:bg-green-700 dark:text-white'
     },
     ongreen: {
-      label: 'Bien',
+      label: 'Excelente',
       className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
     },
     onyellow: {
-      label: 'Atención',
+      label: 'Bien',
       className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
     },
     onattention: {
-      label: 'Alerta',
+      label: 'Atención',
       className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
     },
     critical: {
@@ -48,11 +48,11 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
       className: 'bg-red-600 text-white dark:bg-red-700 dark:text-white'
     },
     overdue: {
-      label: 'Vencida',
+      label: 'Crítico',
       className: 'bg-red-700 text-white dark:bg-red-800 dark:text-white'
     },
     notstarted: {
-      label: 'Por iniciar',
+      label: 'Bien',
       className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
     }
   }
@@ -118,7 +118,9 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
           </div>
 
           <div className="mt-2 text-xs text-gray-500 dark:text-[var(--dm-text-muted)]">
-            <span>{stats.progressLabel}</span>
+            {(stats.type !== 'checklist' || (task.subtasks && task.subtasks.length > 0)) && (
+              <span>{stats.progressLabel}</span>
+            )}
             {!task.done && stats.remaining > 0 && (
               <span className="ml-2">• Ritmo: {stats.ritmoActual.toFixed(1)}/día</span>
             )}

@@ -7,12 +7,15 @@ const IMPORT_GROUPS = [
   ['folders', 'grade_zones', 'topics', 'tasks', 'notes', 'events'],
   ['grade_items'],
   ['note_attachments'],
+  ['schedule_notes', 'schedule_flags'],
   ['pomodoro_sessions'],
 ]
 
 const DELETE_ORDER = [
   'note_attachments',
   'pomodoro_sessions',
+  'schedule_notes',
+  'schedule_flags',
   'events',
   'topics',
   'notes',
@@ -28,6 +31,12 @@ const DELETE_ORDER = [
 
 const CONFLICT_COLUMNS = {
   profiles: ['user_id'],
+}
+
+const OPTIONAL_TABLES = new Set(['schedule_notes', 'schedule_flags'])
+
+function isMissingTableError(error) {
+  return error?.code === 'PGRST205' || error?.message?.includes('schema cache')
 }
 
 function normalizeBackupTables(backup) {
@@ -107,6 +116,7 @@ async function upsertTableRows(table, rows, userId) {
     .upsert(normalizedRows, { onConflict: conflictTarget })
 
   if (error) {
+    if (OPTIONAL_TABLES.has(table) && isMissingTableError(error)) return
     throw new Error(`Error al importar datos en ${table}: ${error.message}`)
   }
 }
@@ -119,6 +129,7 @@ export async function deleteAllUserData(userId) {
       .eq('user_id', userId)
 
     if (error) {
+      if (OPTIONAL_TABLES.has(table) && isMissingTableError(error)) continue
       throw new Error(`Error al eliminar datos de ${table}: ${error.message}`)
     }
   }

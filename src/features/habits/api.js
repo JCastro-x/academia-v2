@@ -84,10 +84,11 @@ export async function getHabitById(id) {
     .from('habits')
     .select('id, user_id, nombre, frecuencia, dias_semana, racha, historial')
     .eq('id', id)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
-  if (error) throw error
-  return data
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export async function createHabit(habit) {

@@ -4,11 +4,11 @@
 
 :root {
   /* Light mode palette - lila/celeste pastel (accent only) */
-  --dm-bg: #f9fafb;           /* fondo base claro (gray-50) - REVERTIDO */
+  --dm-bg: #f8fafc;           /* fondo base claro */
   --dm-surface: #ffffff;       /* tarjetas/superficies elevadas claro */
   --dm-border: #e5e7eb;       /* bordes claro (gray-200) */
-  --dm-text: #111827;         /* texto principal claro (gray-900) */
-  --dm-text-muted: #6b7280;   /* texto secundario claro (gray-500) */
+  --dm-text: #000000;         /* texto principal claro */
+  --dm-text-muted: #000000;   /* texto secundario claro */
   --color-primary: #8B5CF6;   /* lila vibrante para acciones (purple-500) */
   --color-accent: #0EA5E9;    /* celeste/azul cielo acento (sky-500) */
   --font-family: 'Inter', system-ui, sans-serif;
@@ -33,8 +33,8 @@ html.dark {
   --dm-bg: #16171B;           /* fondo base - REVERTIDO */
   --dm-surface: #1E2025;      /* tarjetas/superficies elevadas */
   --dm-border: #2A2D33;       /* bordes */
-  --dm-text: #E8E9EB;         /* texto principal */
-  --dm-text-muted: #9A9DA6;   /* texto secundario */
+  --dm-text: #FFFFFF;         /* texto principal */
+  --dm-text-muted: #FFFFFF;   /* texto secundario */
   --color-primary: #A78BFA;   /* lila vibrante para acciones (purple-400) */
   --color-accent: #38BDF8;    /* celeste/azul cielo acento (sky-400) */
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.24), 0 6px 16px rgb(0 0 0 / 0.16);
@@ -66,6 +66,33 @@ input,
 select,
 textarea {
   border-radius: var(--radius-sm);
+}
+
+main input:not([type='checkbox']):not([type='radio']),
+main select,
+main textarea,
+.modal-panel input:not([type='checkbox']):not([type='radio']),
+.modal-panel select,
+.modal-panel textarea {
+  border-radius: var(--radius-md);
+}
+
+main div[class*='border']:not([class*='rounded-full']),
+.modal-panel div[class*='border']:not([class*='rounded-full']) {
+  border-radius: var(--radius-md);
+}
+
+input[type='date'],
+input[type='datetime-local'] {
+  min-height: 2.75rem;
+  border-radius: var(--radius-md);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.75;
+  padding: 0.15rem;
 }
 
 button:focus-visible,
@@ -142,4 +169,90 @@ input[type="checkbox"]:disabled {
 
 html.dark input[type="checkbox"]:disabled {
   border-color: #4b5563;
+}
+
+html:not(.dark) [class*="text-gray-"] {
+  color: #000000 !important;
+}
+
+html.dark [class*="text-gray-"] {
+  color: #FFFFFF !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #FFFFFF;
+  opacity: 0.78;
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.96) translateY(8px); }
+  70% { opacity: 1; transform: scale(1.01) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.subject-card {
+  animation: popIn 0.42s var(--motion-ease) both;
+  transition: transform 0.22s var(--motion-ease), box-shadow 0.22s var(--motion-ease), border-color 0.22s var(--motion-ease);
+}
+
+.subject-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: var(--shadow-md);
+}
+
+main > div > h1,
+main > div > section,
+main > div > .bg-white {
+  animation: fadeSlideUp 0.4s var(--motion-ease) both;
+}
+
+button:not(:disabled) {
+  transition: transform 0.18s var(--motion-ease), background-color 0.18s var(--motion-ease), border-color 0.18s var(--motion-ease), box-shadow 0.18s var(--motion-ease), color 0.18s var(--motion-ease);
+}
+
+button:not(:disabled):hover {
+  box-shadow: 0 6px 16px rgb(15 23 42 / 0.1);
+}
+
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.modal-panel form > div:last-child {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.15rem;
+  background: var(--dm-surface);
+}
+
+.modal-panel form > div:last-child button {
+  min-height: 2.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subject-card,
+  main > div > h1,
+  main > div > section,
+  main > div > .bg-white {
+    animation: none;
+  }
+}
+
+.subjects-grid > * {
+  min-width: 0;
+  max-width: 100%;
 }
