@@ -1,0 +1,405 @@
+/* ═══════════════════════════════════════════════════════════
+   FORMS.CSS — Form fields, inputs, selects, checkboxes, radios
+   Using Academia v2 CSS variables (--dm-*, --color-primary)
+═══════════════════════════════════════════════════════════ */
+
+/* ── Field container (wrapper for label + input) ─────────────── */
+.field {
+  margin-bottom: 1rem; /* 16px */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Label styling ───────────────────────────────────────────── */
+.field-label {
+  display: block;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  color: var(--dm-text-muted, #9ca3af);
+  margin-bottom: 0.375rem; /* 6px */
+  line-height: 1;
+}
+
+.field-label.required::after {
+  content: ' *';
+  color: #ef4444; /* red-600 */
+}
+
+/* ── Base input/select/textarea styling ───────────────────────── */
+.field-input,
+.field-select,
+.field-textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem; /* 10px 12px */
+  border: 1.5px solid var(--dm-border, #d1d5db);
+  border-radius: 0.5rem; /* 8px */
+  font-size: 0.9375rem; /* 15px */
+  font-family: inherit;
+  background: var(--dm-bg, #fff);
+  color: var(--dm-text, #1f2937);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.field-input:focus,
+.field-select:focus,
+.field-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #3b82f6);
+  background: var(--dm-surface, #f3f4f6);
+}
+
+.field-input:disabled,
+.field-select:disabled,
+.field-textarea:disabled {
+  background: var(--dm-bg, #f9fafb);
+  color: var(--dm-text-muted, #9ca3af);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.field-input::placeholder {
+  color: var(--dm-text-muted, #9ca3af);
+}
+
+/* ── Textarea specific ───────────────────────────────────────── */
+.field-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+/* ── Error message ───────────────────────────────────────────── */
+.field-error {
+  color: #ef4444; /* red-600 */
+  font-size: 0.8125rem; /* 13px */
+  margin-top: 0.5rem; /* 8px */
+  min-height: 1.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.field-error:not(:empty) {
+  animation: slideInError 0.25s ease;
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Field row (grid for side-by-side fields) ─────────────────── */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem; /* 16px */
+}
+
+.field-row.two-cols {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Responsive: stack on mobile */
+@media (max-width: 640px) {
+  .field-row.two-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Ensure inputs don't overflow in narrow grid cells */
+.field-row > div {
+  min-width: 0; /* Critical for flex/grid overflow fix */
+}
+
+/* ── Custom checkboxes ───────────────────────────────────────── */
+.field-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.125rem; /* 18px */
+  height: 1.125rem; /* 18px */
+  border: 1.5px solid var(--dm-border, #d1d5db);
+  border-radius: 0.25rem; /* 4px */
+  background: var(--dm-bg, #fff);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
+.field-checkbox:hover {
+  border-color: var(--color-primary, #3b82f6);
+  background: var(--dm-surface, #f3f4f6);
+}
+
+.field-checkbox:checked {
+  background: var(--color-primary, #3b82f6);
+  border-color: var(--color-primary, #3b82f6);
+}
+
+.field-checkbox:checked::after {
+  content: '✓';
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ── Custom radios ───────────────────────────────────────────── */
+.field-radio {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.125rem; /* 18px */
+  height: 1.125rem; /* 18px */
+  border: 1.5px solid var(--dm-border, #d1d5db);
+  border-radius: 50%;
+  background: var(--dm-bg, #fff);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
+.field-radio:hover {
+  border-color: var(--color-primary, #3b82f6);
+  background: var(--dm-surface, #f3f4f6);
+}
+
+.field-radio:checked {
+  background: var(--color-primary, #3b82f6);
+  border-color: var(--color-primary, #3b82f6);
+}
+
+/* ── Toggle button group (radio buttons styled as buttons) ────── */
+.field-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.625rem; /* 10px */
+  margin-bottom: 1rem; /* 16px */
+}
+
+.field-toggle input {
+  display: none;
+}
+
+.field-toggle label {
+  display: block;
+  text-align: center;
+  padding: 0.75rem 0.625rem; /* 12px 10px */
+  border: 1.5px solid var(--dm-border, #d1d5db);
+  border-radius: 0.5rem; /* 8px */
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.875rem; /* 14px */
+  color: var(--dm-text-muted, #9ca3af);
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.field-toggle label:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-primary, #3b82f6);
+}
+
+.field-toggle input:checked + label {
+  border-color: var(--color-primary, #3b82f6);
+  background: color-mix(in srgb, var(--color-primary, #3b82f6) 12%, transparent);
+  color: var(--color-primary, #3b82f6);
+}
+
+/* ── Subtask row (flex row with input + remove button) ───────── */
+.subtask-row {
+  display: flex;
+  gap: 0.5rem; /* 8px */
+  align-items: center;
+  margin-bottom: 0.5rem; /* 8px */
+  animation: slideInSubtask 0.25s ease;
+}
+
+@keyframes slideInSubtask {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.subtask-row input {
+  flex: 1;
+}
+
+.subtask-remove-btn {
+  width: 2.125rem; /* 34px */
+  height: 2.125rem; /* 34px */
+  flex-shrink: 0;
+  border-radius: 0.5rem; /* 8px */
+  border: 1.5px solid var(--dm-border, #d1d5db);
+  background: var(--dm-surface, #f3f4f6);
+  color: var(--dm-text-muted, #9ca3af);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.18s ease;
+}
+
+.subtask-remove-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  transform: scale(1.08) rotate(90deg);
+}
+
+/* ── Add row button (dashed border) ──────────────────────────── */
+.add-row-btn {
+  width: 100%;
+  padding: 0.5625rem; /* 9px */
+  border: 1.5px dashed var(--dm-border, #d1d5db);
+  border-radius: 0.5rem; /* 8px */
+  background: none;
+  color: var(--dm-text-muted, #9ca3af);
+  font-weight: 600;
+  font-size: 0.8125rem; /* 13px */
+  cursor: pointer;
+  margin-top: 0.125rem; /* 2px */
+  transition: all 0.18s ease;
+}
+
+.add-row-btn:hover {
+  border-color: var(--color-primary, #3b82f6);
+  color: var(--color-primary, #3b82f6);
+  background: color-mix(in srgb, var(--color-primary, #3b82f6) 12%, transparent);
+  transform: translateY(-1px);
+}
+
+.add-row-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Color picker ────────────────────────────────────────────── */
+.color-picker {
+  display: flex;
+  gap: 0.5rem; /* 8px */
+  flex-wrap: wrap;
+  margin-top: 0.5rem; /* 8px */
+}
+
+.color-option {
+  width: 2rem; /* 32px */
+  height: 2rem; /* 32px */
+  border-radius: 50%;
+  border: 2px solid var(--dm-border, #d1d5db);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.color-option:hover {
+  transform: scale(1.15);
+  border-color: var(--dm-text, #1f2937);
+}
+
+.color-option.selected {
+  border-color: var(--dm-text, #1f2937);
+  box-shadow: 0 0 0 2px var(--dm-bg, #fff), 0 0 0 4px var(--color-primary, #3b82f6);
+  transform: scale(1.1);
+}
+
+.color-option.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ── Day picker (checkbox group for days) ────────────────────── */
+.day-picker {
+  display: flex;
+  gap: 0.5rem; /* 8px */
+  flex-wrap: wrap;
+  margin-top: 0.5rem; /* 8px */
+}
+
+.day-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; /* 4px */
+  font-size: 0.75rem; /* 12px */
+  color: var(--dm-text-muted, #9ca3af);
+  cursor: pointer;
+  user-select: none;
+}
+
+.day-checkbox input[type='checkbox'] {
+  width: 1rem; /* 16px */
+  height: 1rem; /* 16px */
+  cursor: pointer;
+}
+
+.day-checkbox:hover {
+  color: var(--dm-text, #1f2937);
+}
+
+/* ── Priority picker ─────────────────────────────────────────── */
+.priority-picker {
+  display: flex;
+  gap: 0.625rem; /* 10px */
+  margin-top: 0.5rem; /* 8px */
+  flex-wrap: wrap;
+}
+
+.priority-option {
+  width: 2.5rem; /* 40px */
+  height: 2.5rem; /* 40px */
+  border-radius: 0.5rem; /* 8px */
+  border: 2px solid var(--dm-border, #d1d5db);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem; /* 12px */
+  font-weight: 600;
+}
+
+.priority-option:hover {
+  transform: scale(1.1);
+  border-color: var(--dm-text, #1f2937);
+}
+
+.priority-option.selected {
+  border-color: var(--dm-text, #1f2937);
+  box-shadow: 0 0 0 2px var(--dm-bg, #fff), 0 0 0 4px var(--color-primary, #3b82f6);
+  transform: scale(1.1);
+}
+
+.priority-option.selected::after {
+  content: '✓';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--color-primary, #3b82f6);
+  color: #fff;
+  width: 1rem; /* 16px */
+  height: 1rem; /* 16px */
+  border-radius: 50%;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

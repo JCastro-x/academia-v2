@@ -10,6 +10,8 @@ create table semesters (
   nota_minima numeric,
   promedio_previo numeric,
   creditos_previos int,
+  start_date date,
+  end_date date,
   updated_at timestamptz default now()
 );
 create index on semesters (user_id, activo);
@@ -27,7 +29,9 @@ create table subjects (
   color text,
   icono text,
   horario jsonb,
-  updated_at timestamptz default now()
+  linked_lab_id uuid references subjects(id) ON DELETE SET NULL,
+  updated_at timestamptz default now(),
+  constraint check_subjects_no_self_lab CHECK (linked_lab_id IS NULL OR linked_lab_id != id)
 );
 create index on subjects (semester_id);
 create index on subjects (user_id);
@@ -51,7 +55,8 @@ create table grade_items (
   user_id uuid not null,
   nombre text not null,
   porcentaje_ingresado numeric,
-  puntos_netos numeric
+  puntos_netos numeric,
+  peso_pts numeric
 );
 create index on grade_items (zone_id);
 create index on grade_items (user_id);
@@ -69,7 +74,12 @@ create table tasks (
   subtasks jsonb default '[]',
   attachments jsonb default '[]',
   reminder_at timestamptz,
-  updated_at timestamptz default now()
+  tipo text not null default 'checklist',
+  total_units numeric,
+  work_days int[],
+  log jsonb default '{}',
+  updated_at timestamptz default now(),
+  constraint check_tasks_tipo check (tipo IN ('checklist', 'cantidad'))
 );
 create index on tasks (semester_id, done);
 create index on tasks (user_id);
@@ -77,7 +87,7 @@ create index on tasks (user_id);
 -- Notes table
 create table notes (
   id uuid primary key default gen_random_uuid(),
-  subject_id uuid references subjects not null,
+  subject_id uuid references subjects,
   user_id uuid not null,
   folder_id uuid,
   titulo text,
@@ -115,25 +125,15 @@ create table topics (
 create index on topics (subject_id);
 create index on topics (user_id);
 
--- Flashcards table
-create table flashcards (
-  id uuid primary key default gen_random_uuid(),
-  subject_id uuid references subjects not null,
-  user_id uuid not null,
-  frente text,
-  dorso text,
-  estado text default 'nueva'
-);
-create index on flashcards (subject_id);
-create index on flashcards (user_id);
-
 -- Habits table
 create table habits (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null default auth.uid(),
-  nombre text,
+  nombre text not null,
+  frecuencia text not null, -- 'diario' | 'semanal'
+  dias_semana int[], -- array de días [1-7] para frecuencia semanal (1=lunes, 7=domingo)
   racha int default 0,
-  historial jsonb default '[]'
+  historial jsonb default '[]' -- array de fechas completadas ['2024-01-15', '2024-01-16', ...]
 );
 create index on habits (user_id);
 
@@ -176,7 +176,11 @@ $$ language plpgsql security definer;
 
 create or replace function set_user_id_from_folder() returns trigger as $$
 begin
-  new.user_id := (select user_id from folders where id = new.parent_id);
+  if new.parent_id is not null then
+    new.user_id := (select user_id from folders where id = new.parent_id);
+  else
+    new.user_id := auth.uid();
+  end if;
   return new;
 end;
 $$ language plpgsql security definer;
@@ -200,11 +204,8 @@ create trigger trg_notes_user_id before insert on notes
 create trigger trg_topics_user_id before insert on topics
   for each row execute function set_user_id_from_subject();
 
-create trigger trg_flashcards_user_id before insert on flashcards
-  for each row execute function set_user_id_from_subject();
-
 create trigger trg_folders_user_id before insert on folders
-  for each row when (new.parent_id is not null) execute function set_user_id_from_folder();
+  for each row execute function set_user_id_from_folder();
 
 create trigger trg_grade_items_user_id before insert on grade_items
   for each row execute function set_user_id_from_zone();
@@ -250,11 +251,6 @@ create policy "own rows" on topics
   for all using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-alter table flashcards enable row level security;
-create policy "own rows" on flashcards
-  for all using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
 alter table habits enable row level security;
 create policy "own rows" on habits
   for all using (auth.uid() = user_id)
@@ -262,5 +258,124 @@ create policy "own rows" on habits
 
 alter table events enable row level security;
 create policy "own rows" on events
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Note attachments table (images, drawings, PDFs)
+create table note_attachments (
+  id uuid primary key default gen_random_uuid(),
+  note_id uuid references notes not null,
+  user_id uuid not null,
+  tipo text not null, -- 'imagen' | 'dibujo' | 'pdf'
+  nombre text not null,
+  storage_path text not null, -- path en Supabase Storage: notes/{user_id}/{note_id}/{filename}
+  metadata jsonb default '{}', -- info adicional (dimensiones, tamaño, etc)
+  created_at timestamptz default now()
+);
+create index on note_attachments (note_id);
+create index on note_attachments (user_id);
+
+-- Trigger for note_attachments user_id (based on note_id hierarchy with auth.uid() fallback)
+create or replace function set_user_id_from_note() returns trigger as $$
+begin
+  if new.note_id is not null then
+    new.user_id := (select user_id from notes where id = new.note_id);
+  else
+    new.user_id := auth.uid();
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger trg_note_attachments_user_id before insert on note_attachments
+  for each row execute function set_user_id_from_note();
+
+-- RLS for note_attachments
+alter table note_attachments enable row level security;
+create policy "own rows" on note_attachments
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Storage bucket for note attachments (private bucket with RLS)
+-- Run this in Supabase dashboard or via SQL:
+insert into storage.buckets (id, name, public)
+values ('note-attachments', 'note-attachments', false)
+on conflict (id) do nothing;
+
+-- Storage RLS policies for note-attachments bucket
+-- Allow users to upload to their own folder (notes/{user_id}/*)
+-- Note: PostgreSQL arrays are 1-indexed, so [2] = userId for path "notes/{userId}/{noteId}/{filename}"
+create policy "Users can upload to their own folder"
+on storage.objects for insert
+with check (
+  bucket_id = 'note-attachments' and
+  auth.uid()::text = (storage.foldername(name))[2]
+);
+
+-- Allow users to read their own files
+create policy "Users can read their own files"
+on storage.objects for select
+using (
+  bucket_id = 'note-attachments' and
+  auth.uid()::text = (storage.foldername(name))[2]
+);
+
+-- Allow users to delete their own files
+create policy "Users can delete their own files"
+on storage.objects for delete
+using (
+  bucket_id = 'note-attachments' and
+  auth.uid()::text = (storage.foldername(name))[2]
+);
+
+-- Pomodoro sessions table (historial de sesiones completadas)
+create table pomodoro_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  started_at timestamptz not null,
+  ended_at timestamptz not null,
+  duration_min int not null, -- duración real en minutos
+  tipo text not null, -- 'trabajo' | 'descanso_corto' | 'descanso_largo'
+  task_id uuid references tasks, -- nullable, opcional
+  subject_id uuid references subjects -- nullable, opcional
+);
+create index on pomodoro_sessions (user_id);
+create index on pomodoro_sessions (started_at);
+
+-- Trigger for pomodoro_sessions user_id (direct auth.uid(), no hierarchy dependency)
+create or replace function set_user_id_from_pomodoro_session() returns trigger as $$
+begin
+  new.user_id := auth.uid();
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger trg_pomodoro_sessions_user_id before insert on pomodoro_sessions
+  for each row execute function set_user_id_from_pomodoro_session();
+
+-- RLS for pomodoro_sessions
+alter table pomodoro_sessions enable row level security;
+create policy "own rows" on pomodoro_sessions
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Profiles table (datos de usuario y preferencias, a nivel de usuario no de semestre)
+create table profiles (
+  user_id uuid primary key references auth.users not null default auth.uid(),
+  nombre text,
+  registro_academico text,
+  carrera text,
+  institucion text,
+  cursos_ganados int default 0,
+  tipografia text default 'Inter',              -- 'Inter' | 'sans' | 'serif' | 'mono'
+  tema_color text default '#84cc16',            -- color hex (ej. '#84cc16')
+  sonidos_interaccion text default 'classic',  -- 'classic' | 'modern' | 'off'
+  modo_oscuro boolean default false,
+  updated_at timestamptz default now()
+);
+
+-- RLS: simple equality (una sola igualdad, sin joins)
+alter table profiles enable row level security;
+create policy "own rows" on profiles
   for all using (auth.uid() = user_id)
   with check (auth.uid() = user_id);

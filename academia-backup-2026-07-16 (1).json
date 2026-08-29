@@ -1,0 +1,2860 @@
+{
+  "version": 4,
+  "exportedAt": "2026-07-16T22:54:13.274Z",
+  "semestres": [
+    {
+      "id": "sem_1772153696066",
+      "activo": false,
+      "nombre": "5To sem",
+      "notesArray": [],
+      "updatedAt": 1784240236512,
+      "updated_at": 1784240236512
+    },
+    {
+      "id": "sem_1778304827333",
+      "tasks": [
+        {
+          "id": "1781652845243",
+          "due": "2026-06-27",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "9e977ed7-06d7-4a6c-bb1c-ac5dbf3b916a",
+          "notes": "",
+          "title": "Tarea 6",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 0,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [
+            {
+              "done": false,
+              "text": "32"
+            }
+          ],
+          "createdAt": 1781652845244,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1781652819860",
+          "due": "2026-06-23",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "9e977ed7-06d7-4a6c-bb1c-ac5dbf3b916a",
+          "notes": "",
+          "title": "Tarea 5",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 0,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [
+            {
+              "done": true,
+              "text": "7"
+            },
+            {
+              "done": true,
+              "text": "7"
+            },
+            {
+              "done": true,
+              "text": "7"
+            },
+            {
+              "done": true,
+              "text": "7"
+            },
+            {
+              "done": true,
+              "text": "7"
+            }
+          ],
+          "createdAt": 1781652819860,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1781582416118",
+          "due": "2026-06-18",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "9e977ed7-06d7-4a6c-bb1c-ac5dbf3b916a",
+          "notes": "",
+          "title": "Tarea 4",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 0,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [
+            {
+              "done": false,
+              "text": "10"
+            },
+            {
+              "done": false,
+              "text": "10"
+            }
+          ],
+          "createdAt": 1781582416118,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1781291947186",
+          "due": "2026-06-14",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Tarea 3",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [
+            {
+              "done": false,
+              "text": "5"
+            },
+            {
+              "done": false,
+              "text": "5"
+            },
+            {
+              "done": false,
+              "text": "5"
+            }
+          ],
+          "createdAt": 1781291947186,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_0",
+          "due": "2026-06-05",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_2",
+          "due": "2026-06-07",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 2,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_3",
+          "due": "2026-06-08",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 3,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_4",
+          "due": "2026-06-09",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 4,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_5",
+          "due": "2026-06-10",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 5,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_6",
+          "due": "2026-06-11",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 6,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_7",
+          "due": "2026-06-12",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 7,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_8",
+          "due": "2026-06-13",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 8,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_9",
+          "due": "2026-06-14",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 9,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_10",
+          "due": "2026-06-15",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 10,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_11",
+          "due": "2026-06-16",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 11,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_12",
+          "due": "2026-06-17",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 12,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_13",
+          "due": "2026-06-18",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 13,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_14",
+          "due": "2026-06-19",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 14,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_15",
+          "due": "2026-06-20",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 15,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_16",
+          "due": "2026-06-21",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 16,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_17",
+          "due": "2026-06-22",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 17,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_18",
+          "due": "2026-06-23",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 18,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780697540756_19",
+          "due": "2026-06-24",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Hoja de trabajo",
+          "repeat": "daily",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1780697540756,
+          "kanbanCol": "todo",
+          "repeatDone": 19,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 20,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780615687153",
+          "due": "2026-06-10",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Tarea 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [
+            {
+              "done": true,
+              "text": "10"
+            },
+            {
+              "done": true,
+              "text": "8"
+            },
+            {
+              "done": true,
+              "text": "8"
+            },
+            {
+              "done": true,
+              "text": "8"
+            },
+            {
+              "done": false,
+              "text": "8"
+            }
+          ],
+          "createdAt": 1780615687153,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "2026-06-10",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780366860077",
+          "due": "2026-06-05",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_1778350626022",
+          "notes": "",
+          "title": "Tarea de Inter",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1780366860077,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1780634639518",
+          "due": "",
+          "done": true,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "",
+          "notes": "",
+          "title": "adasdada",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 0,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1780634639518,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        }
+      ],
+      "activo": false,
+      "grades": {
+        "9e977ed7-06d7-4a6c-bb1c-ac5dbf3b916a": {
+          "final_1": 60,
+          "tareas_1": 100,
+          "tareas_2": 100,
+          "tareas_3": 100,
+          "tareas_4": 100,
+          "tareas_5": 100,
+          "tareas_6": 100,
+          "parciales_1": 30,
+          "parciales_2": 55,
+          "hojas_de_trabajo_1": 100,
+          "hojas_de_trabajo_2": 95,
+          "hojas_de_trabajo_3": 100,
+          "hojas_de_trabajo_4": 95,
+          "hojas_de_trabajo_5": 100,
+          "hojas_de_trabajo_6": 100,
+          "hojas_de_trabajo_7": 100,
+          "hojas_de_trabajo_8": 100,
+          "hojas_de_trabajo_9": 100,
+          "hojas_de_trabajo_10": 100,
+          "hojas_de_trabajo_11": 100,
+          "hojas_de_trabajo_12": 100,
+          "hojas_de_trabajo_13": 100,
+          "hojas_de_trabajo_14": 100,
+          "hojas_de_trabajo_15": 100,
+          "hojas_de_trabajo_16": 100,
+          "hojas_de_trabajo_17": "",
+          "hojas_de_trabajo_18": ""
+        }
+      },
+      "nombre": "Vacas Junio 2026",
+      "topics": [],
+      "prevAvg": 0,
+      "materias": [
+        {
+          "id": "9e977ed7-06d7-4a6c-bb1c-ac5dbf3b916a",
+          "code": "107",
+          "dias": "Lun, Mar, Mié, Jue, Vie",
+          "icon": "🧮",
+          "name": "Intermedia 1",
+          "color": "#fbbf24",
+          "zones": [
+            {
+              "key": "tareas",
+              "subs": [
+                {
+                  "key": "tareas_1",
+                  "label": "Tarea 1",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "tareas_2",
+                  "label": "Tarea 2",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "tareas_3",
+                  "label": "Tarea 3",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "tareas_4",
+                  "label": "Tarea 4",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "tareas_5",
+                  "label": "Tarea 5",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "tareas_6",
+                  "label": "Tareas 6",
+                  "maxPts": 2.5
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Tareas",
+              "maxPts": 15
+            },
+            {
+              "key": "parciales",
+              "subs": [
+                {
+                  "key": "parciales_1",
+                  "label": "Primer parcial",
+                  "maxPts": 25
+                },
+                {
+                  "key": "parciales_2",
+                  "label": "Segundo parcial",
+                  "maxPts": 25
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Parciales",
+              "maxPts": 50
+            },
+            {
+              "key": "final",
+              "subs": [
+                {
+                  "key": "final_1",
+                  "label": "Examen final",
+                  "maxPts": 25
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Final",
+              "maxPts": 25
+            },
+            {
+              "key": "hojas_de_trabajo",
+              "subs": [
+                {
+                  "key": "hojas_de_trabajo_1",
+                  "label": "Hoja de trabajo 1",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_2",
+                  "label": "Hoja de trabajo 2",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_3",
+                  "label": "Hojas de Trabajo 3",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_4",
+                  "label": "Hojas de Trabajo 4",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_5",
+                  "label": "Hojas de Trabajo 5",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_6",
+                  "label": "Hojas de Trabajo 6",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_7",
+                  "label": "Hojas de Trabajo 7",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_8",
+                  "label": "Hojas de Trabajo 8",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_9",
+                  "label": "Hojas de Trabajo 9",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_10",
+                  "label": "Hojas de Trabajo 10",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_11",
+                  "label": "Hojas de Trabajo 11",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_12",
+                  "label": "Hojas de Trabajo 12",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_13",
+                  "label": "Hojas de Trabajo 13",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_14",
+                  "label": "Hojas de Trabajo 14",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_15",
+                  "label": "Hojas de Trabajo 15",
+                  "maxPts": 0.63
+                },
+                {
+                  "key": "hojas_de_trabajo_16",
+                  "label": "Hojas de Trabajo 16",
+                  "maxPts": 0.55
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Hojas de Trabajo",
+              "maxPts": 10
+            }
+          ],
+          "credits": "9",
+          "horario": "7:00-11:00",
+          "seccion": "A",
+          "apartados": [
+            {
+              "id": "63ca0841-0477-4192-89f8-0178e519d6ce",
+              "tipo": "parcial",
+              "orden": 0,
+              "nombre": "Parcial 1",
+              "parcialKey": "1"
+            },
+            {
+              "id": "1ac998ee-8962-4010-910f-0e9efdb92f9d",
+              "tipo": "parcial",
+              "orden": 1,
+              "nombre": "Parcial 2",
+              "parcialKey": "2"
+            },
+            {
+              "id": "10ec4a8f-0aa0-42f4-8eb3-a8545ce4f6d3",
+              "tipo": "parcial",
+              "orden": 2,
+              "nombre": "Parcial 3",
+              "parcialKey": "3"
+            },
+            {
+              "id": "e13a84f2-fa59-41f7-8d4f-f2a607718c22",
+              "tipo": "parcial",
+              "orden": 3,
+              "nombre": "Final",
+              "parcialKey": "final"
+            }
+          ],
+          "catedratico": "Nery Amilcar Mejia Godinez"
+        }
+      ],
+      "prevCred": 0,
+      "flashcards": [],
+      "notesArray": [
+        {
+          "id": "note_1781647722814",
+          "type": "text",
+          "matId": "9e977ed7-06d7-4a6c-bb1c-ac5dbf3b916a",
+          "title": "Tarea 4",
+          "images": {
+            "IMG_1781647724168": "IDB:IMG_1781647724168"
+          },
+          "content": "",
+          "folderId": "",
+          "updatedAt": 1781647733864
+        },
+        {
+          "id": "note_1782182043895",
+          "type": "text",
+          "matId": "9e977ed7-06d7-4a6c-bb1c-ac5dbf3b916a",
+          "title": "Notas series y radios",
+          "images": {},
+          "content": "¡Ánimo con ese examen! Es completamente normal sentir que la cabeza da vueltas con este tema. Las series de potencias suelen ser el \"jefe final\" en los cursos de cálculo y matemáticas intermedias, pero una vez que entiendes la \"receta\", se vuelven muy mecánicas.Vamos a ordenar todo esto para que tengas un algoritmo mental claro de qué hacer paso a paso. 🧠1. El \"Chivo\" de los Criterios (Para no confundirlos) 📝Antes que nada, aclaremos la confusión con los números ($0$ y $1$). Estás mezclando dos tipos de pruebas diferentes. Aquí tienes cómo separarlas en tu mente:A. El Criterio del Límite Normal (Prueba de la Divergencia)Solo le sacas el límite al término general: $\\lim_{n \\to \\infty} a_n$Si el límite es $\\neq 0$: La serie DIVERGE (es decir, explota). 💥Si el límite es $= 0$: No sabes nada. Tienes que usar otra prueba. 🤷‍♂️B. El Criterio del Valor Absoluto (Prueba de la Razón y Prueba de la Raíz)Esta es la que vas a usar el 99% de las veces para las series de potencias (las que tienen una $x$). Sacas un límite $L$.Si $L &lt; 1$: La serie CONVERGE. ✅ (Este es el que siempre vamos a buscar forzar).Si $L &gt; 1$: La serie DIVERGE. 💥Si $L = 1$: La prueba no sirve, hay que intentar otra cosa.2. La Receta Maestra para Series de Potencias 🧑‍🍳Cuando en el examen te pidan Radio e Intervalo de convergencia, siempre sigue exactamente estos 5 pasos:Paso 1: Aplica la Prueba de la RazónCasi sin pensar, plantea este límite:$$L = \\lim_{n \\to \\infty} \\left| \\frac{a_{n+1}}{a_n} \\right|$$(Ojo: Si absolutamente todo en la serie está elevado a la $n$, usas la de la Raíz $\\sqrt[n]{|a_n|}$, pero la de la razón es la más común).Paso 2: El truco de \"sacar la $x$\" 🕵️‍♂️Esto es lo que te causaba duda. El límite dice $\\lim_{n \\to \\infty}$, lo que significa que la única variable que se está moviendo y cambiando de valor es la $n$.Para los ojos del límite, la $x$ es como si fuera un simple número estático (una constante). Por regla de límites, las constantes se pueden sacar afuera para que no estorben.Simplificas tus $x$ adentro del valor absoluto (ej. $\\frac{x^{n+1}}{x^n} = x$).Sacas la $x$ del límite, pero siempre protegida con su valor absoluto: $|x|$.Te quedará algo así: $L = |x| \\cdot \\lim_{n \\to \\infty} (\\text{cosas con } n)$Paso 3: Calcula el límite de las $n$ 🧮Resuelves el límite que te quedó adentro (el de las $n$). Puede darte tres tipos de resultados:Un número (por ejemplo, $1$, $\\frac{1}{4}$, $2$).Cero ($0$).Infinito ($\\infty$).Paso 4: Fuerza la convergencia para hallar el Radio ($R$) 🎯Para que una serie de potencias converja, por ley, nuestro resultado total $L$ debe ser menor a $1$. Así que tomas tu resultado y lo fuerzas:Caso A (Da un número): Si te dio $L = \\frac{|x|}{4}$. Escribes: $\\frac{|x|}{4} &lt; 1$. Despejas la $x$ pasando el 4 a multiplicar: $|x| &lt; 4$. Ese número que te queda solo ($4$) es tu Radio de Convergencia ($R$).Caso B (Da Cero): Si te dio $L = |x| \\cdot 0 = 0$. Como $0$ siempre es menor que $1$, no importa qué valga $x$. Tu Radio es $R = \\infty$. (Terminaste el problema, intervalo es $(-\\infty, \\infty)$).Caso C (Da Infinito): Si te da $L = \\infty$, la serie solo converge cuando $x = 0$ (para \"apagar\" el infinito). Tu Radio es $R = 0$.Paso 5: Evaluar los Extremos (¡No lo olvides!) ⚠️Si caíste en el \"Caso A\", tienes una desigualdad como $|x| &lt; 4$, lo que significa que tu intervalo está entre $-4 &lt; x &lt; 4$.La Prueba de la Razón no nos asegura qué pasa exactamente en el $-4$ ni en el $4$. Tienes que ser un inspector y probarlos a mano:Agarra tu serie original y borra la $x$. Escribe un $4$ en su lugar.Ahora tienes una serie normal de puros números. Olvídate de la Prueba de la Razón y mírala con ojos frescos: ¿Es una serie p? ¿Es alternante? ¿Diverge por el término enésimo? Resuélvela.Repite el proceso poniendo el $-4$.El veredicto final: Si en el extremo convergió, le pones corchete []. Si divergió, le pones paréntesis (). (Ej. Si diverge en $-4$ pero converge en $4$, tu intervalo final es $(-4, 4]$).Con esta estructura mental, sin importar qué monstruo algebraico te pongan en frente, siempre sabrás cuál es el siguiente paso a dar.¿Hay algún paso específico de esta receta, por ejemplo cómo simplificar los factoriales o evaluar un extremo, que te gustaría que practiquemos con un ejercicio corto antes de tu examen?",
+          "folderId": "",
+          "updatedAt": 1782182058571
+        },
+        {
+          "id": "note_1782182910434",
+          "type": "text",
+          "matId": "9e977ed7-06d7-4a6c-bb1c-ac5dbf3b916a",
+          "title": "Consejos Pruebas",
+          "images": {},
+          "content": "¡Esa es la pregunta del millón! 🏆 Ese es exactamente el momento en el que todos los temas del curso colisionan. Al reemplazar la $x$, tu serie de potencias se transforma en una **serie numérica clásica** (ya no hay variables, solo números y $n$).\n<br>\n<br>Aquí es donde tienes que sacar tu \"caja de herramientas\" mental de pruebas de convergencia. Para saber cuál usar, **no tienes que adivinar, solo tienes que mirar la \"forma\" de la serie**.\n<br>\n<br>Aquí tienes tu árbol de decisiones infalible para el examen:\n<br>\n<br>### ⏱️ Paso 0: El filtro rápido (Prueba de la Divergencia)\n<br>\n<br>Antes de sudar resolviendo cosas complejas, hazle una mirada rápida al límite hacia el infinito: $\\lim_{n \\to \\infty} a_n$.\n<br>\n<br>* **¿Qué buscas?** Si a simple vista ves que el término dominante de arriba es igual o más grande que el de abajo (ej. $\\frac{n^2}{n^2+1}$ o $\\frac{n^3}{n^2}$), el límite no va a ser cero.\n<br>* **Veredicto:** Si no da $0$, la serie **Diverge**. Si da $0$, sigues al siguiente paso.\n<br>\n<br>---\n<br>\n<br>### 🌳 El Árbol de Decisiones (Según la forma de tu serie)\n<br>\n<br>#### 1. Si ves un $(-1)^n$ 🎭\n<br>\n<br>* **La forma:** Alterna signos (ej. $\\sum \\frac{(-1)^n}{n}$).\n<br>* **Tu herramienta:** **Prueba de la Serie Alternante**.\n<br>* **¿Qué debes hacer?** Olvídate del $(-1)^n$ por un momento y revisa dos cosas sobre el resto de la función:\n<br>1. ¿El límite cuando $n \\to \\infty$ da $0$?\n<br>2. ¿El denominador crece, haciendo que los términos sean cada vez más pequeños (decreciente)?\n<br>\n<br>\n<br>* **Veredicto:** Si cumple ambas, **Converge**.\n<br>\n<br>#### 2. Si ves fracciones de polinomios (puro álgebra) ⚖️\n<br>\n<br>* **La forma:** Polinomios arriba y abajo (ej. $\\frac{n^2 - 1}{n^4 + 3n}$).\n<br>* **Tu herramienta:** **Comparación en el Límite** (Limit Comparison).\n<br>* **¿Qué debes hacer?** 1. Extrae la \"serie conocida\" ignorando las sumas pequeñas. En el ejemplo te quedaría $\\frac{n^2}{n^4} = \\frac{1}{n^2}$.\n<br>2. Haces el límite de tu serie original dividida entre la nueva: $\\lim \\frac{a_n}{b_n}$.\n<br>* **Veredicto:** Si el límite da un número mayor que 0, ambas hacen lo mismo (si tu serie conocida convergía, la original también).\n<br>\n<br>#### 3. Si solo queda un $n$ elevado a un número (La más regalada) 🎁\n<br>\n<br>* **La forma:** Un 1 arriba y una potencia de $n$ abajo (ej. $\\frac{1}{n^3}$, $\\frac{1}{\\sqrt{n}}$).\n<br>* **Tu herramienta:** **Prueba de la Serie $p$**.\n<br>* **¿Qué debes hacer?** Solo mirar el exponente $p$ de la $n$.\n<br>* **Veredicto:** Si $p &gt; 1$, **Converge** (ej. $\\frac{1}{n^2}$). Si $p \\leq 1$, **Diverge** (ej. $\\frac{1}{n^1}$ o $\\frac{1}{n^{1/2}}$).\n<br>\n<br>#### 4. Si ves un logaritmo multiplicando abajo 🪵\n<br>\n<br>* **La forma:** Tienes una $n$ sola junto a un $\\ln(n)$ (ej. $\\frac{1}{n \\ln(n)}$).\n<br>* **Tu herramienta:** **Prueba de la Integral**.\n<br>* **¿Qué debes hacer?** Cambia las $n$ por $x$ y evalúa la integral impropia de $1$ a $\\infty$. (Estas suelen resolverse con una sustitución simple $u = \\ln(x)$).\n<br>* **Veredicto:** Si la integral te da un número finito, **Converge**. Si te da infinito, **Diverge**.\n<br>\n<br>#### 5. Si todo está elevado a la $n$ 📦\n<br>\n<br>* **La forma:** Fracciones completas metidas en paréntesis a la potencia $n$ (ej. $(\\frac{n}{2n+1})^n$).\n<br>* **Tu herramienta:** **Prueba de la Raíz**.\n<br>* **¿Qué debes hacer?** Sácale la raíz enésima $\\sqrt[n]{ }$ a todo para matar el exponente y le sacas el límite.\n<br>* **Veredicto:** Menor que 1 Converge, mayor que 1 Diverge.\n<br>\n<br>---\n<br>\n<br>### 💡 Un consejo clave para el examen\n<br>\n<br>En los problemas de **Radio e Intervalo**, cuando evalúas los extremos, casi *nunca* vas a volver a usar la Prueba de la Razón. ¿Por qué? Porque la Prueba de la Razón te dio $L=1$ en los extremos (¡por eso estás haciendo esto a mano!). Así que si en un extremo te quedan factoriales ($!$) o cosas raras, lo más seguro es que algo simplificaste mal antes de evaluar, o es una serie alternante o de divergencia directa.\n<br>\n<br>¡Tu enfoque principal en los extremos será casi siempre Series $p$, Comparaciones o Series Alternantes! 🚀",
+          "folderId": "",
+          "updatedAt": 1782183313776
+        },
+        {
+          "id": "note_1782183313776",
+          "type": "text",
+          "matId": "9e977ed7-06d7-4a6c-bb1c-ac5dbf3b916a",
+          "title": "formula",
+          "images": {
+            "IMG_1782183320178": "IDB:IMG_1782183320178",
+            "IMG_1782485573858": "IDB:IMG_1782485573858",
+            "IMG_1782485595391": "IDB:IMG_1782485595391"
+          },
+          "content": "",
+          "folderId": "",
+          "updatedAt": 1782485597423
+        }
+      ],
+      "notesFolders": [],
+      "updatedAt": 1784240236512,
+      "updated_at": 1784240236512
+    },
+    {
+      "id": "sem_1782796983892",
+      "notes": {},
+      "tasks": [
+        {
+          "id": "1784090245397",
+          "due": "2026-10-22",
+          "done": false,
+          "tags": [],
+          "type": "Proyecto",
+          "matId": "5f6be3d9-48d9-4f05-86b1-13592312ce38",
+          "notes": "",
+          "title": "IPC 2 - Proyecto 3",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1784090245397,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784090224700",
+          "due": "2026-09-24",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "5f6be3d9-48d9-4f05-86b1-13592312ce38",
+          "notes": "",
+          "title": "IPC 2 - Proyecto 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "high",
+          "subtasks": [],
+          "createdAt": 1784090224700,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784090207548",
+          "due": "2026-08-27",
+          "done": false,
+          "tags": [],
+          "type": "Proyecto",
+          "matId": "5f6be3d9-48d9-4f05-86b1-13592312ce38",
+          "notes": "",
+          "title": "IPC 2 - Proyecto 1",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 120,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784090207548,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784085071125",
+          "due": "2026-10-16",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "notes": "",
+          "title": "Inter 2 - Tarea #3",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 90,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784085071125,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784085053262",
+          "due": "2026-09-11",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "notes": "",
+          "title": "Inter 2 - Tarea #2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 90,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784085053262,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784084966362",
+          "due": "2026-10-16",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "41df5cd9-4fa7-4c30-a6e7-6238f301801b",
+          "notes": "",
+          "title": "Inter 3 - Tarea #3",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 90,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784084966362,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784084945881",
+          "due": "2026-09-11",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "41df5cd9-4fa7-4c30-a6e7-6238f301801b",
+          "notes": "",
+          "title": "Inter 3 - Tarea #2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 90,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784084945881,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784084909169",
+          "due": "2026-08-07",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "41df5cd9-4fa7-4c30-a6e7-6238f301801b",
+          "notes": "",
+          "title": "Inter 3 - Tarea #1",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 90,
+          "comments": [],
+          "priority": "low",
+          "subtasks": [],
+          "createdAt": 1784084909169,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784084142140",
+          "due": "2026-10-31",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #10 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784084142140,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784084114075",
+          "due": "2026-10-24",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #9 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784084114075,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784084092376",
+          "due": "2026-10-17",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #8 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784084092377,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784084072598",
+          "due": "2026-10-10",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #7 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784084072598,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784084043728",
+          "due": "2026-10-03",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #6 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 90,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784084043728,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784084019846",
+          "due": "2026-09-26",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #5 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784084019846,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784083943396",
+          "due": "2026-09-12",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #4 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784083943396,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784083928970",
+          "due": "2026-08-22",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #3 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784083928970,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784083908214",
+          "due": "2026-08-08",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #2 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "low",
+          "subtasks": [],
+          "createdAt": 1784083908214,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784082125449",
+          "due": "2026-07-25",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "notes": "",
+          "title": "Tarea #1 - Fisica 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "low",
+          "subtasks": [],
+          "createdAt": 1784082125449,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784081554401",
+          "due": "2026-08-07",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "notes": "",
+          "title": "Tarea #1 - Inter 2",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 60,
+          "comments": [],
+          "priority": "med",
+          "subtasks": [],
+          "createdAt": 1784081554401,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        },
+        {
+          "id": "1784050410910",
+          "due": "2026-07-20",
+          "done": false,
+          "tags": [],
+          "type": "Tarea",
+          "matId": "mat_lab_1783623862669",
+          "notes": "",
+          "title": "Tarea Fortalecimiento",
+          "repeat": "none",
+          "estDays": 0,
+          "timeEst": 30,
+          "comments": [],
+          "priority": "low",
+          "subtasks": [],
+          "createdAt": 1784050410910,
+          "kanbanCol": "todo",
+          "repeatDone": 0,
+          "attachments": [],
+          "datePlanned": "",
+          "repeatCount": 0,
+          "repeatUntil": "",
+          "estHoursPerDay": 0
+        }
+      ],
+      "activo": true,
+      "events": [
+        {
+          "id": "1783963150701",
+          "date": "2026-08-23",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "title": "Parcial #1 - Fisica 2",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "1"
+        },
+        {
+          "id": "1783963170254",
+          "date": "2026-10-04",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "title": "Parcial #2 - Fisica 2",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "2"
+        },
+        {
+          "id": "1783989754685",
+          "date": "2026-08-09",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "title": "Parcial #1 - Inter 2",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "1"
+        },
+        {
+          "id": "1783989769934",
+          "date": "2026-09-13",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "title": "Parcial #2 - Inter 2",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "2"
+        },
+        {
+          "id": "1783989788769",
+          "date": "2026-10-18",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "title": "Parcial #3 - Inter 2",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "3"
+        },
+        {
+          "id": "1783990901846",
+          "date": "2026-08-12",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "5f6be3d9-48d9-4f05-86b1-13592312ce38",
+          "title": "Parcial #1 - IPC 2",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "1"
+        },
+        {
+          "id": "1783990917993",
+          "date": "2026-09-11",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "5f6be3d9-48d9-4f05-86b1-13592312ce38",
+          "title": "Parcial #2 - IPC 2",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "2"
+        },
+        {
+          "id": "1783990936743",
+          "date": "2026-10-23",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "5f6be3d9-48d9-4f05-86b1-13592312ce38",
+          "title": "Parcial #3 - IPC 2",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "3"
+        },
+        {
+          "id": "1784038886518",
+          "date": "2026-08-04",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "33e39f8c-74ff-4b0d-9d03-42f6f43453ad",
+          "title": "Parcial #1 - Lfp",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "1"
+        },
+        {
+          "id": "1784038920808",
+          "date": "2026-09-09",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "33e39f8c-74ff-4b0d-9d03-42f6f43453ad",
+          "title": "Parcial #2 - Lfp",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "2"
+        },
+        {
+          "id": "1784038936754",
+          "date": "2026-10-13",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "33e39f8c-74ff-4b0d-9d03-42f6f43453ad",
+          "title": "Parcial #3 - Lfp",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "3"
+        },
+        {
+          "id": "1784084468446",
+          "date": "2026-08-09",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "41df5cd9-4fa7-4c30-a6e7-6238f301801b",
+          "title": "Parcial #1 - Inter 3",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "1"
+        },
+        {
+          "id": "1784084489028",
+          "date": "2026-08-09",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "41df5cd9-4fa7-4c30-a6e7-6238f301801b",
+          "title": "Parcial #2 - Inter 3",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "2"
+        },
+        {
+          "id": "1784084506110",
+          "date": "2026-08-09",
+          "desc": "",
+          "hora": "",
+          "type": "Parcial",
+          "matId": "41df5cd9-4fa7-4c30-a6e7-6238f301801b",
+          "title": "Parcial #3 - Inter 3",
+          "isExam": true,
+          "horaEnd": "",
+          "apartadoKey": "3"
+        }
+      ],
+      "grades": {},
+      "nombre": "6to",
+      "topics": [
+        {
+          "id": "79358434-20ca-4f64-b50d-cc75aa15f5e4",
+          "comp": 0,
+          "name": "Definición de una función vectorial",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "9fd8e7ed-6444-4f26-9d92-2a7a4a6db79b",
+          "comp": 0,
+          "name": "Dominio de una función vectoria",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "f3cb089e-a355-4e80-9b83-35f6d57aa4a0",
+          "comp": 0,
+          "name": "Límites de funciones vectoriales",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "5c65390f-23fa-42a6-be88-a17cc59e0535",
+          "comp": 0,
+          "name": "Gráficas de funciones vectoriales",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "4fa53820-1b46-4b8e-8e38-2d993d851668",
+          "comp": 0,
+          "name": "Derivadas e integrales de funciones vectoriales",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "5bdc544e-8a51-4c9f-8200-25c1cca488d5",
+          "comp": 0,
+          "name": "Vector tangente unitario",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "aba6934f-be9c-44ab-9a4a-46949751c442",
+          "comp": 0,
+          "name": "Longitud de arco",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "b7582872-331f-4900-803f-0c18adcd69df",
+          "comp": 0,
+          "name": "Curvatura",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "dcdfd829-3806-4851-a3df-2b168cd95479",
+          "comp": 0,
+          "name": "Definición de funciones de dos variables",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "d4f48a5d-b95f-44c2-a704-a40660add789",
+          "comp": 0,
+          "name": "Gráfica de dominio de funciones de dos variables",
+          "seen": false,
+          "subs": [],
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "parcial": "1",
+          "apartadoId": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2"
+        },
+        {
+          "id": "077c114b-8dfc-49bb-8031-757f32e1b691",
+          "comp": 0,
+          "name": "Fuerza Electromagnetica",
+          "seen": false,
+          "subs": [],
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "parcial": "1",
+          "apartadoId": "9813cff0-64c1-42ed-ba1e-f029c4dc59a1"
+        },
+        {
+          "id": "4c84387d-b738-4606-83ee-b14948ca261f",
+          "comp": 0,
+          "name": "Variables separables",
+          "seen": false,
+          "subs": [],
+          "matId": "41df5cd9-4fa7-4c30-a6e7-6238f301801b",
+          "parcial": "1",
+          "apartadoId": "d3430c8c-bfa2-417a-ba5b-ba09f6248f45"
+        }
+      ],
+      "cerrado": false,
+      "prevAvg": 0,
+      "materias": [
+        {
+          "id": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "code": "0152",
+          "dias": "Lun, Mar, Mié, Vie",
+          "icon": "🧪",
+          "name": "Fisica 2",
+          "color": "#4ade80",
+          "zones": [
+            {
+              "key": "tareas",
+              "subs": [
+                {
+                  "key": "tareas_1",
+                  "label": "Tarea 1",
+                  "maxPts": 1.5
+                },
+                {
+                  "key": "tareas_2",
+                  "label": "Tarea 2",
+                  "maxPts": 1.5
+                },
+                {
+                  "key": "tareas_3",
+                  "label": "Tarea 3",
+                  "maxPts": 1.5
+                },
+                {
+                  "key": "tareas_4",
+                  "label": "Tarea 4",
+                  "maxPts": 1.5
+                },
+                {
+                  "key": "tareas_5",
+                  "label": "Tarea 5",
+                  "maxPts": 1.5
+                }
+              ],
+              "color": "#4ade80",
+              "label": "Tareas",
+              "maxPts": 7.5
+            },
+            {
+              "key": "parciales",
+              "subs": [
+                {
+                  "key": "parciales_1",
+                  "label": "Primer parcial",
+                  "maxPts": 25
+                },
+                {
+                  "key": "parciales_2",
+                  "label": "Segundo parcial",
+                  "maxPts": 25
+                }
+              ],
+              "color": "#4ade80",
+              "label": "Parciales",
+              "maxPts": 50
+            },
+            {
+              "key": "final",
+              "subs": [
+                {
+                  "key": "final_1",
+                  "label": "Examen final",
+                  "maxPts": 25
+                }
+              ],
+              "color": "#4ade80",
+              "label": "Final",
+              "maxPts": 25
+            },
+            {
+              "key": "hojas_de_trabajo",
+              "subs": [
+                {
+                  "key": "hojas_de_trabajo_1",
+                  "label": "Hojas de trabajo 1",
+                  "maxPts": 7.5
+                }
+              ],
+              "color": "#4ade80",
+              "label": "Hojas de trabajo",
+              "maxPts": 7.5
+            },
+            {
+              "key": "laboratorios",
+              "subs": [
+                {
+                  "key": "laboratorios_1",
+                  "label": "Lab 1",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "laboratorios_2",
+                  "label": "Lab 2",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "laboratorios_3",
+                  "label": "Lab 3",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "laboratorios_4",
+                  "label": "Lab 4",
+                  "maxPts": 2.5
+                }
+              ],
+              "color": "#4ade80",
+              "label": "Laboratorios",
+              "maxPts": 10
+            }
+          ],
+          "credits": "6 cred",
+          "horario": "10:40-11:30",
+          "seccion": "B+",
+          "labScale": 100,
+          "apartados": [
+            {
+              "id": "9813cff0-64c1-42ed-ba1e-f029c4dc59a1",
+              "tipo": "parcial",
+              "orden": 0,
+              "nombre": "Parcial 1",
+              "parcialKey": "1"
+            },
+            {
+              "id": "3cf15512-8afe-4046-a68d-a85c99454433",
+              "tipo": "parcial",
+              "orden": 1,
+              "nombre": "Parcial 2",
+              "parcialKey": "2"
+            },
+            {
+              "id": "a4f7671c-91b4-4eb1-a9c1-ed4111e80550",
+              "tipo": "parcial",
+              "orden": 2,
+              "nombre": "Parcial 3",
+              "parcialKey": "3"
+            },
+            {
+              "id": "8aaef585-020a-47c1-8ef9-10cf97ba0142",
+              "tipo": "parcial",
+              "orden": 3,
+              "nombre": "Final",
+              "parcialKey": "final"
+            }
+          ],
+          "labMaxPts": 10,
+          "catedratico": "WALTER ALVAREZ",
+          "linkedLabId": "mat_lab_1783622891261"
+        },
+        {
+          "id": "mat_lab_1783622891261",
+          "code": "0152",
+          "dias": "Jue",
+          "icon": "🧪",
+          "name": "Lab Fisica 2",
+          "color": "#4ade80",
+          "zones": [
+            {
+              "key": "g",
+              "subs": [
+                {
+                  "key": "nota",
+                  "label": "Nota General",
+                  "maxPts": 100
+                }
+              ],
+              "color": "#4ade80",
+              "label": "Calificación (/100)",
+              "maxPts": 100
+            }
+          ],
+          "credits": "1 cred",
+          "horario": "9:00-10:40",
+          "seccion": "B3",
+          "labScale": 100,
+          "parentId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "apartados": [
+            {
+              "id": "f80b8145-0ca0-4540-932f-643154d82155",
+              "tipo": "parcial",
+              "orden": 0,
+              "nombre": "Parcial 1",
+              "parcialKey": "1"
+            },
+            {
+              "id": "f3bce9cc-aad4-4a75-82b1-61442ea40898",
+              "tipo": "parcial",
+              "orden": 1,
+              "nombre": "Parcial 2",
+              "parcialKey": "2"
+            },
+            {
+              "id": "c7a63a84-905b-48af-ab8c-2188a876d7fc",
+              "tipo": "parcial",
+              "orden": 2,
+              "nombre": "Parcial 3",
+              "parcialKey": "3"
+            },
+            {
+              "id": "53aae180-97d5-421a-9aa8-969d21117c45",
+              "tipo": "parcial",
+              "orden": 3,
+              "nombre": "Final",
+              "parcialKey": "final"
+            }
+          ],
+          "labMaxPts": 10,
+          "catedratico": "PAOLA HENGSTENBERG"
+        },
+        {
+          "id": "33e39f8c-74ff-4b0d-9d03-42f6f43453ad",
+          "code": "0796",
+          "dias": "Mar",
+          "icon": "💻",
+          "name": "Lfp",
+          "color": "#7c6aff",
+          "zones": [
+            {
+              "key": "laboratorios",
+              "subs": [
+                {
+                  "key": "laboratorios_1",
+                  "label": "Lab 1",
+                  "maxPts": 5
+                },
+                {
+                  "key": "laboratorios_2",
+                  "label": "Lab 2",
+                  "maxPts": 5
+                },
+                {
+                  "key": "laboratorios_3",
+                  "label": "Lab 3",
+                  "maxPts": 5
+                },
+                {
+                  "key": "laboratorios_4",
+                  "label": "Lab 4",
+                  "maxPts": 5
+                }
+              ],
+              "color": "#7c6aff",
+              "label": "Laboratorios",
+              "maxPts": 20
+            },
+            {
+              "key": "tareas",
+              "subs": [
+                {
+                  "key": "tareas_1",
+                  "label": "Tarea 1",
+                  "maxPts": 4
+                },
+                {
+                  "key": "tareas_2",
+                  "label": "Tarea 2",
+                  "maxPts": 4
+                },
+                {
+                  "key": "tareas_3",
+                  "label": "Tarea 3",
+                  "maxPts": 4
+                },
+                {
+                  "key": "tareas_4",
+                  "label": "Tarea 4",
+                  "maxPts": 4
+                },
+                {
+                  "key": "tareas_5",
+                  "label": "Tarea 5",
+                  "maxPts": 4
+                }
+              ],
+              "color": "#7c6aff",
+              "label": "Tareas",
+              "maxPts": 20
+            },
+            {
+              "key": "parciales",
+              "subs": [
+                {
+                  "key": "parciales_1",
+                  "label": "Primer parcial",
+                  "maxPts": 15
+                },
+                {
+                  "key": "parciales_2",
+                  "label": "Segundo parcial",
+                  "maxPts": 15
+                }
+              ],
+              "color": "#7c6aff",
+              "label": "Parciales",
+              "maxPts": 30
+            },
+            {
+              "key": "final",
+              "subs": [
+                {
+                  "key": "final_1",
+                  "label": "Examen final",
+                  "maxPts": 30
+                }
+              ],
+              "color": "#7c6aff",
+              "label": "Final",
+              "maxPts": 30
+            }
+          ],
+          "credits": "3 cred",
+          "horario": "7:10-8:50",
+          "seccion": "B+",
+          "labScale": 100,
+          "apartados": [
+            {
+              "id": "af51471a-c635-4399-8932-21be46d3d68e",
+              "tipo": "parcial",
+              "orden": 0,
+              "nombre": "Parcial 1",
+              "parcialKey": "1"
+            },
+            {
+              "id": "62a25f1c-8002-4942-a355-715881dd02a6",
+              "tipo": "parcial",
+              "orden": 1,
+              "nombre": "Parcial 2",
+              "parcialKey": "2"
+            },
+            {
+              "id": "a628ebef-0a94-4607-b6c1-82ece2c4e802",
+              "tipo": "parcial",
+              "orden": 2,
+              "nombre": "Parcial 3",
+              "parcialKey": "3"
+            },
+            {
+              "id": "24cbaba9-4092-421d-bcc7-eab34284d062",
+              "tipo": "parcial",
+              "orden": 3,
+              "nombre": "Final",
+              "parcialKey": "final"
+            }
+          ],
+          "labMaxPts": 30,
+          "catedratico": "DAVID MORALES",
+          "linkedLabId": "mat_lab_1783623862669"
+        },
+        {
+          "id": "mat_lab_1783623862669",
+          "code": "0796",
+          "dias": "Mar",
+          "icon": "🧪",
+          "name": "Lab Lfp",
+          "color": "#7c6aff",
+          "zones": [
+            {
+              "key": "g",
+              "subs": [
+                {
+                  "key": "nota",
+                  "label": "Nota General",
+                  "maxPts": 100
+                }
+              ],
+              "color": "#7c6aff",
+              "label": "Calificación (/100)",
+              "maxPts": 100
+            }
+          ],
+          "credits": "1 cred",
+          "horario": "9:00-10:40",
+          "seccion": "B+",
+          "labScale": 100,
+          "parentId": "33e39f8c-74ff-4b0d-9d03-42f6f43453ad",
+          "apartados": [
+            {
+              "id": "adf75220-e69c-4f80-8e9b-d40dcb76418d",
+              "tipo": "parcial",
+              "orden": 0,
+              "nombre": "Parcial 1",
+              "parcialKey": "1"
+            },
+            {
+              "id": "64fcb573-adb2-4423-9824-830973b9dae7",
+              "tipo": "parcial",
+              "orden": 1,
+              "nombre": "Parcial 2",
+              "parcialKey": "2"
+            },
+            {
+              "id": "a50532d7-2ff1-441b-bb52-11698a1cc468",
+              "tipo": "parcial",
+              "orden": 2,
+              "nombre": "Parcial 3",
+              "parcialKey": "3"
+            },
+            {
+              "id": "d3ee1370-a59f-413b-b102-4329386f4544",
+              "tipo": "parcial",
+              "orden": 3,
+              "nombre": "Final",
+              "parcialKey": "final"
+            }
+          ],
+          "labMaxPts": 30,
+          "catedratico": "CARLOS AGUILAR"
+        },
+        {
+          "id": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "code": "0112",
+          "dias": "Lun, Mar, Mié, Vie",
+          "icon": "✏️",
+          "name": "Inter 2",
+          "color": "#fbbf24",
+          "zones": [
+            {
+              "key": "tareas",
+              "subs": [
+                {
+                  "key": "tareas_1",
+                  "label": "Tarea 1",
+                  "maxPts": 3
+                },
+                {
+                  "key": "tareas_2",
+                  "label": "Tarea 2",
+                  "maxPts": 3
+                },
+                {
+                  "key": "tareas_3",
+                  "label": "Tarea 3",
+                  "maxPts": 3
+                },
+                {
+                  "key": "tareas_4",
+                  "label": "Tarea 4",
+                  "maxPts": 3
+                },
+                {
+                  "key": "tareas_5",
+                  "label": "Tarea 5",
+                  "maxPts": 3
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Tareas",
+              "maxPts": 15
+            },
+            {
+              "key": "parciales",
+              "subs": [
+                {
+                  "key": "parciales_1",
+                  "label": "Primer parcial",
+                  "maxPts": 25
+                },
+                {
+                  "key": "parciales_2",
+                  "label": "Segundo parcial",
+                  "maxPts": 25
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Parciales",
+              "maxPts": 50
+            },
+            {
+              "key": "final",
+              "subs": [
+                {
+                  "key": "final_1",
+                  "label": "Examen final",
+                  "maxPts": 25
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Final",
+              "maxPts": 25
+            },
+            {
+              "key": "actividades",
+              "subs": [
+                {
+                  "key": "actividades_1",
+                  "label": "Actividad 1",
+                  "maxPts": 5
+                },
+                {
+                  "key": "actividades_2",
+                  "label": "Actividad 2",
+                  "maxPts": 5
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Actividades",
+              "maxPts": 10
+            }
+          ],
+          "credits": "9 cred",
+          "horario": "14:00-14:50",
+          "seccion": "M",
+          "apartados": [
+            {
+              "id": "82c8b095-b15b-4ccd-b207-44d4b60ebfd2",
+              "tipo": "parcial",
+              "orden": 0,
+              "nombre": "Parcial 1",
+              "parcialKey": "1"
+            },
+            {
+              "id": "363c7793-dcce-4ed6-be18-8ee97fe827c2",
+              "tipo": "parcial",
+              "orden": 1,
+              "nombre": "Parcial 2",
+              "parcialKey": "2"
+            },
+            {
+              "id": "2a0644f6-3c8d-4e40-bcf3-1cf635c327ff",
+              "tipo": "parcial",
+              "orden": 2,
+              "nombre": "Parcial 3",
+              "parcialKey": "3"
+            },
+            {
+              "id": "d5836288-2ba0-4480-b14e-8f554259fa6e",
+              "tipo": "parcial",
+              "orden": 3,
+              "nombre": "Final",
+              "parcialKey": "final"
+            }
+          ],
+          "catedratico": "FRANCISCO GARCIA"
+        },
+        {
+          "id": "41df5cd9-4fa7-4c30-a6e7-6238f301801b",
+          "code": "0114",
+          "dias": "Lun, Mar, Mié, Vie",
+          "icon": "🧮",
+          "name": "Inter 3",
+          "color": "#fbbf24",
+          "zones": [
+            {
+              "key": "proyecto",
+              "subs": [
+                {
+                  "key": "proyecto_1",
+                  "label": "Lab 1",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "proyecto_2",
+                  "label": "Lab 2",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "proyecto_3",
+                  "label": "Lab 3",
+                  "maxPts": 2.5
+                },
+                {
+                  "key": "proyecto_4",
+                  "label": "Lab 4",
+                  "maxPts": 2.5
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Proyecto",
+              "maxPts": 10
+            },
+            {
+              "key": "tareas",
+              "subs": [
+                {
+                  "key": "tareas_1",
+                  "label": "Tarea 1",
+                  "maxPts": 3
+                },
+                {
+                  "key": "tareas_2",
+                  "label": "Tarea 2",
+                  "maxPts": 3
+                },
+                {
+                  "key": "tareas_3",
+                  "label": "Tarea 3",
+                  "maxPts": 3
+                },
+                {
+                  "key": "tareas_4",
+                  "label": "Tarea 4",
+                  "maxPts": 3
+                },
+                {
+                  "key": "tareas_5",
+                  "label": "Tarea 5",
+                  "maxPts": 3
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Tareas",
+              "maxPts": 15
+            },
+            {
+              "key": "parciales",
+              "subs": [
+                {
+                  "key": "parciales_1",
+                  "label": "Primer parcial",
+                  "maxPts": 25
+                },
+                {
+                  "key": "parciales_2",
+                  "label": "Segundo parcial",
+                  "maxPts": 25
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Parciales",
+              "maxPts": 50
+            },
+            {
+              "key": "final",
+              "subs": [
+                {
+                  "key": "final_1",
+                  "label": "Examen final",
+                  "maxPts": 25
+                }
+              ],
+              "color": "#fbbf24",
+              "label": "Final",
+              "maxPts": 25
+            }
+          ],
+          "credits": "3 cred",
+          "horario": "13:10-14:00",
+          "seccion": "G",
+          "apartados": [
+            {
+              "id": "d3430c8c-bfa2-417a-ba5b-ba09f6248f45",
+              "tipo": "parcial",
+              "orden": 0,
+              "nombre": "Parcial 1",
+              "parcialKey": "1"
+            },
+            {
+              "id": "9cf1cc14-f100-4ec7-bdcd-35c4b7ce9ffe",
+              "tipo": "parcial",
+              "orden": 1,
+              "nombre": "Parcial 2",
+              "parcialKey": "2"
+            },
+            {
+              "id": "75f166e4-a38f-4c07-a501-e8ae3201c77d",
+              "tipo": "parcial",
+              "orden": 2,
+              "nombre": "Parcial 3",
+              "parcialKey": "3"
+            },
+            {
+              "id": "2cb00158-279d-432d-8c65-8ebfb2f3a464",
+              "tipo": "parcial",
+              "orden": 3,
+              "nombre": "Final",
+              "parcialKey": "final"
+            }
+          ],
+          "catedratico": "ALEJANDRO MARTINEZ"
+        },
+        {
+          "id": "5f6be3d9-48d9-4f05-86b1-13592312ce38",
+          "code": "0771",
+          "dias": "Lun, Mié",
+          "icon": "🌐",
+          "name": "IPC 2",
+          "color": "#22d3ee",
+          "zones": [
+            {
+              "key": "laboratorios",
+              "subs": [
+                {
+                  "key": "laboratorios_1",
+                  "label": "Lab 1",
+                  "maxPts": 7.5
+                },
+                {
+                  "key": "laboratorios_2",
+                  "label": "Lab 2",
+                  "maxPts": 7.5
+                },
+                {
+                  "key": "laboratorios_3",
+                  "label": "Lab 3",
+                  "maxPts": 7.5
+                },
+                {
+                  "key": "laboratorios_4",
+                  "label": "Lab 4",
+                  "maxPts": 7.5
+                }
+              ],
+              "color": "#22d3ee",
+              "label": "Laboratorios",
+              "maxPts": 30
+            },
+            {
+              "key": "tareas",
+              "subs": [
+                {
+                  "key": "tareas_1",
+                  "label": "Tarea 1",
+                  "maxPts": 1
+                },
+                {
+                  "key": "tareas_2",
+                  "label": "Tarea 2",
+                  "maxPts": 1
+                },
+                {
+                  "key": "tareas_3",
+                  "label": "Tarea 3",
+                  "maxPts": 1
+                },
+                {
+                  "key": "tareas_4",
+                  "label": "Tarea 4",
+                  "maxPts": 1
+                },
+                {
+                  "key": "tareas_5",
+                  "label": "Tarea 5",
+                  "maxPts": 1
+                }
+              ],
+              "color": "#22d3ee",
+              "label": "Tareas",
+              "maxPts": 5
+            },
+            {
+              "key": "parciales",
+              "subs": [
+                {
+                  "key": "parciales_1",
+                  "label": "Primer parcial",
+                  "maxPts": 17.5
+                },
+                {
+                  "key": "parciales_2",
+                  "label": "Segundo parcial",
+                  "maxPts": 17.5
+                }
+              ],
+              "color": "#22d3ee",
+              "label": "Parciales",
+              "maxPts": 35
+            },
+            {
+              "key": "final",
+              "subs": [
+                {
+                  "key": "final_1",
+                  "label": "Examen final",
+                  "maxPts": 30
+                }
+              ],
+              "color": "#22d3ee",
+              "label": "Final",
+              "maxPts": 30
+            }
+          ],
+          "credits": "5 cred",
+          "horario": "17:20-19:00",
+          "seccion": "P",
+          "labScale": 100,
+          "apartados": [
+            {
+              "id": "189777f8-b30b-4f95-95e5-ee7c14952921",
+              "tipo": "parcial",
+              "orden": 0,
+              "nombre": "Parcial 1",
+              "parcialKey": "1"
+            },
+            {
+              "id": "ad88a31b-435c-4f88-bc12-5a74cff66306",
+              "tipo": "parcial",
+              "orden": 1,
+              "nombre": "Parcial 2",
+              "parcialKey": "2"
+            },
+            {
+              "id": "97a2ba97-beac-4701-85e9-c662c8b134d2",
+              "tipo": "parcial",
+              "orden": 2,
+              "nombre": "Parcial 3",
+              "parcialKey": "3"
+            },
+            {
+              "id": "3e97f230-b011-4b48-a833-abfa94587e0f",
+              "tipo": "parcial",
+              "orden": 3,
+              "nombre": "Final",
+              "parcialKey": "final"
+            }
+          ],
+          "labMaxPts": 10,
+          "catedratico": "FERNANDO PAZ",
+          "linkedLabId": "mat_lab_1783624569415"
+        },
+        {
+          "id": "mat_lab_1783624569415",
+          "code": "0771",
+          "dias": "Mar",
+          "icon": "🧪",
+          "name": "Lab IPC 2",
+          "color": "#4ade80",
+          "zones": [
+            {
+              "key": "g",
+              "subs": [
+                {
+                  "key": "nota",
+                  "label": "Nota General",
+                  "maxPts": 100
+                }
+              ],
+              "color": "#4ade80",
+              "label": "Calificación (/100)",
+              "maxPts": 100
+            }
+          ],
+          "credits": "1 cred",
+          "horario": "17:20-19:00",
+          "seccion": "P",
+          "labScale": 100,
+          "parentId": "5f6be3d9-48d9-4f05-86b1-13592312ce38",
+          "apartados": [
+            {
+              "id": "7b7a16e4-5a22-4785-86a5-74c629524acd",
+              "tipo": "parcial",
+              "orden": 0,
+              "nombre": "Parcial 1",
+              "parcialKey": "1"
+            },
+            {
+              "id": "855c6ec7-cb24-4127-906d-8b664e7f1d36",
+              "tipo": "parcial",
+              "orden": 1,
+              "nombre": "Parcial 2",
+              "parcialKey": "2"
+            },
+            {
+              "id": "3c7b63fc-0027-401d-ac2b-d082af92ebb3",
+              "tipo": "parcial",
+              "orden": 2,
+              "nombre": "Parcial 3",
+              "parcialKey": "3"
+            },
+            {
+              "id": "545b034f-1563-4f0b-8833-747e0ce4a84a",
+              "tipo": "parcial",
+              "orden": 3,
+              "nombre": "Final",
+              "parcialKey": "final"
+            }
+          ],
+          "labMaxPts": 10,
+          "catedratico": "CARLOS MANUEL"
+        }
+      ],
+      "prevCred": 0,
+      "createdAt": "2026-06-30T05:23:03.892Z",
+      "examDates": {
+        "33e39f8c-74ff-4b0d-9d03-42f6f43453ad__1": "2026-08-04",
+        "33e39f8c-74ff-4b0d-9d03-42f6f43453ad__2": "2026-09-09",
+        "33e39f8c-74ff-4b0d-9d03-42f6f43453ad__3": "2026-10-13",
+        "41df5cd9-4fa7-4c30-a6e7-6238f301801b__1": "2026-08-09",
+        "41df5cd9-4fa7-4c30-a6e7-6238f301801b__2": "2026-08-09",
+        "41df5cd9-4fa7-4c30-a6e7-6238f301801b__3": "2026-08-09",
+        "5f6be3d9-48d9-4f05-86b1-13592312ce38__1": "2026-08-12",
+        "5f6be3d9-48d9-4f05-86b1-13592312ce38__2": "2026-09-11",
+        "5f6be3d9-48d9-4f05-86b1-13592312ce38__3": "2026-10-23",
+        "97827022-2d75-47c1-ab0d-2fd8bd4e66d5__1": "2026-08-09",
+        "97827022-2d75-47c1-ab0d-2fd8bd4e66d5__2": "2026-09-13",
+        "97827022-2d75-47c1-ab0d-2fd8bd4e66d5__3": "2026-10-18",
+        "d2cf3d0e-4043-41ca-940e-2c5e07c05baa__1": "2026-08-23",
+        "d2cf3d0e-4043-41ca-940e-2c5e07c05baa__2": "2026-10-04"
+      },
+      "fcFolders": [],
+      "flashcards": [],
+      "notesArray": [
+        {
+          "id": "note_1784154077951",
+          "type": "text",
+          "matId": "41df5cd9-4fa7-4c30-a6e7-6238f301801b",
+          "title": "Tareas",
+          "images": {
+            "IMG_1784154080946": "IDB:IMG_1784154080946"
+          },
+          "content": "",
+          "folderId": "",
+          "updatedAt": 1784154082995
+        },
+        {
+          "id": "note_1784154580183",
+          "type": "text",
+          "matId": "97827022-2d75-47c1-ab0d-2fd8bd4e66d5",
+          "title": "asadasd",
+          "images": {
+            "IMG_1784154587801": "IDB:IMG_1784154587801"
+          },
+          "content": "<br>",
+          "folderId": "",
+          "updatedAt": 1784154589883
+        },
+        {
+          "id": "note_1784154763054",
+          "type": "text",
+          "matId": "33e39f8c-74ff-4b0d-9d03-42f6f43453ad",
+          "title": "asdasd",
+          "images": {
+            "IMG_1784154768149": "IDB:IMG_1784154768149",
+            "IMG_1784154979789": "IDB:IMG_1784154979789"
+          },
+          "content": "dsadasda",
+          "folderId": "",
+          "updatedAt": 1784154981817
+        },
+        {
+          "id": "note_1784155814959",
+          "type": "text",
+          "matId": "d2cf3d0e-4043-41ca-940e-2c5e07c05baa",
+          "title": "notas de prueba",
+          "images": {
+            "IMG_1784161047721": "IDB:IMG_1784161047721",
+            "IMG_1784161050081": "IDB:IMG_1784161050081",
+            "IMG_1784161486052": "IDB:IMG_1784161486052"
+          },
+          "content": "",
+          "folderId": "",
+          "updatedAt": 1784161486088
+        }
+      ],
+      "notesFolders": [
+        {
+          "id": "folder_1783913665909",
+          "icon": "🧪",
+          "name": "Primer parcial",
+          "color": "#3b82f6",
+          "parentId": "mat_5f6be3d9-48d9-4f05-86b1-13592312ce38",
+          "contextType": "subject"
+        }
+      ],
+      "promedioObjetivo": 76,
+      "updatedAt": 1784240236512,
+      "updated_at": 1784240236512
+    }
+  ],
+  "settings": {
+    "minGrade": 61,
+    "theme": "dark",
+    "semester": "1er Año · 2do Sem",
+    "font": "Inter",
+    "soundVariant": "classic",
+    "accentColor": "#84cc16",
+    "overviewMode": "standard",
+    "habits": [],
+    "pomData": {
+      "today": {
+        "0": {
+          "date": "2026-06-27",
+          "mins": 88,
+          "time": "11:04",
+          "taskId": "",
+          "partial": true,
+          "subject": "General",
+          "taskTitle": ""
+        },
+        "1": {
+          "date": "2026-06-27",
+          "mins": 103,
+          "time": "17:00",
+          "taskId": "",
+          "partial": true,
+          "subject": "General",
+          "taskTitle": ""
+        },
+        "2": {
+          "date": "2026-06-28",
+          "mins": 109,
+          "time": "18:55",
+          "taskId": "",
+          "partial": true,
+          "subject": "General",
+          "taskTitle": ""
+        },
+        "3": {
+          "date": "2026-06-28",
+          "mins": 109,
+          "time": "18:55",
+          "taskId": "",
+          "partial": true,
+          "subject": "General",
+          "taskTitle": ""
+        },
+        "4": {
+          "date": "2026-06-28",
+          "mins": 109,
+          "time": "18:55",
+          "taskId": "",
+          "partial": true,
+          "subject": "General",
+          "taskTitle": ""
+        },
+        "5": {
+          "date": "2026-06-28",
+          "mins": 109,
+          "time": "18:55",
+          "taskId": "",
+          "partial": true,
+          "subject": "General",
+          "taskTitle": ""
+        },
+        "6": {
+          "date": "2026-06-28",
+          "mins": 114,
+          "time": "23:00",
+          "taskId": "",
+          "partial": true,
+          "subject": "General",
+          "taskTitle": ""
+        }
+      },
+      "date": "Mon Jul 13 2026",
+      "goal": 1,
+      "history": {},
+      "updatedAt": 1782622808705
+    },
+    "profile": {
+      "name": "Castro",
+      "carrera": "Ingeniería en Ciencias y Sistemas",
+      "facultad": "Facultad de Ingeniería · USAC",
+      "registro": "202405110",
+      "totalCredCarrera": 300
+    },
+    "timerData": {
+      "history": {},
+      "lastDuration": {
+        "hours": 0,
+        "minutes": 0,
+        "seconds": 10
+      }
+    },
+    "chronoData": {
+      "sessions": {
+        "0": {
+          "date": "2026-06-09T00:44:25.976Z",
+          "laps": 0,
+          "duration": 1030,
+          "formatted": "00:01.03"
+        }
+      },
+      "lastSession": "00:01.03"
+    },
+    "pomDailyGoal": 1,
+    "showWeeklyBar": true,
+    "approvedCourses": [],
+    "defaultHomePage": "overview",
+    "relojMode": {
+      "lastSelected": "pomodoro"
+    }
+  }
+}

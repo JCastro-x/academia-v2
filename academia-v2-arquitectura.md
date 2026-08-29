@@ -238,17 +238,6 @@ create table topics (
 create index on topics (subject_id);
 create index on topics (user_id);
 
-create table flashcards (
-  id uuid primary key default gen_random_uuid(),
-  subject_id uuid references subjects not null,
-  user_id uuid not null,
-  frente text,
-  dorso text,
-  estado text default 'nueva'
-);
-create index on flashcards (subject_id);
-create index on flashcards (user_id);
-
 create table habits (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null default auth.uid(),
@@ -297,9 +286,6 @@ create trigger trg_notes_user_id before insert on notes
 create trigger trg_topics_user_id before insert on topics
   for each row execute function set_user_id_from_subject();
 
-create trigger trg_flashcards_user_id before insert on flashcards
-  for each row execute function set_user_id_from_subject();
-
 create trigger trg_grade_items_user_id before insert on grade_items
   for each row execute function set_user_id_from_zone();
 ```
@@ -312,8 +298,8 @@ create policy "own rows" on tasks
   with check (auth.uid() = user_id);
 ```
 (Repetir exactamente esta forma — `using (auth.uid() = user_id) with check (auth.uid() = user_id)` —
-en `semesters`, `subjects`, `grade_zones`, `grade_items`, `tasks`, `notes`, `topics`, `flashcards`,
-`habits`. Ninguna policy necesita un subquery.)
+en `semesters`, `subjects`, `grade_zones`, `grade_items`, `tasks`, `notes`, `topics`, `habits`.
+Ninguna policy necesita un subquery.)
 
 ## 6. Cómo delegar esto a agentes de código sin perder la arquitectura
 

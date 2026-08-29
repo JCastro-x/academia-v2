@@ -2,16 +2,257 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Light mode palette - lila/celeste pastel (accent only) */
+  --dm-bg: #f8fafc;           /* fondo base claro */
+  --dm-surface: #ffffff;       /* tarjetas/superficies elevadas claro */
+  --dm-border: #e5e7eb;       /* bordes claro (gray-200) */
+  --dm-text: #000000;         /* texto principal claro */
+  --dm-text-muted: #000000;   /* texto secundario claro */
+  --color-primary: #8B5CF6;   /* lila vibrante para acciones (purple-500) */
+  --color-accent: #0EA5E9;    /* celeste/azul cielo acento (sky-500) */
+  --font-family: 'Inter', system-ui, sans-serif;
+
+  /* Aliases para adaptar patrones visuales de Academia sin duplicar valores */
+  --surface: var(--dm-surface);
+  --surface2: var(--dm-bg);
+  --border2: color-mix(in srgb, var(--dm-border) 80%, var(--dm-text) 20%);
+  --text: var(--dm-text);
+  --text2: var(--dm-text-muted);
+  --text3: color-mix(in srgb, var(--dm-text-muted) 70%, transparent);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06), 0 4px 12px rgb(15 23 42 / 0.05);
+  --shadow-md: 0 12px 32px -12px rgb(15 23 42 / 0.22);
+  --motion-ease: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+html.dark {
+  /* Dark mode palette - lila/celeste oscuro (accent only) */
+  --dm-bg: #16171B;           /* fondo base - REVERTIDO */
+  --dm-surface: #1E2025;      /* tarjetas/superficies elevadas */
+  --dm-border: #2A2D33;       /* bordes */
+  --dm-text: #FFFFFF;         /* texto principal */
+  --dm-text-muted: #FFFFFF;   /* texto secundario */
+  --color-primary: #A78BFA;   /* lila vibrante para acciones (purple-400) */
+  --color-accent: #38BDF8;    /* celeste/azul cielo acento (sky-400) */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.24), 0 6px 16px rgb(0 0 0 / 0.16);
+  --shadow-md: 0 16px 36px -14px rgb(0 0 0 / 0.55);
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-family);
+  background-color: var(--dm-bg);
+  color: var(--dm-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 350ms var(--motion-ease), color 350ms var(--motion-ease);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 180ms;
+  transition-timing-function: var(--motion-ease);
+}
+
+button,
+input,
+select,
+textarea {
+  border-radius: var(--radius-sm);
+}
+
+main input:not([type='checkbox']):not([type='radio']),
+main select,
+main textarea,
+.modal-panel input:not([type='checkbox']):not([type='radio']),
+.modal-panel select,
+.modal-panel textarea {
+  border-radius: var(--radius-md);
+}
+
+main div[class*='border']:not([class*='rounded-full']),
+.modal-panel div[class*='border']:not([class*='rounded-full']) {
+  border-radius: var(--radius-md);
+}
+
+input[type='date'],
+input[type='datetime-local'] {
+  min-height: 2.75rem;
+  border-radius: var(--radius-md);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.75;
+  padding: 0.15rem;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+button:not(:disabled):hover,
+a:hover {
+  transform: translateY(-1px);
+}
+
+button:not(:disabled):active,
+a:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Custom checkbox styling - lila/celeste theme */
+input[type="checkbox"] {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--dm-border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--color-primary);
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+input[type="checkbox"]:disabled {
+  border-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+html.dark input[type="checkbox"]:disabled {
+  border-color: #4b5563;
+}
+
+html:not(.dark) [class*="text-gray-"] {
+  color: #000000 !important;
+}
+
+html.dark [class*="text-gray-"] {
+  color: #FFFFFF !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #FFFFFF;
+  opacity: 0.78;
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.96) translateY(8px); }
+  70% { opacity: 1; transform: scale(1.01) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.subject-card {
+  animation: popIn 0.42s var(--motion-ease) both;
+  transition: transform 0.22s var(--motion-ease), box-shadow 0.22s var(--motion-ease), border-color 0.22s var(--motion-ease);
+}
+
+.subject-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: var(--shadow-md);
+}
+
+main > div > h1,
+main > div > section,
+main > div > .bg-white {
+  animation: fadeSlideUp 0.4s var(--motion-ease) both;
+}
+
+button:not(:disabled) {
+  transition: transform 0.18s var(--motion-ease), background-color 0.18s var(--motion-ease), border-color 0.18s var(--motion-ease), box-shadow 0.18s var(--motion-ease), color 0.18s var(--motion-ease);
+}
+
+button:not(:disabled):hover {
+  box-shadow: 0 6px 16px rgb(15 23 42 / 0.1);
+}
+
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.modal-panel form > div:last-child {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.15rem;
+  background: var(--dm-surface);
+}
+
+.modal-panel form > div:last-child button {
+  min-height: 2.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subject-card,
+  main > div > h1,
+  main > div > section,
+  main > div > .bg-white {
+    animation: none;
+  }
+}
+
+.subjects-grid > * {
+  min-width: 0;
+  max-width: 100%;
 }

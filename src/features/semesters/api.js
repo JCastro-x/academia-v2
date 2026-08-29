@@ -9,9 +9,9 @@ export const semestersQueryKeys = {
 export const getSemesters = async () => {
   const { data, error } = await supabase
     .from('semesters')
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .order('updated_at', { ascending: false })
-  
+
   if (error) throw error
   return data
 }
@@ -19,23 +19,26 @@ export const getSemesters = async () => {
 export const getActiveSemester = async () => {
   const { data, error } = await supabase
     .from('semesters')
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .eq('activo', true)
-    .single()
-  
-  if (error) throw error
-  return data
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export const getSemesterById = async (id) => {
   const { data, error } = await supabase
     .from('semesters')
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .eq('id', id)
-    .single()
-  
-  if (error) throw error
-  return data
+    .limit(1)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export const createSemester = async (semester) => {
@@ -47,10 +50,12 @@ export const createSemester = async (semester) => {
       nota_minima: semester.nota_minima,
       promedio_previo: semester.promedio_previo,
       creditos_previos: semester.creditos_previos,
+      start_date: semester.start_date,
+      end_date: semester.end_date,
     })
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
     .single()
-  
+
   if (error) throw error
   return data
 }
@@ -60,11 +65,12 @@ export const updateSemester = async (id, updates) => {
     .from('semesters')
     .update(updates)
     .eq('id', id)
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
-    .single()
-  
-  if (error) throw error
-  return data
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
+    .limit(1)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export const deleteSemester = async (id) => {
@@ -90,9 +96,10 @@ export const setActiveSemester = async (id) => {
     .from('semesters')
     .update({ activo: true })
     .eq('id', id)
-    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, updated_at')
-    .single()
-  
-  if (error) throw error
-  return data
+    .select('id, nombre, activo, promedio_objetivo, nota_minima, promedio_previo, creditos_previos, start_date, end_date, updated_at')
+    .limit(1)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }

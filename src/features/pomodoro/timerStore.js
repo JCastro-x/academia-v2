@@ -1,0 +1,210 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+export const useTimerStore = create(
+  persist(
+    (set, get) => ({
+      // Pomodoro configuration
+      pomodoroConfig: {
+        workDuration: 25, // minutos
+        shortBreakDuration: 5,
+        longBreakDuration: 15,
+        sessionsBeforeLongBreak: 4,
+      },
+      
+      // Pomodoro state
+      pomodoroState: {
+        isRunning: false,
+        isPaused: false,
+        currentPhase: 'trabajo', // 'trabajo' | 'descanso_corto' | 'descanso_largo'
+        startedAt: null, // timestamp
+        remainingSeconds: 25 * 60, // segundos
+        totalDuration: 25 * 60, // duración total en segundos (capturada al iniciar)
+        completedSessions: 0, // sesiones de trabajo completadas hoy
+        currentSessionCount: 0, // sesiones en el ciclo actual
+        linkedTaskId: null, // opcional
+        linkedSubjectId: null, // opcional
+      },
+      
+      // Chronometer state
+      chronometerState: {
+        isRunning: false,
+        isPaused: false,
+        startedAt: null, // timestamp
+        elapsedSeconds: 0, // segundos
+      },
+      
+      // Pomodoro actions
+      setPomodoroConfig: (config) => set({ pomodoroConfig: { ...get().pomodoroConfig, ...config } }),
+      
+      startPomodoro: (taskId = null, subjectId = null) => set((state) => {
+        const duration = state.pomodoroConfig.workDuration * 60;
+        return {
+          pomodoroState: {
+            ...state.pomodoroState,
+            isRunning: true,
+            isPaused: false,
+            startedAt: Date.now(),
+            currentPhase: 'trabajo',
+            remainingSeconds: duration,
+            totalDuration: duration,
+            linkedTaskId: taskId,
+            linkedSubjectId: subjectId,
+          },
+        };
+      }),
+      
+      pausePomodoro: () => set((state) => ({
+        pomodoroState: {
+          ...state.pomodoroState,
+          isRunning: false,
+          isPaused: true,
+        },
+      })),
+      
+      resumePomodoro: () => set((state) => {
+        const elapsed = Math.floor((Date.now() - state.pomodoroState.startedAt) / 1000);
+        return {
+          pomodoroState: {
+            ...state.pomodoroState,
+            isRunning: true,
+            isPaused: false,
+            startedAt: Date.now() - (elapsed * 1000),
+          },
+        };
+      }),
+      
+      resetPomodoro: () => set((state) => {
+        const duration = state.pomodoroConfig.workDuration * 60;
+        return {
+          pomodoroState: {
+            ...state.pomodoroState,
+            isRunning: false,
+            isPaused: false,
+            startedAt: null,
+            remainingSeconds: duration,
+            totalDuration: duration,
+            currentPhase: 'trabajo',
+            currentSessionCount: 0,
+            linkedTaskId: null,
+            linkedSubjectId: null,
+          },
+        };
+      }),
+      
+      updatePomodoroRemaining: (remaining) => set((state) => ({
+        pomodoroState: {
+          ...state.pomodoroState,
+          remainingSeconds: remaining,
+        },
+      })),
+      
+      completePomodoroSession: () => set((state) => {
+        const newSessionCount = state.pomodoroState.currentSessionCount + 1;
+        const completedSessions = state.pomodoroState.completedSessions + 1;
+        
+        // Determinar siguiente fase
+        let nextPhase = 'trabajo';
+        let nextDuration;
+        
+        if (state.pomodoroState.currentPhase === 'trabajo') {
+          if (newSessionCount >= state.pomodoroConfig.sessionsBeforeLongBreak) {
+            nextPhase = 'descanso_largo';
+            nextDuration = state.pomodoroConfig.longBreakDuration * 60;
+          } else {
+            nextPhase = 'descanso_corto';
+            nextDuration = state.pomodoroConfig.shortBreakDuration * 60;
+          }
+        } else {
+          // Después de descanso, vuelta a trabajo
+          nextPhase = 'trabajo';
+          nextDuration = state.pomodoroConfig.workDuration * 60;
+        }
+        
+        return {
+          pomodoroState: {
+            ...state.pomodoroState,
+            isRunning: false,
+            isPaused: false,
+            startedAt: null,
+            currentPhase: nextPhase,
+            remainingSeconds: nextDuration,
+            totalDuration: nextDuration,
+            completedSessions,
+            currentSessionCount: state.pomodoroState.currentPhase === 'trabajo' ? newSessionCount : state.pomodoroState.currentSessionCount,
+          },
+        };
+      }),
+      
+      resetDailyPomodoroCount: () => set((state) => ({
+        pomodoroState: {
+          ...state.pomodoroState,
+          completedSessions: 0,
+        },
+      })),
+      
+      // Chronometer actions
+      startChronometer: () => set({
+        chronometerState: {
+          isRunning: true,
+          isPaused: false,
+          startedAt: Date.now(),
+          elapsedSeconds: 0,
+        },
+      }),
+      
+      pauseChronometer: () => set((state) => ({
+        chronometerState: {
+          ...state.chronometerState,
+          isRunning: false,
+          isPaused: true,
+        },
+      })),
+      
+      resumeChronometer: () => set((state) => {
+        const elapsed = Math.floor((Date.now() - state.chronometerState.startedAt) / 1000);
+        return {
+          chronometerState: {
+            ...state.chronometerState,
+            isRunning: true,
+            isPaused: false,
+            startedAt: Date.now() - (elapsed * 1000),
+          },
+        };
+      }),
+      
+      resetChronometer: () => set({
+        chronometerState: {
+          isRunning: false,
+          isPaused: false,
+          startedAt: null,
+          elapsedSeconds: 0,
+        },
+      }),
+      
+      updateChronometerElapsed: (elapsed) => set((state) => ({
+        chronometerState: {
+          ...state.chronometerState,
+          elapsedSeconds: elapsed,
+        },
+      })),
+    }),
+    {
+      name: 'timer-storage',
+      partialize: (state) => ({
+        pomodoroConfig: state.pomodoroConfig,
+        pomodoroState: {
+          completedSessions: state.pomodoroState.completedSessions,
+        },
+      }),
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...persistedState,
+        pomodoroState: {
+          ...currentState.pomodoroState,
+          ...persistedState.pomodoroState,
+        },
+      }),
+    }
+  )
+);

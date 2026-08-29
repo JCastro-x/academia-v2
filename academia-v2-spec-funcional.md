@@ -14,7 +14,6 @@
   (sección de arquitectura): cada vista tiene su URL, no hay estado que se pierda al recargar.
 - **Animaciones/transiciones en cada acción** (abrir modal, completar tarea, cambiar de página,
   difuminados) — se resuelve con Framer Motion (agregar a package.json en Fase 0).
-- **Decisión: Flashcards se da de baja.** Temas del Curso ya cubre repaso espaciado por dificultad.
 - **Decisión: Agenda Semanal se mantiene**, pero es un componente de solo lectura derivado de
   `tasks`/`events` ya cargados — no tiene tabla ni store propio.
 
@@ -124,7 +123,6 @@ tipo, fecha+hora inicio, fecha+hora fin, descripción (mismo modelo que "Nuevo E
   las zonas, proyecta la nota final estimada y dice cuánto falta para "ganar". Color de estado:
   rojo (por debajo de zona mínima), amarillo (en zona mínima pero no ganada), verde (ganada). El
   umbral de "ganada" es configurable por clase (ya existe en `grade_zones`/config de materia).
-- **Flashcards**: dado de baja (ver decisión arriba).
 - **Estadísticas**: *pendiente de definir* — hoy solo muestra un promedio general. Antes de meterlo
   en un ticket de fase, definir qué métricas exactas debe mostrar (¿tendencia por semestre?,
   ¿comparación entre materias?, ¿horas de estudio vs. Pomodoro?).
