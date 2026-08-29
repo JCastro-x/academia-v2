@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTimerStore } from '../features/pomodoro/timerStore';
 import { useCreatePomodoroSession, usePomodoroSessionsByDate } from '../features/pomodoro/hooks';
 import { calculatePomodoroStats } from '../features/pomodoro/api';
+import { playSound } from '../lib/sound';
 
 export default function PomodoroTimer() {
   const {
@@ -21,6 +22,22 @@ export default function PomodoroTimer() {
   const [showConfig, setShowConfig] = useState(false);
   const [configValues, setConfigValues] = useState(pomodoroConfig);
   const intervalRef = useRef(null);
+  const lastCountdownSecondRef = useRef(null);
+
+  const triggerCountdownSound = (remainingSeconds) => {
+    if (remainingSeconds > 10 || remainingSeconds <= 0) {
+      if (remainingSeconds > 10) {
+        lastCountdownSecondRef.current = null;
+      }
+      return;
+    }
+
+    const thisSecond = Math.ceil(remainingSeconds);
+    if (thisSecond !== lastCountdownSecondRef.current) {
+      lastCountdownSecondRef.current = thisSecond;
+      playSound('countdown');
+    }
+  };
 
   // Obtener sesiones de los últimos 7 días para stats
   const today = new Date();
@@ -38,10 +55,10 @@ export default function PomodoroTimer() {
         const remaining = totalDuration - elapsed;
 
         if (remaining <= 0) {
-          // Timer completado
           clearInterval(intervalRef.current);
+          lastCountdownSecondRef.current = null;
+          playSound('pomodoro-complete');
           if (pomodoroState.currentPhase === 'trabajo') {
-            // Guardar sesión en DB
             const durationMin = Math.round(pomodoroConfig.workDuration);
             createSession.mutate({
               started_at: new Date(pomodoroState.startedAt).toISOString(),
@@ -54,6 +71,7 @@ export default function PomodoroTimer() {
           }
           completePomodoroSession();
         } else {
+          triggerCountdownSound(remaining);
           updatePomodoroRemaining(remaining);
         }
       }, 1000);
@@ -77,6 +95,7 @@ export default function PomodoroTimer() {
         const elapsed = Math.floor((Date.now() - pomodoroState.startedAt) / 1000);
         const totalDuration = pomodoroState.totalDuration;
         const remaining = totalDuration - elapsed;
+        triggerCountdownSound(Math.max(0, remaining));
         updatePomodoroRemaining(Math.max(0, remaining));
       }
     };
@@ -133,6 +152,7 @@ export default function PomodoroTimer() {
   const handleSaveConfig = () => {
     setPomodoroConfig(configValues);
     setShowConfig(false);
+    lastCountdownSecondRef.current = null;
     resetPomodoro();
   };
 

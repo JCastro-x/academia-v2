@@ -97,6 +97,15 @@ export const playSound = (type = 'click') => {
       playTone({ frequency: 260, duration: 0.12, type: 'sawtooth', volume: 0.22, endFrequency: 140 })
       playTone({ frequency: 180, duration: 0.14, type: 'square', volume: 0.14, startTime: 0.08, endFrequency: 90 })
       break
+    case 'countdown':
+      playTone({ frequency: 760, duration: 0.08, type: 'triangle', volume: 0.12, endFrequency: 620 })
+      break
+    case 'pomodoro-complete':
+      playTone({ frequency: 440, duration: 0.18, type: 'triangle', volume: 0.14, endFrequency: 520 })
+      playTone({ frequency: 554.37, duration: 0.2, type: 'sine', volume: 0.14, startTime: 0.2, endFrequency: 660 })
+      playTone({ frequency: 698.46, duration: 0.28, type: 'triangle', volume: 0.12, startTime: 0.42, endFrequency: 820 })
+      playTone({ frequency: 880, duration: 0.24, type: 'sine', volume: 0.1, startTime: 0.72, endFrequency: 980 })
+      break
     default:
       playTone({ frequency: 760, duration: 0.1, type: 'sine', volume: 0.24 })
       break

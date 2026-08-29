@@ -7,6 +7,8 @@ import { getCurrentUser } from './lib/supabase.js'
 import AppLayout from './layouts/AppLayout.jsx'
 import Auth from './pages/Auth.jsx'
 import AuthCallback from './pages/AuthCallback.jsx'
+import Terms from './pages/Terms.jsx'
+import Privacy from './pages/Privacy.jsx'
 import Overview from './pages/Overview.jsx'
 import CreateFirstSemester from './pages/CreateFirstSemester.jsx'
 import Subjects from './pages/Subjects.jsx'
@@ -54,12 +56,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* Static pages - served directly from public/ */}
-          <Route path="/" element={<Navigate to="/landing.html" replace />} />
+          {/* Landing / entry */}
+          <Route path="/" element={<Navigate to="/auth" replace />} />
           
           {/* Auth routes */}
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           
           {/* Create first semester (protected but doesn't need semesterId) */}
           <Route
