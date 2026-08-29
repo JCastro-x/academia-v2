@@ -1,12 +1,12 @@
 import { useParams } from 'react-router-dom'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useTasks } from '../features/tasks/hooks.js'
 import { useEvents } from '../features/events/hooks.js'
 import { useScheduleNotes, useScheduleFlags } from '../features/schedule-table/hooks.js'
 import { useSemester } from '../features/semesters/hooks.js'
 import { getSemesterStats, getWeekStartDateForWeek, getWeekNumberForDate } from '../domain/semester-weeks.js'
-import { parseDate, formatDate, diffDays } from '../domain/task-stats.js'
+import { parseDate, formatDate, todayStr } from '../domain/task-stats.js'
 import SemesterProgressBar from '../components/SemesterProgressBar.jsx'
 
 export default function ScheduleTable() {
@@ -17,6 +17,7 @@ export default function ScheduleTable() {
   const { data: scheduleNotes } = useScheduleNotes(semesterId)
   const { data: scheduleFlags } = useScheduleFlags(semesterId)
   const { data: semester } = useSemester(semesterId)
+  const [expandedWeeks, setExpandedWeeks] = useState(new Set())
 
   // Calculate semester context
   const semesterContext = useMemo(() => {
@@ -35,7 +36,7 @@ export default function ScheduleTable() {
       const weekEnd = new Date(weekStart)
       weekEnd.setDate(weekEnd.getDate() + 6)
       
-      const today = new Date()
+      const today = parseDate(todayStr())
       const isPast = weekEnd < today
       const isCurrent = weekStart <= today && weekEnd >= today
       const isFuture = weekStart > today
@@ -51,6 +52,22 @@ export default function ScheduleTable() {
     }
     return weeks
   }, [semesterContext, semester?.start_date])
+
+  useEffect(() => {
+    setExpandedWeeks(new Set(weeks.filter((week) => !week.isPast).map((week) => week.number)))
+  }, [weeks])
+
+  const toggleWeek = (weekNumber) => {
+    setExpandedWeeks((current) => {
+      const next = new Set(current)
+      if (next.has(weekNumber)) {
+        next.delete(weekNumber)
+      } else {
+        next.add(weekNumber)
+      }
+      return next
+    })
+  }
 
   // Get tasks/events for a specific week and subject
   const getItemsForWeekAndSubject = (week, subjectId) => {
@@ -116,11 +133,11 @@ export default function ScheduleTable() {
           <table className="min-w-full">
             <thead>
               <tr className="bg-gray-50 dark:bg-[var(--dm-bg)]">
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-[var(--dm-text-muted)] uppercase tracking-wider sticky left-0 bg-gray-50 dark:bg-[var(--dm-bg)] z-10">
+                <th className="sticky top-0 left-0 z-30 bg-gray-50 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text-muted)]">
                   Semana
                 </th>
                 {subjects?.map(subject => (
-                  <th key={subject.id} className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-[var(--dm-text-muted)] uppercase tracking-wider">
+                  <th key={subject.id} className="sticky top-0 z-20 bg-gray-50 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text-muted)]">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{subject.icono}</span>
                       <span className="truncate max-w-[150px]">{subject.nombre}</span>
@@ -139,8 +156,20 @@ export default function ScheduleTable() {
                     ${week.isFuture ? 'bg-white dark:bg-[var(--dm-surface)]' : ''}
                   `}
                 >
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-[var(--dm-text)] sticky left-0 z-10">
-                    <div className="flex items-center gap-2">
+                  <td
+                    colSpan={expandedWeeks.has(week.number) ? undefined : subjects?.length + 1}
+                    className="sticky left-0 z-10 whitespace-nowrap bg-inherit px-4 py-2 text-sm font-medium text-gray-900 dark:text-[var(--dm-text)]"
+                    onClick={() => toggleWeek(week.number)}
+                  >
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2 text-left"
+                      aria-expanded={expandedWeeks.has(week.number)}
+                      aria-label={`${expandedWeeks.has(week.number) ? 'Colapsar' : 'Expandir'} semana ${week.number}`}
+                    >
+                      <span className="inline-block w-4 text-center text-gray-500 dark:text-[var(--dm-text-muted)]">
+                        {expandedWeeks.has(week.number) ? '−' : '+'}
+                      </span>
                       {scheduleFlags?.find(flag => flag.week_number === week.number)?.flag_type && (
                         <span
                           className={`inline-block w-2.5 h-2.5 rounded-full ${
@@ -154,15 +183,15 @@ export default function ScheduleTable() {
                       {week.isPast && <span className="text-green-500">✓</span>}
                       {week.isCurrent && <span className="text-blue-500">●</span>}
                       <span>Semana {week.number}</span>
-                    </div>
+                    </button>
                     <div className="text-xs text-gray-500 dark:text-[var(--dm-text-muted)]">
                       {formatDate(week.start)} - {formatDate(week.end)}
                     </div>
                   </td>
-                  {subjects?.map(subject => {
+                  {expandedWeeks.has(week.number) && subjects?.map(subject => {
                     const items = getItemsForWeekAndSubject(week, subject.id)
                     return (
-                      <td key={subject.id} className="px-4 py-3 min-w-0 text-sm text-gray-900 dark:text-[var(--dm-text)]">
+                      <td key={subject.id} className="min-w-0 px-4 py-2 text-sm text-gray-900 dark:text-[var(--dm-text)]">
                         {items.length > 0 ? (
                           <div className="space-y-1">
                             {items.map(item => (

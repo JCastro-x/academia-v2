@@ -78,7 +78,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
       animate={{ opacity: 1, x: 0 }}
       whileHover={{ y: -2, boxShadow: '0 8px 20px rgba(15, 23, 42, 0.1)' }}
       whileTap={{ scale: 0.995 }}
-      className={`bg-white rounded-xl shadow-[var(--shadow-sm)] p-4 transition-shadow dark:bg-[var(--dm-surface)] ${task.done ? 'opacity-60' : ''}`}
+      className={`task-card bg-white rounded-xl border border-gray-200 shadow-[var(--shadow-sm)] p-4 transition-shadow dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] ${task.done ? 'opacity-60' : ''}`}
     >
       <div className="flex items-start gap-3">
         <button
