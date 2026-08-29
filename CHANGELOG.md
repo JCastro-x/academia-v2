@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## [2026-08-29] — Semestres UI + ajuste de separación de tarjetas
+
+**Tarea:** dejar lista la gestión de semestres desde la aplicación, con flujo de activación, creación, edición y archivado usando `activo` como estado de negocio, y reforzar la separación visual entre tarjetas de tareas sin exagerar el detalle.
+
+**Implementado:**
+- `src/pages/Semesters.jsx`: nueva pantalla de gestión de semestres con listado, crear, editar, activar y archivar.
+- `src/main.jsx`: nueva ruta `/s/:semesterId/semesters` y render del componente de semestres.
+- `src/layouts/AppLayout.jsx`: agregado el item “Semestres” al sidebar con acceso directo desde el layout principal.
+- `src/features/semesters/hooks.js`: reuso de hooks existentes para crear, editar, activar y consultar semestres.
+- `src/components/TaskList.jsx`: aumentada la separación vertical entre tarjetas para que se perciba mejor el borde mientras sigue siendo sutil.
+
+**Comportamiento clave:**
+- La creación de un nuevo semestre sigue el flujo actual seguro: crea el registro y luego activa el semestre nuevo.
+- Al activar un semestre, la app redirige a ese semestre en la ruta activa.
+- El “archivar” se resuelve en UI como `activo: false`, sin añadir una nueva migración ni tocar el schema actual.
+- Las queries relacionadas a semestres y activo se invalidan tras crear, activar y archivar.
+
+**Verificado:**
+- Tests: suite en verde tras ajustar la aserción ambigua de la página legal.
+- Build: compilación final ejecutada con Vite sin errores.
+
+---
+
 ## [2026-08-28] — Paso 3: Formularios/Modales con forms.css centralizado
 
 **Tarea:** refactorizar 8 formularios de la app (TaskForm, SubjectForm, SemesterForm, NoteForm, FolderForm, HabitForm, ItemForm, ZoneForm) para usar un sistema visual consistente y centralizado, basado en `forms.css` inspirado en Ritmo pero adaptado a las CSS variables v2 de Academia (--dm-text, --dm-border, --color-primary).

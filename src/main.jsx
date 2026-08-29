@@ -10,6 +10,7 @@ import AuthCallback from './pages/AuthCallback.jsx'
 import Terms from './pages/Terms.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Overview from './pages/Overview.jsx'
+import Semesters from './pages/Semesters.jsx'
 import CreateFirstSemester from './pages/CreateFirstSemester.jsx'
 import Subjects from './pages/Subjects.jsx'
 import Tasks from './pages/Tasks.jsx'
@@ -85,6 +86,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             }
           >
             <Route index element={<Overview />} />
+            <Route path="semesters" element={<Semesters />} />
             <Route path="subjects" element={<Subjects />} />
             <Route path="tasks" element={<Tasks />} />
             <Route path="schedule" element={<ScheduleTable />} />

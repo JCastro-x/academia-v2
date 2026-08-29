@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
-import { useUpsertProfile } from '../features/profile/hooks.js'
+import { useProfile, useUpsertProfile } from '../features/profile/hooks.js'
 import { signOut } from '../lib/supabase.js'
 import { exportAllUserData, downloadJSON } from '../lib/exportData.js'
 
@@ -24,17 +24,55 @@ function formatDate(date) {
   })
 }
 
-function formatTime(date) {
-  return date.toLocaleTimeString('es-ES', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+function getGreeting(date) {
+  const hour = date.getHours()
+  if (hour >= 5 && hour < 12) return 'Buenos días'
+  if (hour >= 12 && hour < 19) return 'Buenas tardes'
+  return 'Buenas noches'
+}
+
+function GreetingIcon({ hour }) {
+  const isDay = hour >= 5 && hour < 19
+
+  if (isDay) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        className="h-5 w-5 shrink-0 text-amber-500 animate-[pulse_1.8s_ease-in-out_infinite]"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.9" />
+        <g stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+          <path d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
+        </g>
+      </svg>
+    )
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="h-5 w-5 shrink-0 text-indigo-400 animate-[spin_8s_linear_infinite]"
+      aria-hidden="true"
+    >
+      <path
+        d="M18.5 14.5A6.2 6.2 0 0 1 9.8 9.2a6.2 6.2 0 1 0 8.7 5.3Z"
+        fill="currentColor"
+      />
+      <circle cx="16.6" cy="7.2" r="1.2" fill="rgba(255,255,255,0.7)" />
+      <circle cx="7.2" cy="7.8" r="0.9" fill="rgba(255,255,255,0.7)" />
+      <circle cx="9.4" cy="5.1" r="0.7" fill="rgba(255,255,255,0.7)" />
+    </svg>
+  )
 }
 
 export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
   const navigate = useNavigate()
   const { semesterId } = useParams()
   const now = useCurrentDateTime()
+  const { data: profile } = useProfile()
   const upsertProfile = useUpsertProfile()
 
   const {
@@ -113,135 +151,128 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-white dark:bg-[var(--dm-surface)] border-b border-gray-200 dark:border-[var(--dm-border)] px-4 py-3 flex items-center justify-between">
-      {/* Left: hamburger + title */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={toggleSidebar}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-[var(--dm-border)] rounded-lg"
-          aria-label="Toggle sidebar"
-        >
-          <svg className="w-6 h-6 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Academia v2</h1>
-      </div>
-
-      {/* Center: date/time + online status */}
-      <div className="hidden md:flex items-center gap-4 text-sm text-gray-500 dark:text-[var(--dm-text-muted)]">
-        <span className="capitalize">{formatDate(now)}</span>
-        <span>{formatTime(now)}</span>
-        <span className="flex items-center gap-1.5">
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isOnline ? 'bg-green-500' : 'bg-red-500'
-            }`}
-          />
-          <span>{isOnline ? 'En línea' : 'Desconectado'}</span>
-        </span>
-      </div>
-
-      {/* Right: actions */}
-      <div className="flex items-center gap-2">
-        {/* Botones rápidos (visible en desktop) */}
-        <div className="hidden md:flex items-center gap-1">
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <button
-            onClick={onOpenClassModal}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={toggleSidebar}
+            className="rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
+            aria-label="Toggle sidebar"
           >
-            +Clase
+            <svg className="h-6 w-6 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
           </button>
-          <button
-            onClick={onOpenQuickAdd}
-            className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-[var(--dm-border)] text-black dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-[var(--dm-border)] transition-colors"
-          >
-            Agregar
-          </button>
-          <button
-            onClick={() => navigate(`/s/${semesterId}/exam`)}
-            className="px-3 py-1.5 text-sm text-black rounded-lg transition-colors"
-            style={{ backgroundColor: 'var(--color-primary)', color: '#000000' }}
-          >
-            Examen
-          </button>
+          <h1 className="truncate text-lg font-bold text-gray-900 dark:text-[var(--dm-text)] md:text-xl">Academia v2</h1>
         </div>
 
-        <span className="hidden md:block w-px h-6 bg-gray-200 dark:bg-[var(--dm-border)]" />
+        <div className="flex min-w-0 flex-1 items-center justify-center px-2">
+          <div className="flex min-w-0 items-center justify-center gap-2 text-center text-sm text-gray-700 dark:text-[var(--dm-text)]">
+            <GreetingIcon hour={now.getHours()} />
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="truncate font-semibold text-gray-900 dark:text-[var(--dm-text)] md:text-base">
+                {getGreeting(now)}, {profile?.nombre || 'Estudiante'}
+              </span>
+              <span className="hidden shrink-0 text-[11px] text-gray-500 dark:text-[var(--dm-text-muted)] md:inline">
+                {formatDate(now)}
+              </span>
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-[var(--dm-text-muted)]">
+                <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+                <span>{isOnline ? 'En línea' : 'Desconectado'}</span>
+              </span>
+            </div>
+          </div>
+        </div>
 
-        {/* Toggle claro/oscuro */}
-        <button
-          onClick={handleToggleDarkMode}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-[var(--dm-border)] rounded-lg"
-          aria-label={modoOscuro ? 'Modo claro' : 'Modo oscuro'}
-          title={modoOscuro ? 'Modo claro' : 'Modo oscuro'}
-        >
-          {modoOscuro ? (
-            <svg className="w-5 h-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-          )}
-        </button>
+        <div className="flex flex-shrink-0 items-center gap-2">
+          <div className="hidden items-center gap-1 md:flex">
+            <button
+              onClick={onOpenQuickAdd}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-black transition-colors"
+              style={{ backgroundColor: 'var(--color-primary)', color: '#111827' }}
+            >
+              Agregar
+            </button>
+            <button
+              onClick={() => navigate(`/s/${semesterId}/exam`)}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-red-700 transition-colors"
+              style={{ backgroundColor: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.28)' }}
+            >
+              Examen
+            </button>
+          </div>
 
-        {/* Silenciar */}
-        <button
-          onClick={toggleMute}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-[var(--dm-border)] rounded-lg"
-          aria-label={isMuted ? 'Activar sonidos' : 'Silenciar sonidos'}
-        >
-          {isMuted ? (
-            <svg className="w-5 h-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            </svg>
-          )}
-        </button>
-
-        {/* Ajustes (dropdown) */}
-        <div className="relative" ref={dropdownRef}>
           <button
-            onClick={() => setDropdownOpen(!isDropdownOpen)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-[var(--dm-border)] rounded-lg"
-            aria-label="Ajustes"
+            onClick={handleToggleDarkMode}
+            className="rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
+            aria-label={modoOscuro ? 'Modo claro' : 'Modo oscuro'}
+            title={modoOscuro ? 'Modo claro' : 'Modo oscuro'}
           >
-            <svg className="w-5 h-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+            {modoOscuro ? (
+              <svg className="h-5 w-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
           </button>
 
-          {isDropdownOpen && (
-            <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg shadow-lg z-50 py-1">
-              <button
-                onClick={handleExport}
-                disabled={isExporting}
-                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-[var(--dm-text-muted)] hover:bg-gray-100 dark:hover:bg-[var(--dm-border)] disabled:opacity-50"
-              >
-                {isExporting ? 'Exportando...' : 'Exportar JSON'}
-              </button>
-              <button
-                onClick={handleImport}
-                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-[var(--dm-text-muted)] hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
-              >
-                Importar JSON
-              </button>
-              <hr className="my-1 border-gray-200 dark:border-[var(--dm-border)]" />
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          )}
+          <button
+            onClick={toggleMute}
+            className="rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
+            aria-label={isMuted ? 'Activar sonidos' : 'Silenciar sonidos'}
+          >
+            {isMuted ? (
+              <svg className="h-5 w-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+            )}
+          </button>
+
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(!isDropdownOpen)}
+              className="rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
+              aria-label="Ajustes"
+            >
+              <svg className="h-5 w-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]">
+                <button
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:text-[var(--dm-text-muted)] dark:hover:bg-[var(--dm-border)]"
+                >
+                  {isExporting ? 'Exportando...' : 'Exportar JSON'}
+                </button>
+                <button
+                  onClick={handleImport}
+                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-[var(--dm-text-muted)] dark:hover:bg-[var(--dm-border)]"
+                >
+                  Importar JSON
+                </button>
+                <hr className="my-1 border-gray-200 dark:border-[var(--dm-border)]" />
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-[var(--dm-border)]"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

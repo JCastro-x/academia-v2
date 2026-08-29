@@ -14,7 +14,7 @@ describe('Legal pages', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText(/Términos y condiciones/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Términos y condiciones/i })).toBeInTheDocument()
   })
 
   it('renders the privacy page', () => {
