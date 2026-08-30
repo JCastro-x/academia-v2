@@ -120,7 +120,7 @@ export default function Tasks() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Tareas</h1>
         <button
           onClick={() => openModal('task', { editingTask: null })}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full sm:w-auto"
+          className="bg-[var(--color-primary)] text-white dark:text-black px-4 py-2 rounded-lg hover:opacity-90 w-full sm:w-auto transition-colors"
         >
           + Nueva tarea
         </button>

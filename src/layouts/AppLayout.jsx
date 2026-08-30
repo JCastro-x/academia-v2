@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { Outlet, useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
-import { useProfile } from '../features/profile/hooks.js'
+import { useProfile, useProfileRealtimeSync } from '../features/profile/hooks.js'
 import { useSemesters } from '../features/semesters/hooks.js'
 import { playSound } from '../lib/sound.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -47,6 +47,7 @@ export default function AppLayout() {
 
   // Hidratación: perfil guardado → ui.store (al montar AppLayout)
   const { data: profile } = useProfile()
+  useProfileRealtimeSync()
   const { data: semesters, isLoading: semestersLoading, error: semestersError } = useSemesters()
 
   useEffect(() => {
