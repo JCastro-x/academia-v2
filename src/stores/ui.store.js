@@ -1,61 +1,29 @@
 import { create } from 'zustand'
 
-const readStoredTheme = () => {
-  if (typeof window === 'undefined') {
-    return {
-      modoOscuro: false,
-      tipografia: 'Inter',
-      temaColor: '#84cc16',
-    }
-  }
-
-  return {
-    modoOscuro: localStorage.getItem('academia-theme-dark') === 'true',
-    tipografia: localStorage.getItem('academia-theme-font') || 'Inter',
-    temaColor: localStorage.getItem('academia-theme-color') || '#84cc16',
-  }
+const DEFAULT_THEME = {
+  modoOscuro: false,
+  tipografia: 'Inter',
+  temaColor: '#84cc16',
 }
 
-const initialTheme = readStoredTheme()
-
 export const useUIStore = create((set) => ({
-  // Theme state (preview en vivo, se guarda aparte en profiles)
-  modoOscuro: initialTheme.modoOscuro,
-  tipografia: initialTheme.tipografia,
-  temaColor: initialTheme.temaColor,
+  // Theme state is derived from the authenticated profile in Supabase.
+  // localStorage is intentionally not used as a source of truth anymore.
+  modoOscuro: DEFAULT_THEME.modoOscuro,
+  tipografia: DEFAULT_THEME.tipografia,
+  temaColor: DEFAULT_THEME.temaColor,
   sonidosInteraccion: 'classic',
   horaFormato: '12h',
-  setModoOscuro: (val) => {
-    if (typeof window !== 'undefined') localStorage.setItem('academia-theme-dark', String(val))
-    set({ modoOscuro: val })
-  },
-  setTipografia: (val) => {
-    if (typeof window !== 'undefined') localStorage.setItem('academia-theme-font', val)
-    set({ tipografia: val })
-  },
-  setTemaColor: (val) => {
-    if (typeof window !== 'undefined') localStorage.setItem('academia-theme-color', val)
-    set({ temaColor: val })
-  },
+  setModoOscuro: (val) => set({ modoOscuro: val }),
+  setTipografia: (val) => set({ tipografia: val }),
+  setTemaColor: (val) => set({ temaColor: val }),
   setSonidosInteraccion: (val) => set({ sonidosInteraccion: val }),
   setHoraFormato: (val) => set({ horaFormato: val }),
   resetTheme: () => {
-    const defaultTheme = {
-      modoOscuro: false,
-      tipografia: 'Inter',
-      temaColor: '#84cc16',
-    }
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('academia-theme-dark', String(defaultTheme.modoOscuro))
-      localStorage.setItem('academia-theme-font', defaultTheme.tipografia)
-      localStorage.setItem('academia-theme-color', defaultTheme.temaColor)
-    }
-
     set({
-      modoOscuro: defaultTheme.modoOscuro,
-      tipografia: defaultTheme.tipografia,
-      temaColor: defaultTheme.temaColor,
+      modoOscuro: DEFAULT_THEME.modoOscuro,
+      tipografia: DEFAULT_THEME.tipografia,
+      temaColor: DEFAULT_THEME.temaColor,
       sonidosInteraccion: 'classic',
       horaFormato: '12h',
     })

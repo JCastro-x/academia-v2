@@ -23,7 +23,7 @@ describe('ui.store modal payload', () => {
     })
   })
 
-  it('reads saved theme preferences from localStorage on initialization', async () => {
+  it('ignores legacy localStorage theme prefs and keeps the store defaulted to profile-driven state', async () => {
     localStorage.setItem('academia-theme-dark', 'true')
     localStorage.setItem('academia-theme-color', '#ef4444')
     localStorage.setItem('academia-theme-font', 'Roboto')
@@ -31,8 +31,11 @@ describe('ui.store modal payload', () => {
     vi.resetModules()
     const { useUIStore: freshStore } = await import('./ui.store.js')
 
-    expect(freshStore.getState().modoOscuro).toBe(true)
-    expect(freshStore.getState().temaColor).toBe('#ef4444')
-    expect(freshStore.getState().tipografia).toBe('Roboto')
+    expect(freshStore.getState().modoOscuro).toBe(false)
+    expect(freshStore.getState().temaColor).toBe('#84cc16')
+    expect(freshStore.getState().tipografia).toBe('Inter')
+    expect(localStorage.getItem('academia-theme-dark')).toBe('true')
+    expect(localStorage.getItem('academia-theme-color')).toBe('#ef4444')
+    expect(localStorage.getItem('academia-theme-font')).toBe('Roboto')
   })
 })

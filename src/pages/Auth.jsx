@@ -57,14 +57,7 @@ export default function Auth() {
     Boolean(import.meta.env.VITE_DEV_PASSWORD)
 
   useEffect(() => {
-    const hasStoredTheme =
-      localStorage.getItem('academia-theme-dark') !== null ||
-      localStorage.getItem('academia-theme-color') !== null ||
-      localStorage.getItem('academia-theme-font') !== null
-
-    if (!hasStoredTheme) {
-      resetTheme()
-    }
+    resetTheme()
   }, [resetTheme])
 
   useEffect(() => {

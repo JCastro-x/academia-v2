@@ -79,12 +79,6 @@ export default function AppLayout() {
     setTemaColor(nextTemaColor)
     setSonidosInteraccion(nextSonidosInteraccion)
     setHoraFormato(nextHoraFormato)
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('academia-theme-dark', String(nextModoOscuro))
-      localStorage.setItem('academia-theme-font', nextTipografia)
-      localStorage.setItem('academia-theme-color', nextTemaColor)
-    }
   }, [profile, setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato, modoOscuro, tipografia, temaColor, sonidosInteraccion, horaFormato])
 
   // Mapeo de nombre corto de tipografía a CSS font-family
