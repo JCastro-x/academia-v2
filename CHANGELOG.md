@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [2026-08-29] — HOTFIX DE PRODUCCIÓN — Service worker interceptaba y cacheaba requests GET a Supabase, causando datos stale tras mutaciones (tareas que no se actualizaban, checkbox sin confirmación visual)
+
+**Causa raíz confirmada:**
+- El service worker de producción estaba interceptando todas las `GET` sin excluir Supabase ni requests cross-origin.
+- Como consecuencia, después de mutaciones reales (toggle, create, update, delete de tareas), la app podía seguir leyendo una respuesta vieja del cache del SW en lugar del valor actualizado de Supabase.
+- Esto explica el comportamiento observado: tareas que no se actualizaban, checkbox sin confirmación visual y datos stale tras una mutación.
+
+**Fix aplicado:**
+- En `public/sw.js`, el fetch handler ahora devuelve temprano si la request no es same-origin o si el hostname incluye `supabase`.
+- Se actualizó `CACHE_NAME` de `academia-v2-cache-v1` a `academia-v2-cache-v2` para invalidar el cache viejo ya contaminado en navegadores activos.
+
+**Verificado:**
+- `npm run build` ejecutado correctamente tras el fix.
+- El cambio quedó acotado al problema de producción y no incluye cambios de otros tickets.
+
+---
+
 ## [2026-08-29] — Corrección del drift de schema de perfil (hora_formato) y validación real de DB
 
 **Tarea:** confirmar el error real del 400 en la app y corregir el drift entre schema y código (`profiles.hora_formato`).
