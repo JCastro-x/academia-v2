@@ -38,15 +38,40 @@ export const getStoredSessionUser = () => {
   }
 }
 
+export const getAuthRedirectUrl = () => {
+  if (typeof window === 'undefined') return '/auth/callback'
+
+  const localHostnames = ['localhost', '127.0.0.1', '[::1]']
+  const isLocalHost = localHostnames.includes(window.location.hostname)
+  const explicitLocalRedirect = import.meta.env.VITE_LOCAL_AUTH_REDIRECT_URL
+
+  if (isLocalHost && explicitLocalRedirect) {
+    return `${explicitLocalRedirect.replace(/\/$/, '')}/auth/callback`
+  }
+
+  return `${window.location.origin}/auth/callback`
+}
+
 export const signInWithGoogle = async () => {
-  const redirectTo = `${window.location.origin}/auth/callback`
+  const redirectTo = getAuthRedirectUrl()
+
+  if (typeof window !== 'undefined') {
+    const debugEnabled = window.localStorage.getItem('academia-debug-session') === '1' || new URLSearchParams(window.location.search).get('debug') === 'session'
+    if (debugEnabled) {
+      console.info('[DEBUG session] auth redirect', {
+        hostname: window.location.hostname,
+        origin: window.location.origin,
+        redirectTo,
+      })
+    }
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo,
       queryParams: {
         access_type: 'offline',
-        prompt: 'consent',
       },
     },
   })
