@@ -49,12 +49,16 @@ export default function Profile() {
   // Hydrate formData from profile once loaded
   useEffect(() => {
     if (profile && !formInitialized) {
+      const nextNombre = profile.nombre || ''
       setFormData({
-        nombre: profile.nombre || '',
+        nombre: nextNombre,
         registro_academico: profile.registro_academico || '',
         carrera: profile.carrera || '',
         institucion: profile.institucion || '',
       })
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('academia-profile-name', nextNombre)
+      }
       setFormInitialized(true)
     }
   }, [profile, formInitialized])
@@ -68,23 +72,37 @@ export default function Profile() {
     setPushStatus(Notification.permission === 'granted' ? 'granted' : Notification.permission === 'denied' ? 'denied' : 'default')
   }, [])
 
-  // Creación automática una vez por sesión si no existe perfil (Opción B)
+  // Guard defensivo: no crear un perfil vacío si ya hubo un nombre persistido o si no hay sesión válida.
   useEffect(() => {
-    if (profile === null && !hasAttemptedCreate.current && !upsertProfile.isPending) {
-      hasAttemptedCreate.current = true
-      upsertProfile.mutate({
-        nombre: '',
-        registro_academico: '',
-        carrera: '',
-        institucion: '',
-        modo_oscuro: false,
-        tipografia: 'Inter',
-        tema_color: '#84cc16',
-        sonidos_interaccion: 'classic',
-        hora_formato: '12h',
-      })
+    if (profile !== null || hasAttemptedCreate.current || upsertProfile.isPending) {
+      return
     }
-  }, [profile]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    const cachedSessionUser = localStorage.getItem('academia-session-user')
+    const cachedProfileName = localStorage.getItem('academia-profile-name') || ''
+
+    if (!cachedSessionUser) {
+      return
+    }
+
+    if (cachedProfileName.trim().length > 0) {
+      hasAttemptedCreate.current = true
+      return
+    }
+
+    hasAttemptedCreate.current = true
+    upsertProfile.mutate({
+      nombre: '',
+      registro_academico: '',
+      carrera: '',
+      institucion: '',
+      modo_oscuro: false,
+      tipografia: 'Inter',
+      tema_color: '#84cc16',
+      sonidos_interaccion: 'classic',
+      hora_formato: '12h',
+    })
+  }, [profile, upsertProfile])
 
   const handleFieldChange = (field) => (e) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }))
@@ -98,6 +116,9 @@ export default function Profile() {
       tema_color: temaColor,
       sonidos_interaccion: sonidosInteraccion,
       hora_formato: horaFormato,
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('academia-profile-name', payload.nombre || '')
     }
     console.log('[Profile] Guardando perfil:', JSON.stringify(payload, null, 2))
     try {

@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [2026-08-29] — Ajuste mobile TopBar + QuickAdd, guard en perfil y VAPID
+
+**Tarea:** cerrar los ajustes visuales de mobile pendientes y reforzar la robustez de la sesión/perfil sin tocar el flujo de autenticación real.
+
+**Implementado:**
+- `src/components/TopBar.jsx`: rediseño compacto para 375px, saludo + acciones en la misma fila, metadatos comprimidos y menor altura visual en mobile.
+- `src/components/QuickAdd.jsx`: botón flotante `+` separado del bottom nav con `bottom-20` en mobile y `md:bottom-6` en desktop.
+- `src/pages/Profile.jsx`: guard defensivo para no sobrescribir un nombre de perfil existente al hidratar la sesión.
+- `.env.local`: clave pública VAPID generada y cargada en entorno local para futuras notificaciones push.
+
+**Verificado:**
+- Build: `npm run build` ejecutado con éxito.
+- Browser: validación real de la vista mobile 375px en localhost confirmando el TopBar compacto y el botón flotante visibles en pantalla.
+- Auth: flujo local/guest disponible en la pantalla de login según evidencia del navegador.
+
+---
+
 ## [2026-08-29] — Semestres UI + ajuste de separación de tarjetas
 
 **Tarea:** dejar lista la gestión de semestres desde la aplicación, con flujo de activación, creación, edición y archivado usando `activo` como estado de negocio, y reforzar la separación visual entre tarjetas de tareas sin exagerar el detalle.

@@ -17,7 +17,7 @@ export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject
     <>
       <button
         onClick={() => openModal('quickadd')}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-[var(--color-primary)] text-black rounded-full shadow-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] flex items-center justify-center text-2xl z-40"
+        className="fixed bottom-20 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-primary)] text-2xl text-black shadow-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] md:bottom-6"
         style={{ color: '#000000' }}
       >
         +

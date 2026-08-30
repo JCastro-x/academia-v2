@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { signInWithGoogle } from '../lib/supabase.js'
+import { signInLocalDev, signInWithGoogle } from '../lib/supabase.js'
 import { useUIStore } from '../stores/ui.store.js'
 import FirstRunTour from '../components/FirstRunTour.jsx'
 
@@ -28,6 +28,12 @@ export default function Auth() {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const navigate = useNavigate()
   const resetTheme = useUIStore(s => s.resetTheme)
+  const localHostnames = ['localhost', '127.0.0.1', '[::1]']
+  const hasLocalDevCredentials =
+    import.meta.env.DEV &&
+    localHostnames.includes(window.location.hostname) &&
+    Boolean(import.meta.env.VITE_DEV_EMAIL) &&
+    Boolean(import.meta.env.VITE_DEV_PASSWORD)
 
   useEffect(() => {
     const hasStoredTheme =
@@ -58,6 +64,15 @@ export default function Auth() {
       await signInWithGoogle()
     } catch (error) {
       console.error('Error signing in with Google:', error)
+    }
+  }
+
+  const handleLocalDevSignIn = async () => {
+    try {
+      await signInLocalDev()
+      navigate('/create-first-semester')
+    } catch (error) {
+      console.error('Error signing in with local dev account:', error)
     }
   }
 
@@ -127,6 +142,14 @@ export default function Auth() {
                 Ingresar con Google
               </button>
 
+              {hasLocalDevCredentials && (
+                <button
+                  onClick={handleLocalDevSignIn}
+                  className="rounded-xl border border-violet-400/40 bg-violet-500/10 px-5 py-3 font-semibold text-violet-100 transition hover:border-violet-300 hover:bg-violet-500/20"
+                >
+                  Entrar como dev (local)
+                </button>
+              )}
             </div>
 
             <div className="mt-8 flex flex-wrap gap-5 text-sm text-slate-300">

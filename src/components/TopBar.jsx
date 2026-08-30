@@ -160,8 +160,118 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]">
-      <div className="flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white px-3 py-2 shadow-sm dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] sm:px-4 sm:py-3">
+      <div className="sm:hidden">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              onClick={toggleSidebar}
+              className="rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
+              aria-label="Toggle sidebar"
+            >
+              <svg className="h-5 w-5 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="truncate text-base font-bold text-gray-900 dark:text-[var(--dm-text)]">Academia v2</h1>
+          </div>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2 text-left">
+            <GreetingIcon hour={now.getHours()} />
+            <span className="truncate text-sm font-semibold leading-tight text-gray-900 dark:text-[var(--dm-text)]">
+              {getGreeting(now)}, {profile?.nombre || 'Estudiante'}
+            </span>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              onClick={handleToggleDarkMode}
+              className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
+              aria-label={modoOscuro ? 'Modo claro' : 'Modo oscuro'}
+              title={modoOscuro ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {modoOscuro ? (
+                <svg className="h-4 w-4 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="h-4 w-4 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+
+            <button
+              onClick={toggleMute}
+              className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
+              aria-label={isMuted ? 'Activar sonidos' : 'Silenciar sonidos'}
+            >
+              {isMuted ? (
+                <svg className="h-4 w-4 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                </svg>
+              ) : (
+                <svg className="h-4 w-4 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+              )}
+            </button>
+
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!isDropdownOpen)}
+                className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-[var(--dm-border)]"
+                aria-label="Ajustes"
+              >
+                <svg className="h-4 w-4 dark:text-[var(--dm-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]">
+                  <button
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:text-[var(--dm-text-muted)] dark:hover:bg-[var(--dm-border)]"
+                  >
+                    {isExporting ? 'Exportando...' : 'Exportar JSON'}
+                  </button>
+                  <button
+                    onClick={handleImport}
+                    className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-100 dark:text-[var(--dm-text-muted)] dark:hover:bg-[var(--dm-border)]"
+                  >
+                    Importar JSON
+                  </button>
+                  <hr className="my-1 border-gray-200 dark:border-[var(--dm-border)]" />
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-[var(--dm-border)]"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-1 text-[10px] leading-none text-gray-500 dark:text-[var(--dm-text-muted)]">
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+            <span>{formatDate(now)}</span>
+            <span>·</span>
+            <span>{formatTime(now, horaFormato)}</span>
+            <span>·</span>
+            <span>{isOnline ? 'En línea' : 'Desconectado'}</span>
+          </span>
+        </div>
+      </div>
+
+      <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={toggleSidebar}

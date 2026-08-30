@@ -55,6 +55,30 @@ export const signInWithGoogle = async () => {
   return data
 }
 
+export const signInLocalDev = async () => {
+  const localHostnames = ['localhost', '127.0.0.1', '[::1]']
+  const isLocalDev = import.meta.env.DEV && typeof window !== 'undefined' && localHostnames.includes(window.location.hostname)
+  const devEmail = import.meta.env.VITE_DEV_EMAIL
+  const devPassword = import.meta.env.VITE_DEV_PASSWORD
+
+  if (!isLocalDev) {
+    throw new Error('Local dev sign-in is only allowed in localhost development mode.')
+  }
+
+  if (!devEmail || !devPassword) {
+    throw new Error('Missing VITE_DEV_EMAIL or VITE_DEV_PASSWORD in the local .env.local file.')
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: devEmail,
+    password: devPassword,
+  })
+
+  if (error) throw error
+  persistSessionSnapshot(data.session)
+  return data
+}
+
 export const signOut = async () => {
   const { error } = await supabase.auth.signOut()
   if (error) throw error
