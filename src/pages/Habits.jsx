@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { useHabits, useCreateHabit, useDeleteHabit, useToggleHabitCompletion } from '../features/habits/hooks.js'
+import { motion } from 'framer-motion'
+import { useHabits, useCreateHabit, useDeleteHabit, useUpdateHabit, useToggleHabitCompletion } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import HabitForm from '../components/HabitForm.jsx'
+import HabitHistoryModal from '../components/HabitHistoryModal.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 
 // Helper: get today's date in YYYY-MM-DD format
@@ -19,11 +21,14 @@ function getDayOfWeek(dateStr) {
 
 export default function Habits() {
   const [isCreating, setIsCreating] = useState(false)
+  const [editingHabit, setEditingHabit] = useState(null)
+  const [historyHabit, setHistoryHabit] = useState(null)
   const today = getTodayDate()
   const todayDayOfWeek = getDayOfWeek(today)
 
   const { data: habits, isLoading } = useHabits()
   const createHabit = useCreateHabit()
+  const updateHabit = useUpdateHabit()
   const deleteHabit = useDeleteHabit()
   const toggleCompletion = useToggleHabitCompletion()
   
@@ -36,6 +41,16 @@ export default function Habits() {
       setIsCreating(false)
     } catch (error) {
       console.error('Error creating habit:', error)
+    }
+  }
+
+  const handleEdit = async (habitData) => {
+    try {
+      await updateHabit.mutateAsync({ id: editingHabit.id, updates: habitData })
+      playSound('save')
+      setEditingHabit(null)
+    } catch (error) {
+      console.error('Error updating habit:', error)
     }
   }
 
@@ -122,9 +137,11 @@ export default function Habits() {
                   key={habit.id}
                   layout
                   initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  animate={{ opacity: showToday ? 1 : 0.5, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)]"
+                  className={`bg-white border rounded-lg p-4 hover:shadow-md transition-shadow dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] ${
+                    !showToday ? 'opacity-50' : ''
+                  }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
@@ -156,8 +173,25 @@ export default function Habits() {
                       )}
                       
                       <button
+                        onClick={() => setHistoryHabit(habit)}
+                        className="text-blue-500 hover:text-blue-700 p-2 dark:text-blue-400 dark:hover:text-blue-300"
+                        title="Ver historial"
+                      >
+                        📅
+                      </button>
+                      
+                      <button
+                        onClick={() => setEditingHabit(habit)}
+                        className="text-gray-500 hover:text-gray-700 p-2 dark:text-gray-400 dark:hover:text-gray-300"
+                        title="Editar"
+                      >
+                        ✏️
+                      </button>
+                      
+                      <button
                         onClick={() => handleDelete(habit)}
                         className="text-red-500 hover:text-red-700 p-2 dark:text-red-400 dark:hover:text-red-300"
+                        title="Eliminar"
                       >
                         🗑️
                       </button>
@@ -183,6 +217,29 @@ export default function Habits() {
           isPending={createHabit.isPending}
         />
       </ModalWrapper>
+
+      {/* Edit Habit Modal */}
+      <ModalWrapper
+        isOpen={!!editingHabit}
+        onClose={() => setEditingHabit(null)}
+        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
+      >
+        <h3 className="text-lg font-semibold mb-4">Editar hábito</h3>
+        <HabitForm
+          onSubmit={handleEdit}
+          onCancel={() => setEditingHabit(null)}
+          isPending={updateHabit.isPending}
+          editingHabit={editingHabit}
+        />
+      </ModalWrapper>
+
+      {/* History Modal */}
+      {historyHabit && (
+        <HabitHistoryModal
+          habit={historyHabit}
+          onClose={() => setHistoryHabit(null)}
+        />
+      )}
     </div>
   )
 }

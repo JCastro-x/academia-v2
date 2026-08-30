@@ -1,5 +1,49 @@
 # CHANGELOG
 
+## [2026-08-30] — Feature completa de Hábitos: días de semana, racha, edición e historial
+
+**Tarea:** Implementar funcionalidad completa de hábitos con selector de días, estado visual para días no programados, edición de hábitos, y mini calendario de historial.
+
+**Implementado:**
+- `src/features/habits/api.js` - Modificado `updateHabit()` para recalcular racha inmediatamente cuando cambia `dias_semana` o `frecuencia`, usando `calculateStreak()` con la configuración actualizada antes de guardar.
+- `src/features/habits/hooks.js` - `useUpdateHabit()` ya existía, confirmado funcional.
+- `src/components/HabitForm.jsx` - Agregado soporte para modo edición con prop `editingHabit`:
+  - `useEffect` para pre-popular nombre, frecuencia y dias_semana cuando se edita
+  - Botón de submit cambia texto de "Crear" a "Guardar" en modo edición
+- `src/pages/Habits.jsx` - Modificaciones visuales y funcionales:
+  - Import agregado de `motion` de framer-motion (fix de crash "motion is not defined")
+  - Import agregado de `useUpdateHabit` hook
+  - Import agregado de `HabitHistoryModal` componente nuevo
+  - Estados nuevos: `editingHabit` y `historyHabit`
+  - Handler `handleEdit()` para actualizar hábitos existentes
+  - Tarjetas de hábito: `opacity-50` cuando `!showToday` (día no programado)
+  - Botón de completar solo visible cuando `showToday=true`
+  - Botón de historial (📅) para abrir modal de calendario
+  - Botón de editar (✏️) para abrir modal de edición
+  - Modal de edición reutilizando `HabitForm` con `editingHabit` prop
+- `src/components/HabitHistoryModal.jsx` - Nuevo componente de mini calendario:
+  - Grid 7 columnas (Lun-Dom) con navegación por mes
+  - Días completados marcados en verde (solo si estaban programados)
+  - Días programados pero no completados en gris claro
+  - Días no programados en gris neutro (sin marca)
+  - Navegación: mes anterior/siguiente, botón "Ir a hoy"
+  - Leyenda visual para los tres estados
+  - Usa convención de fecha local YYYY-MM-DD (consistente con `todayStr()` de task-stats.js)
+
+**Verificado:**
+- Build: `npm run build` → exitoso (bundle 939.72 kB, CSS 88.12 kB)
+- Tests: `npm test -- --run` → 115 tests pasando (10 archivos)
+- Schema: `dias_semana int[]`, `racha int default 0`, `historial jsonb default '[]'` confirmados en schema.sql (líneas 134-136)
+- Lógica de racha: `calculateStreak()` en api.js ya distingue correctamente diario/semanal y ignora días no programados para frecuencia semanal
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de UI/lógica, schema ya existente)
+
+**Desviaciones del plan original:** Ninguna - implementación siguió el plan aprobado con recálculo inmediato de racha al editar.
+
+**Pendiente / preguntas abiertas:** Ninguna - feature completada según especificaciones.
+
+---
+
 ## [2026-08-30] — Fix de persistencia de sesión en PWA — Configuración de Supabase y verificación en Auth.jsx
 
 **Tarea:** Corregir el problema donde la PWA pedía autenticación cada vez que se cerraba y reabría, en lugar de mantener la sesión activa.
