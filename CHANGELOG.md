@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## [2026-08-30] — Fix de persistencia de sesión en PWA — Configuración de Supabase y verificación en Auth.jsx
+
+**Tarea:** Corregir el problema donde la PWA pedía autenticación cada vez que se cerraba y reabría, en lugar de mantener la sesión activa.
+
+**Causa raíz confirmada:**
+- El cliente Supabase se creaba sin configuración de persistencia (`persistSession: true`, `storage: localStorage`)
+- Auth.jsx no verificaba si ya existía una sesión activa al montar, siempre mostraba la pantalla de login
+- La configuración `createClient(supabaseUrl, supabaseAnonKey)` sin opciones de auth estaba así desde el inicio del proyecto (commit a18c1d82, 2026-07-17)
+
+**Implementado:**
+- `src/lib/supabase.js`: agregada configuración completa de auth en `createClient()`:
+  - `persistSession: true`
+  - `storage: typeof window !== 'undefined' ? window.localStorage : undefined`
+  - `autoRefreshToken: true`
+  - `detectSessionInUrl: true`
+- `src/pages/Auth.jsx`: agregado `useEffect` al montar que:
+  - Verifica si existe una sesión activa con `supabase.auth.getSession()`
+  - Si hay sesión, consulta semestres con `getSemesters()`
+  - Redirige al semestre activo si existe, o a `/create-first-semester` si no hay semestres
+  - Usa la misma lógica de navegación que `AuthCallback.jsx` para consistencia
+
+**Verificado:**
+- Build: `npm run build` → exitoso (bundle 934.23 kB)
+- Tests: `npm test -- --run` → 115 tests pasando (10 archivos)
+- HMR: Vite detectó los cambios correctamente en el dev server
+
+**Pendiente de validación práctica:**
+- Flujo completo en browser: autenticarse → cerrar PWA → reabrir → verificar redirección automática sin mostrar login
+- Confirmación de que localStorage persiste correctamente entre cierres/aperturas
+
+**Estado de la base de datos remota:** NO APLICA (cambio en capa de cliente/auth únicamente)
+
+---
+
 ## [2026-08-29] — HOTFIX DE PRODUCCIÓN — Service worker interceptaba y cacheaba requests GET a Supabase, causando datos stale tras mutaciones (tareas que no se actualizaban, checkbox sin confirmación visual)
 
 **Causa raíz confirmada:**

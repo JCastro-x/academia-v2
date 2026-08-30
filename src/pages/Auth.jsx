@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { signInLocalDev, signInWithGoogle } from '../lib/supabase.js'
+import { signInLocalDev, signInWithGoogle, supabase } from '../lib/supabase.js'
+import { getSemesters } from '../features/semesters/api.js'
 import { useUIStore } from '../stores/ui.store.js'
 import FirstRunTour from '../components/FirstRunTour.jsx'
 
@@ -66,6 +67,27 @@ export default function Auth() {
       resetTheme()
     }
   }, [resetTheme])
+
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          const semesters = await getSemesters()
+          if (semesters && semesters.length > 0) {
+            const activeSemester = semesters.find((s) => s.activo) || semesters[0]
+            navigate(`/s/${activeSemester.id}`, { replace: true })
+          } else {
+            navigate('/create-first-semester', { replace: true })
+          }
+        }
+      } catch (error) {
+        console.warn('Error checking existing session:', error)
+      }
+    }
+
+    checkExistingSession()
+  }, [navigate])
 
   useEffect(() => {
     const interval = setInterval(() => {
