@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## [2026-08-29] — Corrección del drift de schema de perfil (hora_formato) y validación real de DB
+
+**Tarea:** confirmar el error real del 400 en la app y corregir el drift entre schema y código (`profiles.hora_formato`).
+
+**Diagnóstico confirmado:**
+- El error real en consola: `column profiles.hora_formato does not exist (código Postgres 42703)`.
+- La base real de Supabase no tiene la columna `profiles.hora_formato` aunque el código de la app sí la usa en `TopBar`, `Profile`, `AppLayout` y `features/profile/api.js`.
+
+**Implementado:**
+- Migración SQL para `profiles.hora_formato` con `text default '12h'`, aplicada sobre la base real enlazada.
+- Actualización del export JSON para incluir `hora_formato` en la tabla `profiles` y evitar pérdida de preferencias en backups.
+- Verificación directa del schema con `information_schema.columns` antes y después de la migración.
+
+**Verificado:**
+- `supabase db query --linked` confirma la ausencia inicial de la columna.
+- La migración aplicada deja la columna visible en la DB real con el tipo y default esperados.
+- Build final ejecutado con `npm run build` y commit local realizado.
+
+---
+
 ## [2026-08-29] — Ajuste mobile TopBar + QuickAdd, guard en perfil y VAPID
 
 **Tarea:** cerrar los ajustes visuales de mobile pendientes y reforzar la robustez de la sesión/perfil sin tocar el flujo de autenticación real.
