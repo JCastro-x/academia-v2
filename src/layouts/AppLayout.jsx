@@ -69,11 +69,14 @@ export default function AppLayout() {
   useEffect(() => {
     if (!profile) return
 
+    const storedHoraFormato = typeof window !== 'undefined' ? localStorage.getItem('academia-hora-formato') : null
     const nextModoOscuro = profile.modo_oscuro ?? modoOscuro
     const nextTipografia = profile.tipografia ?? tipografia
     const nextTemaColor = profile.tema_color ?? temaColor
     const nextSonidosInteraccion = profile.sonidos_interaccion ?? sonidosInteraccion
-    const nextHoraFormato = profile.hora_formato ?? horaFormato
+    const nextHoraFormato = storedHoraFormato === '12h' || storedHoraFormato === '24h'
+      ? storedHoraFormato
+      : (profile.hora_formato === '12h' || profile.hora_formato === '24h' ? profile.hora_formato : '12h')
 
     setModoOscuro(nextModoOscuro)
     setTipografia(nextTipografia)
@@ -85,8 +88,9 @@ export default function AppLayout() {
       localStorage.setItem('academia-theme-dark', String(nextModoOscuro))
       localStorage.setItem('academia-theme-font', nextTipografia)
       localStorage.setItem('academia-theme-color', nextTemaColor)
+      localStorage.setItem('academia-hora-formato', nextHoraFormato)
     }
-  }, [profile, setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato, modoOscuro, tipografia, temaColor, sonidosInteraccion, horaFormato])
+  }, [profile, setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato])
 
   // Mapeo de nombre corto de tipografía a CSS font-family
   const FONT_MAP = {

@@ -17,6 +17,14 @@ const readStoredTheme = () => {
 }
 
 const initialTheme = readStoredTheme()
+const readStoredHoraFormato = () => {
+  if (typeof window === 'undefined') {
+    return '12h'
+  }
+
+  const saved = localStorage.getItem('academia-hora-formato')
+  return saved === '24h' || saved === '12h' ? saved : '12h'
+}
 
 export const useUIStore = create((set) => ({
   // Theme state (preview en vivo, se guarda aparte en profiles)
@@ -24,7 +32,7 @@ export const useUIStore = create((set) => ({
   tipografia: initialTheme.tipografia,
   temaColor: initialTheme.temaColor,
   sonidosInteraccion: 'classic',
-  horaFormato: '12h',
+  horaFormato: readStoredHoraFormato(),
   setModoOscuro: (val) => {
     if (typeof window !== 'undefined') localStorage.setItem('academia-theme-dark', String(val))
     set({ modoOscuro: val })
@@ -38,7 +46,11 @@ export const useUIStore = create((set) => ({
     set({ temaColor: val })
   },
   setSonidosInteraccion: (val) => set({ sonidosInteraccion: val }),
-  setHoraFormato: (val) => set({ horaFormato: val }),
+  setHoraFormato: (val) => {
+    const normalized = val === '24h' ? '24h' : '12h'
+    if (typeof window !== 'undefined') localStorage.setItem('academia-hora-formato', normalized)
+    set({ horaFormato: normalized })
+  },
   resetTheme: () => {
     const defaultTheme = {
       modoOscuro: false,
@@ -51,6 +63,8 @@ export const useUIStore = create((set) => ({
       localStorage.setItem('academia-theme-font', defaultTheme.tipografia)
       localStorage.setItem('academia-theme-color', defaultTheme.temaColor)
     }
+
+    if (typeof window !== 'undefined') localStorage.setItem('academia-hora-formato', '12h')
 
     set({
       modoOscuro: defaultTheme.modoOscuro,
