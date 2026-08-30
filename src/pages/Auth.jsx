@@ -4,6 +4,26 @@ import { signInLocalDev, signInWithGoogle } from '../lib/supabase.js'
 import { useUIStore } from '../stores/ui.store.js'
 import FirstRunTour from '../components/FirstRunTour.jsx'
 
+const SESSION_DEBUG_STORAGE_KEY = 'academia-debug-session'
+
+function isSessionDebugEnabled() {
+  if (typeof window === 'undefined') return false
+
+  try {
+    const searchParams = new URLSearchParams(window.location.search)
+    const queryDebug = searchParams.get('debug') === 'session'
+
+    if (queryDebug) {
+      localStorage.setItem(SESSION_DEBUG_STORAGE_KEY, '1')
+    }
+
+    return queryDebug || localStorage.getItem(SESSION_DEBUG_STORAGE_KEY) === '1'
+  } catch (error) {
+    console.warn('[DEBUG session] Failed to read debug flag', error)
+    return false
+  }
+}
+
 const rotatingWords = ['tu semana', 'tu semestre', 'tu estudio', 'tu futuro']
 
 const featureCards = [
@@ -28,6 +48,7 @@ export default function Auth() {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const navigate = useNavigate()
   const resetTheme = useUIStore(s => s.resetTheme)
+  const sessionDebugEnabled = isSessionDebugEnabled()
   const localHostnames = ['localhost', '127.0.0.1', '[::1]']
   const hasLocalDevCredentials =
     import.meta.env.DEV &&
@@ -78,6 +99,11 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-[#050816] text-white">
+      {sessionDebugEnabled && (
+        <div className="fixed right-3 top-3 z-[100] rounded-full border border-amber-300/60 bg-amber-100/90 px-2 py-1 text-[10px] font-medium text-amber-900 shadow-sm backdrop-blur-sm">
+          DEBUG: {typeof window !== 'undefined' && localStorage.getItem('sb-') ? 'storage: yes' : 'storage: no'} · PWA: {typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'}
+        </div>
+      )}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-24 top-20 h-72 w-72 animate-[pulse_12s_ease-in-out_infinite] rounded-full bg-violet-500/25 blur-3xl" />
         <div className="absolute right-6 top-10 h-80 w-80 animate-[pulse_16s_ease-in-out_infinite] rounded-full bg-sky-500/20 blur-3xl" />
