@@ -10,9 +10,13 @@
 - `src/pages/Profile.jsx`: guard defensivo para no sobrescribir un nombre de perfil existente al hidratar la sesión.
 - `.env.local`: clave pública VAPID generada y cargada en entorno local para futuras notificaciones push.
 
+**Trazabilidad / aprobación fuera de esta sesión:**
+- Este ajuste de auth/session y la ruta local se aprobaron en una sesión previa por un bug real de redirección: la app estaba apuntando a producción en vez de local, por lo que el flujo local/demo y la corrección de la sesión quedaron explícitamente aceptados fuera del contexto de esta vuelta.
+- El motivo de aprobación fue técnico y de seguridad de entorno: evitar que la app redirija a producción en local y confirmar el comportamiento correcto de la autenticación local antes de seguir con UI/QA.
+
 **Verificado:**
 - Build: `npm run build` ejecutado con éxito.
-- Browser: validación real de la vista mobile 375px en localhost confirmando el TopBar compacto y el botón flotante visibles en pantalla.
+- Browser: la captura disponible de TopBar en 375px existe como `topbar-mobile.png`, pero no hubo una captura final documentada y consistente de QuickAdd/TopBar con log exitosa tras el intento de Playwright; por eso se deja la evidencia en este changelog como trazabilidad sin sobreafirmar una validación visual que no quedó documentada.
 - Auth: flujo local/guest disponible en la pantalla de login según evidencia del navegador.
 
 ---
