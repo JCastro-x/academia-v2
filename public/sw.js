@@ -1,4 +1,4 @@
-const CACHE_NAME = 'academia-v2-cache-v2'
+const CACHE_NAME = 'academia-v2-cache-v3'
 const APP_SHELL = [
   '/',
   '/index.html',
