@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { Outlet, useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
 import { useProfile } from '../features/profile/hooks.js'
@@ -13,14 +13,15 @@ import GlobalModalHost from '../components/GlobalModalHost.jsx'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
+  const effectiveSemesterId = semesterId
   const navigate = useNavigate()
   const location = useLocation()
   const prevPathRef = useRef(location.pathname)
   const {
     isSidebarCollapsed, toggleSidebar,
     isMuted, toggleMute,
-    modoOscuro, tipografia, temaColor, sonidosInteraccion,
-    setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setMuted,
+    modoOscuro, tipografia, temaColor, sonidosInteraccion, horaFormato,
+    setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato, setMuted,
     setOnline, setOffline,
   } = useUIStore()
 
@@ -49,9 +50,10 @@ export default function AppLayout() {
   const { data: semesters, isLoading: semestersLoading, error: semestersError } = useSemesters()
 
   useEffect(() => {
+    if (!effectiveSemesterId) return
     if (semestersLoading || semestersError || !semesters) return
 
-    const currentSemester = semesters.find((semester) => semester.id === semesterId)
+    const currentSemester = semesters.find((semester) => semester.id === effectiveSemesterId)
     if (currentSemester) return
 
     if (semesters.length > 0) {
@@ -61,15 +63,29 @@ export default function AppLayout() {
     }
 
     navigate('/create-first-semester', { replace: true })
-  }, [semesterId, semesters, semestersLoading, semestersError, navigate])
+  }, [effectiveSemesterId, semesters, semestersLoading, semestersError, navigate])
 
   useEffect(() => {
-    if (!profile) return // null o undefined → no hay perfil, mantener defaults del store
-    setModoOscuro(profile.modo_oscuro ?? false)
-    setTipografia(profile.tipografia ?? 'Inter')
-    setTemaColor(profile.tema_color ?? '#84cc16')
-    setSonidosInteraccion(profile.sonidos_interaccion ?? 'classic')
-  }, [profile, setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion])
+    if (!profile) return
+
+    const nextModoOscuro = profile.modo_oscuro ?? modoOscuro
+    const nextTipografia = profile.tipografia ?? tipografia
+    const nextTemaColor = profile.tema_color ?? temaColor
+    const nextSonidosInteraccion = profile.sonidos_interaccion ?? sonidosInteraccion
+    const nextHoraFormato = profile.hora_formato ?? horaFormato
+
+    setModoOscuro(nextModoOscuro)
+    setTipografia(nextTipografia)
+    setTemaColor(nextTemaColor)
+    setSonidosInteraccion(nextSonidosInteraccion)
+    setHoraFormato(nextHoraFormato)
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('academia-theme-dark', String(nextModoOscuro))
+      localStorage.setItem('academia-theme-font', nextTipografia)
+      localStorage.setItem('academia-theme-color', nextTemaColor)
+    }
+  }, [profile, setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato, modoOscuro, tipografia, temaColor, sonidosInteraccion, horaFormato])
 
   // Mapeo de nombre corto de tipografía a CSS font-family
   const FONT_MAP = {
@@ -80,8 +96,7 @@ export default function AppLayout() {
   }
 
   // Aplicación de tema desde ui.store (preview en vivo)
-  useEffect(() => {
-    console.log('[AppLayout] aplicando tema', { modoOscuro, tipografia, temaColor, sonidosInteraccion })
+  useLayoutEffect(() => {
     document.documentElement.classList.toggle('dark', modoOscuro)
     document.documentElement.style.setProperty('--color-primary', temaColor)
     document.documentElement.style.setProperty('--font-family', FONT_MAP[tipografia] || 'Inter, system-ui, sans-serif')
@@ -102,9 +117,16 @@ export default function AppLayout() {
     { path: 'profile', label: 'Perfil', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
   ]
 
+  const mobileNavItems = [
+    navItems[0],
+    navItems[1],
+    navItems[2],
+    navItems[10],
+  ]
+
   const isActive = (path) => {
-    if (path === '') return location.pathname === `/s/${semesterId}`
-    return location.pathname === `/s/${semesterId}/${path}`
+    if (path === '') return location.pathname === `/s/${effectiveSemesterId}`
+    return location.pathname === `/s/${effectiveSemesterId}/${path}`
   }
 
   // Handlers para los botones del TopBar
@@ -127,16 +149,16 @@ export default function AppLayout() {
 
         {/* Sidebar */}
         <aside
-          className={`bg-white dark:bg-[var(--dm-surface)] border-r border-gray-200 dark:border-[var(--dm-border)] transition-all duration-300 fixed md:sticky md:top-0 z-50 h-full ${
+          className={`bg-white dark:bg-[var(--dm-surface)] border-r border-gray-200 dark:border-[var(--dm-border)] transition-all duration-300 fixed top-0 md:sticky md:top-0 z-50 h-full ${
             isSidebarCollapsed ? '-translate-x-full md:w-16 md:translate-x-0' : 'w-64 translate-x-0'
           }`}
         >
-          <nav className="p-4">
+          <nav className="px-4 pb-4 pt-2 md:p-4">
             <ul className="space-y-2">
               {navItems.map((item) => (
                 <li key={item.path}>
                   <Link
-                    to={`/s/${semesterId}/${item.path}`}
+                    to={`/s/${effectiveSemesterId}/${item.path}`}
                     onClick={() => {
                       if (window.innerWidth < 768) toggleSidebar()
                     }}
@@ -159,10 +181,35 @@ export default function AppLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 basis-0 min-w-0 max-w-full h-full overflow-x-hidden overflow-y-auto overscroll-contain p-4 md:p-6 pb-20">
+        <main className="flex-1 basis-0 min-w-0 max-w-full h-full overflow-x-hidden overflow-y-auto overscroll-contain p-4 pb-24 md:p-6 md:pb-6">
           <Outlet />
         </main>
       </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+          {mobileNavItems.map((item) => {
+            const active = isActive(item.path)
+            const to = item.path ? `/s/${effectiveSemesterId}/${item.path}` : `/s/${effectiveSemesterId}`
+
+            return (
+              <Link
+                key={item.path || 'home'}
+                to={to}
+                className={`flex flex-col items-center justify-center rounded-xl px-2 py-2 text-[10px] font-medium transition-colors ${
+                  active ? 'text-[var(--color-primary)]' : 'text-[var(--dm-text-muted)] opacity-80'
+                }`}
+                style={active ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 14%, transparent)' } : undefined}
+              >
+                <svg className="mb-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                </svg>
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </div>
+      </nav>
 
       <ConfirmDialog />
       <ImportModal />

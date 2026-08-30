@@ -24,6 +24,14 @@ function formatDate(date) {
   })
 }
 
+function formatTime(date, hourFormat = '12h') {
+  return date.toLocaleTimeString('es-ES', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: hourFormat === '12h',
+  })
+}
+
 function getGreeting(date) {
   const hour = date.getHours()
   if (hour >= 5 && hour < 12) return 'Buenos días'
@@ -80,6 +88,7 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
     isMuted, toggleMute,
     isOnline,
     modoOscuro, setModoOscuro,
+    horaFormato,
     openModal,
     addToast,
   } = useUIStore()
@@ -166,20 +175,21 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
           <h1 className="truncate text-lg font-bold text-gray-900 dark:text-[var(--dm-text)] md:text-xl">Academia v2</h1>
         </div>
 
-        <div className="flex min-w-0 flex-1 items-center justify-center px-2">
-          <div className="flex min-w-0 items-center justify-center gap-2 text-center text-sm text-gray-700 dark:text-[var(--dm-text)]">
+        <div className="flex min-w-0 flex-1 items-center justify-center px-0.5 sm:px-2">
+          <div className="flex min-w-0 items-center justify-center gap-2 text-sm text-gray-700 dark:text-[var(--dm-text)]">
             <GreetingIcon hour={now.getHours()} />
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate font-semibold text-gray-900 dark:text-[var(--dm-text)] md:text-base">
+            <div className="flex min-w-0 flex-col items-center justify-center gap-1 text-center sm:flex-row sm:items-center sm:gap-2">
+              <span className="block truncate text-base font-semibold leading-tight text-gray-900 dark:text-[var(--dm-text)] sm:text-lg">
                 {getGreeting(now)}, {profile?.nombre || 'Estudiante'}
               </span>
-              <span className="hidden shrink-0 text-[11px] text-gray-500 dark:text-[var(--dm-text-muted)] md:inline">
-                {formatDate(now)}
-              </span>
-              <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-[var(--dm-text-muted)]">
-                <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
-                <span>{isOnline ? 'En línea' : 'Desconectado'}</span>
-              </span>
+              <div className="flex flex-col items-center gap-0.5 text-[10px] leading-snug text-gray-500 dark:text-[var(--dm-text-muted)] sm:flex-row sm:items-center sm:gap-1.5 sm:text-[11px]">
+                <span className="whitespace-nowrap">{formatDate(now)}</span>
+                <span className="whitespace-nowrap">· {formatTime(now, horaFormato)}</span>
+                <span className="flex items-center gap-1.5">
+                  <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span>{isOnline ? 'En línea' : 'Desconectado'}</span>
+                </span>
+              </div>
             </div>
           </div>
         </div>

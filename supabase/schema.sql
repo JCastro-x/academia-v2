@@ -371,6 +371,7 @@ create table profiles (
   tema_color text default '#84cc16',            -- color hex (ej. '#84cc16')
   sonidos_interaccion text default 'classic',  -- 'classic' | 'modern' | 'off'
   modo_oscuro boolean default false,
+  hora_formato text default '12h',            -- '12h' | '24h'
   updated_at timestamptz default now()
 );
 

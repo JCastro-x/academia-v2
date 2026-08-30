@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { queryClient } from './lib/queryClient.js'
-import { getCurrentUser } from './lib/supabase.js'
+import { getSession, onAuthStateChange, getStoredSessionUser } from './lib/supabase.js'
 import AppLayout from './layouts/AppLayout.jsx'
 import Auth from './pages/Auth.jsx'
 import AuthCallback from './pages/AuthCallback.jsx'
@@ -27,29 +27,66 @@ import './styles/index.css'
 function ProtectedRoute({ children }) {
   const [user, setUser] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
-  const isGuest = localStorage.getItem('academia-guest-mode') === 'true'
 
   React.useEffect(() => {
-    if (isGuest) {
-      setLoading(false)
-      return
+    if (localStorage.getItem('academia-guest-mode') === 'true') {
+      localStorage.removeItem('academia-guest-mode')
     }
 
-    getCurrentUser()
-      .then(setUser)
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false))
-  }, [isGuest])
+    let isActive = true
+
+    const syncSession = async () => {
+      const cachedSessionUser = getStoredSessionUser()
+
+      try {
+        const session = await getSession()
+        if (!isActive) return
+        setUser(session?.user ?? cachedSessionUser ?? null)
+      } catch (error) {
+        console.warn('No active Supabase session', error)
+        if (!isActive) return
+
+        if (navigator.onLine && cachedSessionUser) {
+          setUser(cachedSessionUser)
+        } else {
+          setUser(cachedSessionUser ?? null)
+        }
+      } finally {
+        if (isActive) setLoading(false)
+      }
+    }
+
+    syncSession()
+
+    const { data: { subscription } } = onAuthStateChange((_event, session) => {
+      if (!isActive) return
+      setUser(session?.user ?? getStoredSessionUser() ?? null)
+      setLoading(false)
+    })
+
+    return () => {
+      isActive = false
+      subscription.unsubscribe()
+    }
+  }, [])
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>
+    return <div className="min-h-screen flex items-center justify-center text-gray-600 dark:text-[var(--dm-text-muted)]">Cargando sesión...</div>
   }
 
-  if (!user && !isGuest) {
+  if (!user) {
     return <Navigate to="/auth" replace />
   }
 
   return children
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((error) => {
+      console.warn('Service worker registration failed:', error)
+    })
+  })
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

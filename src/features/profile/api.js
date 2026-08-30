@@ -9,7 +9,7 @@ export async function getProfile() {
   const user = await getCurrentUser()
   const { data, error } = await supabase
     .from('profiles')
-    .select('user_id, nombre, registro_academico, carrera, institucion, cursos_ganados, tipografia, tema_color, sonidos_interaccion, modo_oscuro, updated_at')
+    .select('user_id, nombre, registro_academico, carrera, institucion, cursos_ganados, tipografia, tema_color, sonidos_interaccion, modo_oscuro, hora_formato, updated_at')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false })
     .limit(1)
@@ -36,7 +36,7 @@ export async function upsertProfile(profileData) {
   const { data, error } = await supabase
     .from('profiles')
     .upsert(profile, { onConflict: 'user_id' })
-    .select('user_id, nombre, registro_academico, carrera, institucion, cursos_ganados, tipografia, tema_color, sonidos_interaccion, modo_oscuro, updated_at')
+    .select('user_id, nombre, registro_academico, carrera, institucion, cursos_ganados, tipografia, tema_color, sonidos_interaccion, modo_oscuro, hora_formato, updated_at')
     .maybeSingle()
   
   if (error) throw error
