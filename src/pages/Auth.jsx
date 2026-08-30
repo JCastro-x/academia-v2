@@ -23,13 +23,22 @@ const overviewItems = [
 ]
 
 export default function Auth() {
-  const [isGuest, setIsGuest] = useState(false)
   const [typedWord, setTypedWord] = useState(0)
   const [isTyping, setIsTyping] = useState(true)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const navigate = useNavigate()
   const resetTheme = useUIStore(s => s.resetTheme)
 
-  useEffect(() => { resetTheme() }, [resetTheme])
+  useEffect(() => {
+    const hasStoredTheme =
+      localStorage.getItem('academia-theme-dark') !== null ||
+      localStorage.getItem('academia-theme-color') !== null ||
+      localStorage.getItem('academia-theme-font') !== null
+
+    if (!hasStoredTheme) {
+      resetTheme()
+    }
+  }, [resetTheme])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,39 +59,6 @@ export default function Auth() {
     } catch (error) {
       console.error('Error signing in with Google:', error)
     }
-  }
-
-  const handleGuestMode = () => {
-    localStorage.setItem('academia-guest-mode', 'true')
-    navigate('/s/guest')
-  }
-
-  if (isGuest) {
-    return (
-      <div className="min-h-screen bg-[#050816] px-4 py-10 text-white">
-        <div className="mx-auto max-w-md rounded-[28px] border border-white/10 bg-slate-950/80 p-8 shadow-[0_30px_80px_rgba(76,29,149,0.45)] backdrop-blur-sm">
-          <div className="mb-3 inline-flex rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-200">
-            Modo invitado
-          </div>
-          <h2 className="mb-4 text-3xl font-bold">Probá la app sin cuenta.</h2>
-          <p className="mb-6 text-sm leading-6 text-slate-300">
-            En modo invitado, tus datos se guardan localmente en este navegador y no se sincronizan entre dispositivos.
-          </p>
-          <button
-            onClick={handleGuestMode}
-            className="w-full rounded-xl bg-gradient-to-r from-violet-500 via-indigo-500 to-sky-500 px-4 py-3 font-semibold text-white shadow-lg shadow-violet-900/40 hover:brightness-110"
-          >
-            Continuar como invitado
-          </button>
-          <button
-            onClick={() => setIsGuest(false)}
-            className="mt-4 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 font-medium text-slate-200 hover:border-slate-500 hover:bg-slate-800"
-          >
-            Volver
-          </button>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -124,10 +100,23 @@ export default function Auth() {
               Centralizá tus materias, tareas, notas y rutinas en una sola experiencia clara, enfocada y relajante para estudiar mejor.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <label className="mt-8 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-slate-200">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-500 bg-slate-900 text-violet-500 focus:ring-violet-400"
+              />
+              <span>
+                Acepto los <Link to="/terms" className="font-medium text-violet-200 underline underline-offset-2">Términos</Link> y la <Link to="/privacy" className="font-medium text-violet-200 underline underline-offset-2">Política de privacidad</Link>.
+              </span>
+            </label>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={handleGoogleSignIn}
-                className="inline-flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white px-5 py-3 font-semibold text-slate-900 shadow-[0_0_30px_rgba(255,255,255,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_0_28px_rgba(168,85,247,0.25)]"
+                disabled={!acceptedTerms}
+                className="inline-flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white px-5 py-3 font-semibold text-slate-900 shadow-[0_0_30px_rgba(255,255,255,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_0_28px_rgba(168,85,247,0.25)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -138,12 +127,6 @@ export default function Auth() {
                 Ingresar con Google
               </button>
 
-              <button
-                onClick={() => setIsGuest(true)}
-                className="rounded-xl border border-slate-700 bg-slate-900/70 px-5 py-3 font-semibold text-slate-100 transition hover:border-slate-500 hover:bg-slate-800"
-              >
-                Probar sin cuenta
-              </button>
             </div>
 
             <div className="mt-8 flex flex-wrap gap-5 text-sm text-slate-300">

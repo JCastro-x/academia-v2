@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Flatpickr from 'react-flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 import '../styles/forms.css'
 import { getTaskStats, countWorkDays, todayStr, parseDate } from '../domain/task-stats.js'
 
-export default function TaskForm({ semesterId, subjects, initialData, onSubmit, onCancel, isPending }) {
+export default function TaskForm({ semesterId, subjects, initialData, onSubmit, onAutoSave, onCancel, isPending }) {
   const [formData, setFormData] = useState({
     titulo: initialData?.titulo || '',
     prioridad: initialData?.prioridad || 'media',
@@ -15,6 +15,51 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
     work_days: initialData?.work_days || [1, 2, 3, 4, 5],
     subtasks: initialData?.subtasks || [],
   })
+  const [saveState, setSaveState] = useState('saved')
+  const lastSavedRef = useRef(initialData ? JSON.stringify({
+    titulo: initialData.titulo || '',
+    prioridad: initialData.prioridad || 'media',
+    subject_id: initialData.subject_id || '',
+    due: initialData.due ? initialData.due.slice(0, 16) : '',
+    tipo: initialData.tipo || 'cantidad',
+    total_units: initialData.total_units || '',
+    work_days: initialData.work_days || [1, 2, 3, 4, 5],
+    subtasks: initialData.subtasks || [],
+  }) : '')
+
+  useEffect(() => {
+    if (!initialData?.id || !onAutoSave) return
+
+    const payload = {
+      titulo: formData.titulo,
+      prioridad: formData.prioridad,
+      subject_id: formData.subject_id || null,
+      due: formData.due || null,
+      tipo: formData.tipo,
+      total_units: formData.tipo === 'cantidad' ? Number(formData.total_units) || null : null,
+      subtasks: formData.tipo === 'checklist' ? formData.subtasks : null,
+      work_days: formData.work_days,
+    }
+
+    const snapshot = JSON.stringify(payload)
+    if (snapshot === lastSavedRef.current) return
+
+    setSaveState('pending')
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setSaveState('saving')
+        await onAutoSave(payload)
+        lastSavedRef.current = snapshot
+        setSaveState('saved')
+      } catch (error) {
+        console.error('Error auto-saving task:', error)
+        setSaveState('error')
+      }
+    }, 700)
+
+    return () => clearTimeout(timeoutId)
+  }, [formData, initialData, onAutoSave])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -31,6 +76,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    if (initialData?.id) setSaveState('pending')
   }
 
   const handleWorkDayToggle = (day) => {
@@ -40,6 +86,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         ? prev.work_days.filter(d => d !== day)
         : [...prev.work_days, day].sort()
     }))
+    if (initialData?.id) setSaveState('pending')
   }
 
   const handleSubtaskAdd = () => {
@@ -47,6 +94,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       ...prev,
       subtasks: [...prev.subtasks, { id: Date.now(), titulo: '', done: false }]
     }))
+    if (initialData?.id) setSaveState('pending')
   }
 
   const handleSubtaskChange = (index, field, value) => {
@@ -54,6 +102,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       ...prev,
       subtasks: prev.subtasks.map((st, i) => i === index ? { ...st, [field]: value } : st)
     }))
+    if (initialData?.id) setSaveState('pending')
   }
 
   const handleSubtaskRemove = (index) => {
@@ -61,6 +110,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       ...prev,
       subtasks: prev.subtasks.filter((_, i) => i !== index)
     }))
+    if (initialData?.id) setSaveState('pending')
   }
 
   // Calculate preview stats for new tasks
@@ -92,6 +142,20 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
 
   return (
     <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
+      {initialData?.id && (
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600 dark:border-[var(--dm-border)] dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text-muted)]">
+          <span>Estado de guardado</span>
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${
+            saveState === 'saved' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' :
+            saveState === 'saving' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300' :
+            saveState === 'pending' ? 'bg-sky-500/10 text-sky-700 dark:text-sky-300' :
+            'bg-red-500/10 text-red-700 dark:text-red-300'
+          }`}>
+            {saveState === 'saved' ? 'Guardado' : saveState === 'saving' ? 'Guardando...' : saveState === 'pending' ? 'Pendiente' : 'Error'}
+          </span>
+        </div>
+      )}
+
       {/* Título */}
       <div className="field">
         <label htmlFor="titulo" className="field-label required">Título</label>

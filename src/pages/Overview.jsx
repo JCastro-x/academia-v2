@@ -12,9 +12,9 @@ import QuickAdd from '../components/QuickAdd.jsx'
 
 export default function Overview() {
   const { semesterId } = useParams()
-  const { data: semester, isLoading, error } = useSemester(semesterId)
-  const { data: subjects } = useSubjects(semesterId)
-  const { data: pendingTasks } = usePendingTasks(semesterId)
+  const { data: semester, isLoading: semesterLoading, error } = useSemester(semesterId)
+  const { data: subjects, isLoading: subjectsLoading } = useSubjects(semesterId)
+  const { data: pendingTasks, isLoading: tasksLoading } = usePendingTasks(semesterId)
   const createTask = useCreateTask()
   const toggleTaskDone = useToggleTaskDone()
   const deleteTask = useDeleteTask()
@@ -22,6 +22,7 @@ export default function Overview() {
   const updateSemester = useUpdateSemester()
   const { openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
   const [showEvents, setShowEvents] = useState(false)
+  const isLoading = semesterLoading || subjectsLoading || tasksLoading
 
   const handleCreateTask = async (taskData) => {
     try {
@@ -90,7 +91,28 @@ export default function Overview() {
     })
   }
 
-  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center text-gray-500 dark:text-[var(--dm-text-muted)]">Cargando...</div>
+  if (isLoading) {
+    return (
+      <div className="space-y-6 pb-16 animate-pulse">
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="h-7 w-48 rounded bg-gray-200 dark:bg-[var(--dm-border)]" />
+            <div className="h-4 w-32 rounded bg-gray-200 dark:bg-[var(--dm-border)]" />
+          </div>
+          <div className="h-8 w-28 rounded bg-gray-200 dark:bg-[var(--dm-border)]" />
+        </div>
+
+        <div className="rounded-lg bg-white p-6 shadow-md dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)]">
+          <div className="mb-4 h-6 w-40 rounded bg-gray-200 dark:bg-[var(--dm-border)]" />
+          <div className="space-y-3">
+            <div className="h-16 rounded bg-gray-100 dark:bg-[var(--dm-border)]" />
+            <div className="h-16 rounded bg-gray-100 dark:bg-[var(--dm-border)]" />
+            <div className="h-16 rounded bg-gray-100 dark:bg-[var(--dm-border)]" />
+          </div>
+        </div>
+      </div>
+    )
+  }
   if (error) return <div className="flex min-h-[40vh] items-center justify-center text-red-600 dark:text-red-400">Error: {error.message}</div>
   if (!semester) {
     return (

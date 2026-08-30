@@ -12,8 +12,10 @@ export default function NoteEditor({ noteId, onClose }) {
   const [contenido, setContenido] = useState('')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showDrawingCanvas, setShowDrawingCanvas] = useState(false)
+  const [saveState, setSaveState] = useState('saved')
   const editorRef = useRef(null)
   const fileInputRef = useRef(null)
+  const lastSavedSnapshotRef = useRef('')
   
   const { data: note, isLoading } = useNote(noteId)
   const updateNote = useUpdateNote()
@@ -31,13 +33,42 @@ export default function NoteEditor({ noteId, onClose }) {
 
   useEffect(() => {
     if (note) {
-      setTitulo(note.titulo || '')
-      setContenido(note.contenido || '')
+      const nextTitulo = note.titulo || ''
+      const nextContenido = note.contenido || ''
+      setTitulo(nextTitulo)
+      setContenido(nextContenido)
+      lastSavedSnapshotRef.current = JSON.stringify({ titulo: nextTitulo, contenido: nextContenido })
       if (editorRef.current) {
-        editorRef.current.innerHTML = note.contenido || ''
+        editorRef.current.innerHTML = nextContenido
       }
     }
   }, [note])
+
+  useEffect(() => {
+    if (!noteId || !note) return
+
+    const nextSnapshot = JSON.stringify({ titulo, contenido })
+    if (nextSnapshot === lastSavedSnapshotRef.current) return
+
+    setSaveState('pending')
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setSaveState('saving')
+        await updateNote.mutateAsync({
+          id: noteId,
+          updates: { titulo, contenido },
+        })
+        lastSavedSnapshotRef.current = nextSnapshot
+        setSaveState('saved')
+      } catch (error) {
+        console.error('Error auto-saving note:', error)
+        setSaveState('error')
+      }
+    }, 600)
+
+    return () => clearTimeout(timeoutId)
+  }, [titulo, contenido, noteId, note, updateNote])
 
   const handleFormat = (command) => {
     document.execCommand(command, false, null)
@@ -178,12 +209,16 @@ export default function NoteEditor({ noteId, onClose }) {
 
   const handleSave = async () => {
     try {
+      setSaveState('saving')
       await updateNote.mutateAsync({
         id: noteId,
         updates: { titulo, contenido },
       })
+      lastSavedSnapshotRef.current = JSON.stringify({ titulo, contenido })
+      setSaveState('saved')
     } catch (error) {
       console.error('Error saving note:', error)
+      setSaveState('error')
     }
   }
 
@@ -202,19 +237,29 @@ export default function NoteEditor({ noteId, onClose }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className={`flex flex-col h-full ${isFullscreen ? 'fixed inset-0 z-50 bg-white p-6' : ''}`}
+        className={`flex h-full flex-col ${isFullscreen ? 'fixed inset-0 z-50 bg-white p-6 dark:bg-[var(--dm-bg)]' : 'dark:bg-[var(--dm-bg)]'}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 gap-4">
-          <input
-            type="text"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            className="text-xl font-semibold flex-1 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
-            placeholder="Título de la nota"
-            onKeyDown={handleKeyDown}
-            autoComplete="off"
-          />
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <input
+              type="text"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              className="flex-1 rounded-xl border border-gray-300 bg-white px-2 py-1 text-xl font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] dark:border-[var(--dm-border)] dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
+              placeholder="Título de la nota"
+              onKeyDown={handleKeyDown}
+              autoComplete="off"
+            />
+            <span className={`inline-flex items-center rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+              saveState === 'saved' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' :
+              saveState === 'saving' ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300' :
+              saveState === 'pending' ? 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300' :
+              'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300'
+            }`}>
+              {saveState === 'saved' ? 'Guardado' : saveState === 'saving' ? 'Guardando...' : saveState === 'pending' ? 'Pendiente' : 'Error'}
+            </span>
+          </div>
           
           <div className="flex items-center gap-2">
             <button
@@ -226,13 +271,13 @@ export default function NoteEditor({ noteId, onClose }) {
             </button>
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 text-sm"
+              className="rounded bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
             >
               {isFullscreen ? '↙️' : '⛶'}
             </button>
             <button
               onClick={onClose}
-              className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 text-sm dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
+              className="rounded bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
             >
               ✕
             </button>
@@ -240,39 +285,39 @@ export default function NoteEditor({ noteId, onClose }) {
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center gap-2 mb-4 pb-2 border-b flex-wrap">
+        <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-gray-200 pb-2 dark:border-[var(--dm-border)]">
           <button
             onClick={() => handleFormat('bold')}
-            className="px-3 py-1 border rounded hover:bg-gray-100 font-bold"
+            className="rounded border border-gray-300 bg-white px-3 py-1 font-bold text-gray-800 hover:bg-gray-100 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
             title="Negrita (Ctrl+B)"
           >
             B
           </button>
           <button
             onClick={() => handleFormat('italic')}
-            className="px-3 py-1 border rounded hover:bg-gray-100 italic"
+            className="rounded border border-gray-300 bg-white px-3 py-1 italic text-gray-800 hover:bg-gray-100 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
             title="Cursiva (Ctrl+I)"
           >
             I
           </button>
           <button
             onClick={() => handleFormat('underline')}
-            className="px-3 py-1 border rounded hover:bg-gray-100 underline"
+            className="rounded border border-gray-300 bg-white px-3 py-1 text-gray-800 underline hover:bg-gray-100 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
             title="Subrayado (Ctrl+U)"
           >
             U
           </button>
-          <div className="w-px h-6 bg-gray-300 mx-2" />
+          <div className="mx-2 h-6 w-px bg-gray-300 dark:bg-[var(--dm-border)]" />
           <button
             onClick={() => setShowDrawingCanvas(!showDrawingCanvas)}
-            className={`px-3 py-1 border rounded hover:bg-gray-100 dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] ${showDrawingCanvas ? 'bg-blue-100 border-blue-500' : ''}`}
+            className={`rounded border px-3 py-1 hover:bg-gray-100 dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] ${showDrawingCanvas ? 'border-blue-500 bg-blue-100 text-blue-700 dark:border-[var(--color-primary)] dark:bg-[color-mix(in_srgb,var(--color-primary)_14%,var(--dm-surface))] dark:text-[var(--color-primary)]' : 'border-gray-300 bg-white text-gray-800 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]'}`}
             title="Dibujar"
           >
             ✏️
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-1 border rounded hover:bg-gray-100"
+            className="rounded border border-gray-300 bg-white px-3 py-1 text-gray-800 hover:bg-gray-100 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
             title="Subir imagen o PDF"
           >
             📎
@@ -340,7 +385,7 @@ export default function NoteEditor({ noteId, onClose }) {
           onInput={handleContenidoChange}
           onPaste={handlePaste}
           onKeyDown={handleKeyDown}
-          className="flex-1 overflow-y-auto p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[200px]"
+          className="min-h-[220px] flex-1 overflow-y-auto rounded-xl border border-gray-300 bg-white p-4 text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] dark:border-[var(--dm-border)] dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
         />
 
         {/* Footer hint */}

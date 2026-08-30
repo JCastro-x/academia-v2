@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useProfile, useUpsertProfile } from '../features/profile/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
+import { savePushSubscription, urlBase64ToUint8Array } from '../lib/supabase.js'
 
 const THEME_COLORS = [
   { name: 'Verde lima', value: '#84cc16' },
@@ -29,8 +30,8 @@ export default function Profile() {
   const hasAttemptedCreate = useRef(false)
 
   const {
-    modoOscuro, tipografia, temaColor, sonidosInteraccion,
-    setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion,
+    modoOscuro, tipografia, temaColor, sonidosInteraccion, horaFormato,
+    setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato,
   } = useUIStore()
 
   // Form state for editable data fields (no asociado a preview)
@@ -41,6 +42,9 @@ export default function Profile() {
     institucion: '',
   })
   const [formInitialized, setFormInitialized] = useState(false)
+  const [pushStatus, setPushStatus] = useState('checking')
+  const [pushError, setPushError] = useState('')
+  const [pushPending, setPushPending] = useState(false)
 
   // Hydrate formData from profile once loaded
   useEffect(() => {
@@ -55,6 +59,15 @@ export default function Profile() {
     }
   }, [profile, formInitialized])
 
+  useEffect(() => {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setPushStatus('unsupported')
+      return
+    }
+
+    setPushStatus(Notification.permission === 'granted' ? 'granted' : Notification.permission === 'denied' ? 'denied' : 'default')
+  }, [])
+
   // Creación automática una vez por sesión si no existe perfil (Opción B)
   useEffect(() => {
     if (profile === null && !hasAttemptedCreate.current && !upsertProfile.isPending) {
@@ -68,6 +81,7 @@ export default function Profile() {
         tipografia: 'Inter',
         tema_color: '#84cc16',
         sonidos_interaccion: 'classic',
+        hora_formato: '12h',
       })
     }
   }, [profile]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -83,12 +97,53 @@ export default function Profile() {
       tipografia,
       tema_color: temaColor,
       sonidos_interaccion: sonidosInteraccion,
+      hora_formato: horaFormato,
     }
     console.log('[Profile] Guardando perfil:', JSON.stringify(payload, null, 2))
     try {
       await upsertProfile.mutateAsync(payload)
     } catch (error) {
       console.error('[Profile] Error saving profile:', error)
+    }
+  }
+
+  const handleEnablePushNotifications = async () => {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setPushStatus('unsupported')
+      setPushError('Este navegador no soporta notificaciones push.')
+      return
+    }
+
+    try {
+      setPushPending(true)
+      setPushError('')
+
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        setPushStatus('denied')
+        setPushError('Las notificaciones fueron rechazadas. Podés activarlas desde la configuración del navegador.')
+        return
+      }
+
+      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+      if (!vapidKey) {
+        throw new Error('Falta VITE_VAPID_PUBLIC_KEY en el entorno.')
+      }
+
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      })
+
+      await savePushSubscription(subscription)
+      setPushStatus('granted')
+    } catch (error) {
+      console.error('[Profile] Error enabling push notifications:', error)
+      setPushStatus('error')
+      setPushError(error.message || 'No se pudo activar el recordatorio push.')
+    } finally {
+      setPushPending(false)
     }
   }
 
@@ -226,6 +281,28 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* Hora */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-[var(--dm-text-muted)] mb-2">
+              Formato de hora
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {['12h', '24h'].map(option => (
+                <button
+                  key={option}
+                  onClick={() => setHoraFormato(option)}
+                  className={`px-4 py-2 rounded-lg border transition-colors ${
+                    horaFormato === option
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] bg-opacity-20 text-black dark:text-black'
+                      : 'border-gray-300 text-black dark:border-[var(--dm-border)] dark:text-white hover:border-gray-400 dark:hover:border-white'
+                  }`}
+                >
+                  {option === '12h' ? '12 horas' : '24 horas'}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Sonidos */}
           <div className="flex items-center justify-between">
             <div>
@@ -274,6 +351,40 @@ export default function Profile() {
             </button>
           </div>
         </div>
+      </section>
+
+      <section className="bg-white dark:bg-[var(--dm-surface)] rounded-lg border dark:border-[var(--dm-border)] p-6 mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold dark:text-[var(--dm-text)]">Recordatorios</h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
+              Activá notificaciones para recibir avisos de entregas y resúmenes diarios aunque la app esté cerrada.
+            </p>
+          </div>
+          <button
+            onClick={handleEnablePushNotifications}
+            disabled={pushPending || pushStatus === 'granted'}
+            className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pushPending ? 'Activando...' : pushStatus === 'granted' ? 'Recordatorios activos' : 'Activar recordatorios'}
+          </button>
+        </div>
+
+        {pushStatus === 'unsupported' && (
+          <p className="mt-3 text-sm text-amber-700 dark:text-amber-300">
+            Tu navegador no soporta notificaciones push.
+          </p>
+        )}
+
+        {pushStatus === 'denied' && (
+          <p className="mt-3 text-sm text-red-700 dark:text-red-300">
+            Las notificaciones fueron rechazadas. Podés habilitarlas desde la configuración del navegador y volver a intentarlo.
+          </p>
+        )}
+
+        {pushError && (
+          <p className="mt-3 text-sm text-red-700 dark:text-red-300">{pushError}</p>
+        )}
       </section>
 
       {/* Guardar */}
