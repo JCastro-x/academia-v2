@@ -1,4 +1,4 @@
-const CACHE_NAME = 'academia-v2-cache-v1'
+const CACHE_NAME = 'academia-v2-cache-v2'
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -26,6 +26,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
 
   if (request.method !== 'GET') return
+
+  const requestUrl = new URL(request.url)
+  const isSameOrigin = requestUrl.origin === self.location.origin
+  const isSupabaseRequest = requestUrl.hostname.includes('supabase')
+
+  if (!isSameOrigin || isSupabaseRequest) {
+    return
+  }
 
   event.respondWith(
     caches.match(request).then((cached) => {
