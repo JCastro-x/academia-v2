@@ -45,3 +45,39 @@ self.addEventListener('fetch', (event) => {
     })
   )
 })
+
+self.addEventListener('push', (event) => {
+  const payload = event.data ? event.data.json() : null
+  const title = payload?.title || 'Academia'
+  const options = {
+    body: payload?.body || 'Tenés una actualización importante.',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: payload?.tag || 'academia-task-reminder',
+    data: {
+      url: payload?.url || '/tasks',
+    },
+    vibrate: [200, 100, 200],
+  }
+
+  event.waitUntil(self.registration.showNotification(title, options))
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.preventDefault()
+
+  const url = event.notification?.data?.url || '/tasks'
+  const targetUrl = new URL(url, self.location.origin).toString()
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus().then(() => client.navigate(targetUrl))
+        }
+      }
+
+      return clients.openWindow(targetUrl)
+    })
+  )
+})

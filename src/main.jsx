@@ -22,6 +22,7 @@ import Habits from './pages/Habits.jsx'
 import Clock from './pages/Clock.jsx'
 import Profile from './pages/Profile.jsx'
 import Exam from './pages/Exam.jsx'
+import { startTaskNotificationScheduler } from './lib/notificationScheduler.js'
 import './styles/index.css'
 
 const SESSION_DEBUG_STORAGE_KEY = 'academia-debug-session'
@@ -173,6 +174,10 @@ if ('serviceWorker' in navigator) {
     })
   })
 }
+
+window.addEventListener('load', () => {
+  startTaskNotificationScheduler()
+})
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

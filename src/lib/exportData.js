@@ -24,7 +24,7 @@ const TABLE_COLUMNS = {
   profiles: [
     'user_id', 'nombre', 'registro_academico', 'carrera', 'institucion',
     'cursos_ganados', 'tipografia', 'tema_color', 'sonidos_interaccion',
-    'modo_oscuro', 'updated_at',
+    'modo_oscuro', 'hora_formato', 'updated_at',
   ],
   semesters: [
     'id', 'user_id', 'nombre', 'activo', 'promedio_objetivo', 'nota_minima',
