@@ -5,7 +5,7 @@ import { useTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useDeleteTas
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
-import TaskList from '../components/TaskList.jsx'
+import TaskCard from '../components/TaskCard.jsx'
 import TaskForm from '../components/TaskForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 
@@ -183,15 +183,23 @@ export default function Tasks() {
 
       <div className="min-w-0 pb-16">
         <AnimatePresence mode="popLayout">
-          <motion.div layout>
-            <TaskList
-              tasks={filteredTasks}
-              subjects={subjects}
-              onToggleDone={handleToggleDone}
-              onEdit={(task) => openModal('task', { editingTask: task })}
-              onDelete={handleDeleteTask}
-            />
-          </motion.div>
+          {filteredTasks.map(task => (
+            <motion.div
+              key={task.id}
+              layout
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+            >
+              <TaskCard
+                task={task}
+                subject={subjects?.find(s => s.id === task.subject_id)}
+                onToggleDone={handleToggleDone}
+                onEdit={(t) => openModal('task', { editingTask: t })}
+                onDelete={handleDeleteTask}
+              />
+            </motion.div>
+          ))}
         </AnimatePresence>
       </div>
     </div>
