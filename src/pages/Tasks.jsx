@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { useTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useDeleteTask, useDeleteCompletedTasks } from '../features/tasks/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
@@ -111,6 +111,14 @@ export default function Tasks() {
     return true
   }) || []
 
+  // Sort: completed tasks go to the end (legacy behavior)
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    if (a.done !== b.done) {
+      return a.done ? 1 : -1
+    }
+    return 0
+  })
+
   if (isLoading) {
     return <div className="flex min-h-[40vh] items-center justify-center text-gray-500 dark:text-[var(--dm-text-muted)]">Cargando...</div>
   }
@@ -183,22 +191,15 @@ export default function Tasks() {
 
       <div className="min-w-0 pb-16">
         <AnimatePresence mode="popLayout">
-          {filteredTasks.map(task => (
-            <motion.div
+          {sortedTasks.map(task => (
+            <TaskCard
               key={task.id}
-              layout
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-            >
-              <TaskCard
-                task={task}
-                subject={subjects?.find(s => s.id === task.subject_id)}
-                onToggleDone={handleToggleDone}
-                onEdit={(t) => openModal('task', { editingTask: t })}
-                onDelete={handleDeleteTask}
-              />
-            </motion.div>
+              task={task}
+              subject={subjects?.find(s => s.id === task.subject_id)}
+              onToggleDone={handleToggleDone}
+              onEdit={(t) => openModal('task', { editingTask: t })}
+              onDelete={handleDeleteTask}
+            />
           ))}
         </AnimatePresence>
       </div>

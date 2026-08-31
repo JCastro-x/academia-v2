@@ -76,10 +76,14 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 10 }}
-      whileHover={{ y: -2, boxShadow: '0 8px 20px rgba(15, 23, 42, 0.12)' }}
-      whileTap={{ scale: 0.995 }}
-      className={`task-card bg-white rounded-xl border-[2.5px] border-gray-300 shadow-[var(--shadow-sm)] p-4 transition-all duration-200 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02)] ${task.done ? 'opacity-50 bg-gray-100 dark:bg-gray-800/50' : ''}`}
+      exit={{ opacity: 0, x: 20 }}
+      transition={{ duration: 0.3 }}
+      className={`task-card bg-white rounded-xl border-[2.5px] border-gray-300 shadow-[var(--shadow-sm)] p-4 transition-all duration-300 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02)] ${task.done ? 'done' : ''}`}
+      style={task.done ? {
+        opacity: '0.5',
+        transform: 'translateX(20px)',
+        background: 'rgba(74,222,128,0.05)'
+      } : {}}
     >
       <div className="flex items-start gap-3">
         <button
@@ -91,7 +95,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
 
         <div className="flex-1">
           <div className="flex items-center justify-between">
-            <h4 className={`font-medium ${task.done ? 'line-through text-gray-500 dark:text-[var(--dm-text-muted)]' : 'text-gray-900 dark:text-[var(--dm-text)]'}`}>
+            <h4 className={`font-medium ${task.done ? 'line-through' : ''}`} style={task.done ? { color: 'var(--text3)', transition: 'all 0.3s ease' } : { color: 'var(--dm-text)' }}>
               {task.titulo}
             </h4>
             <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeConfig.className}`}>

@@ -408,62 +408,66 @@ export default function Calendar() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
-              Materia
-            </label>
-            <select
-              name="subject_id"
-              defaultValue={editingEvent?.subject_id || ''}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
-            >
-              <option value="">Sin materia</option>
-              {subjects?.map(subject => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.nombre}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+                Materia
+              </label>
+              <select
+                name="subject_id"
+                defaultValue={editingEvent?.subject_id || ''}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+              >
+                <option value="">Sin materia</option>
+                {subjects?.map(subject => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+                Tipo
+              </label>
+              <select
+                name="tipo"
+                defaultValue={editingEvent?.tipo || 'otro'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+              >
+                <option value="parcial">Parcial</option>
+                <option value="tarea">Tarea</option>
+                <option value="otro">Otro</option>
+                <option value="proyecto">Proyecto</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
-              Tipo
-            </label>
-            <select
-              name="tipo"
-              defaultValue={editingEvent?.tipo || 'otro'}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
-            >
-              <option value="parcial">Parcial</option>
-              <option value="tarea">Tarea</option>
-              <option value="otro">Otro</option>
-              <option value="proyecto">Proyecto</option>
-            </select>
-          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+                Fecha y hora inicio
+              </label>
+              <input
+                name="start_at"
+                type="datetime-local"
+                defaultValue={editingEvent?.start_at ? toLocalDateTimeValue(new Date(editingEvent.start_at)) : toLocalDateTimeValue(selectedDate)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
-              Fecha y hora inicio
-            </label>
-            <input
-              name="start_at"
-              type="datetime-local"
-              defaultValue={editingEvent?.start_at ? toLocalDateTimeValue(new Date(editingEvent.start_at)) : toLocalDateTimeValue(selectedDate)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
-              Fecha y hora fin
-            </label>
-            <input
-              name="end_at"
-              type="datetime-local"
-              defaultValue={editingEvent?.end_at ? toLocalDateTimeValue(new Date(editingEvent.end_at)) : ''}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-[var(--dm-text)]">
+                Fecha y hora fin
+              </label>
+              <input
+                name="end_at"
+                type="datetime-local"
+                defaultValue={editingEvent?.end_at ? toLocalDateTimeValue(new Date(editingEvent.end_at)) : ''}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+              />
+            </div>
           </div>
 
           <div>

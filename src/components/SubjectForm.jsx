@@ -74,18 +74,41 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
         </div>
       </div>
 
-      <div className="field">
-        <label htmlFor="catedratico" className="field-label">Catedrático</label>
-        <input
-          id="catedratico"
-          type="text"
-          name="catedratico"
-          value={formData.catedratico}
-          onChange={handleChange}
-          className="field-input"
-          disabled={isPending}
-          autoComplete="off"
-        />
+      <div className="field-row two-cols">
+        <div className="min-w-0">
+          <label htmlFor="catedratico" className="field-label">Catedrático</label>
+          <input
+            id="catedratico"
+            type="text"
+            name="catedratico"
+            value={formData.catedratico}
+            onChange={handleChange}
+            className="field-input"
+            disabled={isPending}
+            autoComplete="off"
+          />
+        </div>
+
+        <div className="min-w-0">
+          <label className="field-label">Color</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={formData.color}
+              onChange={handleChange}
+              className="w-10 h-8 border border-gray-300 rounded cursor-pointer dark:border-[var(--dm-border)]"
+              disabled={isPending}
+            />
+            <input
+              type="text"
+              value={formData.color}
+              onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
+              className="flex-1 field-input text-sm"
+              disabled={isPending}
+              autoComplete="off"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="field-row two-cols">

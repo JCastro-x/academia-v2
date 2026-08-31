@@ -212,92 +212,94 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </div>
       </div>
 
-      {/* Fecha de entrega */}
-      <div className="field">
-        <label htmlFor="due" className="field-label">Fecha de entrega</label>
-        <Flatpickr
-          id="due"
-          value={formData.due}
-          onChange={(dates) => {
-            const selectedDate = dates[0]
-            const dateStr = selectedDate
-              ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}T${String(selectedDate.getHours()).padStart(2, '0')}:${String(selectedDate.getMinutes()).padStart(2, '0')}`
-              : ''
-            setFormData(prev => ({ ...prev, due: dateStr }))
-          }}
-          options={{
-            enableTime: true,
-            dateFormat: 'Y-m-d H:i',
-            altInput: true,
-            altFormat: 'd/m/Y H:i',
-            theme: 'light',
-            static: true
-          }}
-          className="field-input"
-          disabled={isPending}
-        />
-      </div>
-
-      {/* Recordatorio personalizado */}
-      <div className="field">
-        <label htmlFor="reminder_at" className="field-label">Recordatorio (opcional)</label>
-        <Flatpickr
-          id="reminder_at"
-          value={formData.reminder_at}
-          onChange={(dates) => {
-            const selectedDate = dates[0]
-            const dateStr = selectedDate
-              ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}T${String(selectedDate.getHours()).padStart(2, '0')}:${String(selectedDate.getMinutes()).padStart(2, '0')}`
-              : ''
-            setFormData(prev => ({ ...prev, reminder_at: dateStr }))
-          }}
-          options={{
-            enableTime: true,
-            dateFormat: 'Y-m-d H:i',
-            altInput: true,
-            altFormat: 'd/m/Y H:i',
-            theme: 'light',
-            static: true,
-            minDate: 'today'
-          }}
-          className="field-input"
-          disabled={isPending}
-          placeholder="Selecciona fecha y hora..."
-        />
-      </div>
-
-      {/* Tipo de tarea */}
-      <div className="field">
-        <label htmlFor="tipo" className="field-label">Tipo de tarea</label>
-        <select
-          id="tipo"
-          name="tipo"
-          value={formData.tipo}
-          onChange={handleChange}
-          className="field-select"
-          disabled={isPending}
-        >
-          <option value="cantidad">Por cantidad (unidades)</option>
-          <option value="checklist">Checklist (subtareas)</option>
-        </select>
-      </div>
-
-      {/* Total de unidades (solo si tipo === cantidad) */}
-      {formData.tipo === 'cantidad' && (
-        <div className="field">
-          <label htmlFor="total_units" className="field-label">Total de unidades</label>
-          <input
-            id="total_units"
-            type="number"
-            name="total_units"
-            value={formData.total_units}
-            onChange={handleChange}
-            min="1"
+      {/* Fecha de entrega + Recordatorio */}
+      <div className="field-row two-cols">
+        <div className="min-w-0">
+          <label htmlFor="due" className="field-label">Fecha de entrega</label>
+          <Flatpickr
+            id="due"
+            value={formData.due}
+            onChange={(dates) => {
+              const selectedDate = dates[0]
+              const dateStr = selectedDate
+                ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}T${String(selectedDate.getHours()).padStart(2, '0')}:${String(selectedDate.getMinutes()).padStart(2, '0')}`
+                : ''
+              setFormData(prev => ({ ...prev, due: dateStr }))
+            }}
+            options={{
+              enableTime: true,
+              dateFormat: 'Y-m-d H:i',
+              altInput: true,
+              altFormat: 'd/m/Y H:i',
+              theme: 'light',
+              static: true
+            }}
             className="field-input"
             disabled={isPending}
           />
         </div>
-      )}
+
+        <div className="min-w-0">
+          <label htmlFor="reminder_at" className="field-label">Recordatorio (opcional)</label>
+          <Flatpickr
+            id="reminder_at"
+            value={formData.reminder_at}
+            onChange={(dates) => {
+              const selectedDate = dates[0]
+              const dateStr = selectedDate
+                ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}T${String(selectedDate.getHours()).padStart(2, '0')}:${String(selectedDate.getMinutes()).padStart(2, '0')}`
+                : ''
+              setFormData(prev => ({ ...prev, reminder_at: dateStr }))
+            }}
+            options={{
+              enableTime: true,
+              dateFormat: 'Y-m-d H:i',
+              altInput: true,
+              altFormat: 'd/m/Y H:i',
+              theme: 'light',
+              static: true,
+              minDate: 'today'
+            }}
+            className="field-input"
+            disabled={isPending}
+            placeholder="Selecciona fecha y hora..."
+          />
+        </div>
+      </div>
+
+      {/* Tipo de tarea + Total de unidades */}
+      <div className="field-row two-cols">
+        <div className="min-w-0">
+          <label htmlFor="tipo" className="field-label">Tipo de tarea</label>
+          <select
+            id="tipo"
+            name="tipo"
+            value={formData.tipo}
+            onChange={handleChange}
+            className="field-select"
+            disabled={isPending}
+          >
+            <option value="cantidad">Por cantidad (unidades)</option>
+            <option value="checklist">Checklist (subtareas)</option>
+          </select>
+        </div>
+
+        {formData.tipo === 'cantidad' && (
+          <div className="min-w-0">
+            <label htmlFor="total_units" className="field-label">Total de unidades</label>
+            <input
+              id="total_units"
+              type="number"
+              name="total_units"
+              value={formData.total_units}
+              onChange={handleChange}
+              min="1"
+              className="field-input"
+              disabled={isPending}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Días de trabajo */}
       <div className="field">
