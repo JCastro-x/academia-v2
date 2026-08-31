@@ -340,7 +340,6 @@ export default function NoteEditor({ noteId, onClose }) {
             ref={fileInputRef}
             type="file"
             accept="image/*,application/pdf"
-            capture={isMobile ? "" : undefined}
             onChange={handleFileInputChange}
             className="hidden"
           />

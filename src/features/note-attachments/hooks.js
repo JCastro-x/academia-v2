@@ -52,10 +52,8 @@ export function useDeleteAttachment() {
       await deleteAttachmentFile(attachment.storage_path)
       await deleteAttachment(id)
     },
-    onSuccess: (_, noteId) => {
-      queryClient.invalidateQueries({
-        queryKey: noteAttachmentsQueryKeys.byNote(noteId),
-      })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: noteAttachmentsQueryKeys.all })
     },
   })
 }

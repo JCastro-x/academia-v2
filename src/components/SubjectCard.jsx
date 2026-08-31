@@ -36,13 +36,13 @@ export default function SubjectCard({ subject, onEdit, onDelete }) {
 
       <div className="mt-4 flex min-w-0 gap-2">
         <button
-          onClick={() => onEdit(subject)}
+          onClick={(e) => { e.stopPropagation(); onEdit(subject) }}
           className="min-w-0 flex-1 bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[var(--color-primary)] py-2 px-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-sm truncate"
         >
           Editar
         </button>
         <button
-          onClick={() => onDelete(subject)}
+          onClick={(e) => { e.stopPropagation(); onDelete(subject) }}
           className="min-w-0 flex-1 bg-red-50 text-red-600 py-2 px-2 rounded-lg hover:bg-red-100 text-sm truncate dark:bg-[color-mix(in_srgb,red_12%,transparent)] dark:text-red-300 dark:hover:bg-[color-mix(in_srgb,red_20%,transparent)]"
         >
           Eliminar

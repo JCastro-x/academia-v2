@@ -241,11 +241,21 @@ function ProtectedRoute({ children }) {
   )
 }
 
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
-      console.warn('Service worker registration failed:', error)
-    })
+    try {
+      navigator.serviceWorker.register('/sw.js').then((registration) => {
+        console.log('[SW] Service Worker registered successfully:', registration)
+      }).catch((error) => {
+        console.error('[SW] Service Worker registration failed:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        })
+      })
+    } catch (error) {
+      console.error('[SW] Unexpected error during Service Worker registration:', error)
+    }
   })
 }
 

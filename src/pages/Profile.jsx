@@ -148,20 +148,30 @@ export default function Profile() {
       }
 
       const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+      console.log('[Profile] VAPID key from env:', vapidKey ? 'Present' : 'Missing')
+      
       if (!vapidKey) {
         throw new Error('Falta VITE_VAPID_PUBLIC_KEY en el entorno.')
       }
 
       const registration = await navigator.serviceWorker.ready
+      console.log('[Profile] Service Worker ready:', registration.scope)
+      
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       })
+      
+      console.log('[Profile] Push subscription created:', subscription.endpoint)
 
       await savePushSubscription(subscription)
       setPushStatus('granted')
     } catch (error) {
-      console.error('[Profile] Error enabling push notifications:', error)
+      console.error('[Profile] Error enabling push notifications:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      })
       setPushStatus('error')
       setPushError(error.message || 'No se pudo activar el recordatorio push.')
     } finally {

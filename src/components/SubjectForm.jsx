@@ -1,17 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import '../styles/forms.css'
 
 export default function SubjectForm({ semesterId, initialData, onSubmit, onCancel, isPending }) {
-  const [formData, setFormData] = useState({
-    nombre: initialData?.nombre || '',
-    codigo: initialData?.codigo || '',
-    catedratico: initialData?.catedratico || '',
-    seccion: initialData?.seccion || '',
-    creditos: initialData?.creditos || '',
-    color: initialData?.color || '#3b82f6',
-    icono: initialData?.icono || '📚',
-    horario: initialData?.horario || null,
-  })
+  const defaultEmptyState = {
+    nombre: '',
+    codigo: '',
+    catedratico: '',
+    seccion: '',
+    creditos: '',
+    color: '#3b82f6',
+    icono: '📚',
+    horario: null,
+  }
+
+  const [formData, setFormData] = useState(defaultEmptyState)
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData)
+    } else {
+      setFormData(defaultEmptyState)
+    }
+  }, [initialData])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -142,26 +152,6 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
         </div>
       </div>
 
-      <div className="field">
-        <label className="field-label">Color</label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={formData.color}
-            onChange={handleChange}
-            className="w-12 h-10 border border-gray-300 rounded cursor-pointer dark:border-[var(--dm-border)]"
-            disabled={isPending}
-          />
-          <input
-            type="text"
-            value={formData.color}
-            onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-            className="flex-1 field-input"
-            disabled={isPending}
-            autoComplete="off"
-          />
-        </div>
-      </div>
 
       <div className="flex gap-3 pt-4">
         <button
@@ -169,7 +159,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
           disabled={isPending}
           className="flex-1 bg-[var(--color-primary)] text-white py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {isPending ? 'Guardando...' : (initialData ? 'Guardar' : 'Crear')}
+          {isPending ? 'Guardando...' : (initialData ? 'Guardar cambios' : 'Crear')}
         </button>
         {onCancel && (
           <button

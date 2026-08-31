@@ -299,3 +299,21 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 html.dark * {
   scrollbar-color: var(--dm-border) transparent;
 }
+
+/* Flatpickr calendar centered styling */
+.calendario-centrado {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 9999 !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+@media (max-width: 768px) {
+  .calendario-centrado {
+    width: 90vw !important;
+    max-width: 320px !important;
+  }
+}

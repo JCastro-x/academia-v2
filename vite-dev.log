@@ -1,0 +1,28 @@
+
+> academia-v2@1.0.0 dev
+> vite
+
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m326[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.87:[1m5174[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m2:28:36 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Grades.jsx, /src/styles/index.css[22m
+[2m2:28:41 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/SubjectForm.jsx, /src/styles/index.css[22m
+[2m2:32:58 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:33:00 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:33:02 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:33:10 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:33:12 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:33:18 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Grades.jsx, /src/styles/index.css[22m
+[2m2:33:30 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/GlobalModalHost.jsx, /src/styles/index.css[22m
+[2m2:33:32 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/GlobalModalHost.jsx, /src/styles/index.css[22m
+[2m2:38:39 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:38:45 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:38:51 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:38:53 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:39:01 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Subjects.jsx, /src/styles/index.css[22m
+[2m2:39:08 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/GlobalModalHost.jsx, /src/styles/index.css[22m
+[2m2:39:10 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/GlobalModalHost.jsx, /src/styles/index.css[22m
+[2m2:39:12 p. m.[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/SubjectForm.jsx, /src/styles/index.css[22m
