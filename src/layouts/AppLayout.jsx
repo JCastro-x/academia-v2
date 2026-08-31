@@ -183,7 +183,7 @@ export default function AppLayout() {
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-0.5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
           {mobileNavItems.map((item) => {
             const active = isActive(item.path)
