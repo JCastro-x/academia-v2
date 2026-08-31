@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useHabits, useCreateHabit, useDeleteHabit, useUpdateHabit, useToggleHabitCompletion } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
@@ -23,8 +23,20 @@ export default function Habits() {
   const [isCreating, setIsCreating] = useState(false)
   const [editingHabit, setEditingHabit] = useState(null)
   const [historyHabit, setHistoryHabit] = useState(null)
-  const today = getTodayDate()
-  const todayDayOfWeek = getDayOfWeek(today)
+  const [today, setToday] = useState(getTodayDate())
+  const [todayDayOfWeek, setTodayDayOfWeek] = useState(getDayOfWeek(getTodayDate()))
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newToday = getTodayDate()
+      if (newToday !== today) {
+        setToday(newToday)
+        setTodayDayOfWeek(getDayOfWeek(newToday))
+      }
+    }, 60000) // Check every minute
+
+    return () => clearInterval(interval)
+  }, [today])
 
   const { data: habits, isLoading } = useHabits()
   const createHabit = useCreateHabit()

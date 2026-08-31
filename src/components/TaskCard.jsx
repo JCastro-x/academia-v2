@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion'
+import { forwardRef } from 'react'
 import { getTaskStats, daysRemainingLabel, todayStr } from '../domain/task-stats.js'
 import { useIncrementTaskLogUnit } from '../features/tasks/hooks.js'
 
-export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete }) {
+const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, ref) => {
   const priorityColors = {
     baja: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     media: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -74,6 +75,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
@@ -187,4 +189,8 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
       </div>
     </motion.div>
   )
-}
+})
+
+TaskCard.displayName = 'TaskCard'
+
+export default TaskCard

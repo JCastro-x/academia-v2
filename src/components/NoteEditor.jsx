@@ -13,6 +13,7 @@ export default function NoteEditor({ noteId, onClose }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showDrawingCanvas, setShowDrawingCanvas] = useState(false)
   const [saveState, setSaveState] = useState('saved')
+  const [isMobile, setIsMobile] = useState(false)
   const editorRef = useRef(null)
   const fileInputRef = useRef(null)
   const lastSavedSnapshotRef = useRef('')
@@ -43,6 +44,15 @@ export default function NoteEditor({ noteId, onClose }) {
       }
     }
   }, [note])
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     if (!noteId || !note) return
@@ -91,9 +101,11 @@ export default function NoteEditor({ noteId, onClose }) {
 
   const handleImageUpload = async (file) => {
     try {
+      setSaveState('saving')
       const userId = (await supabase.auth.getUser()).data.user?.id
       if (!userId) {
         addToast({ type: 'error', message: 'Debes estar autenticado para subir imágenes' })
+        setSaveState('error')
         return
       }
 
@@ -109,9 +121,11 @@ export default function NoteEditor({ noteId, onClose }) {
         noteId,
       })
 
+      setSaveState('saved')
       addToast({ type: 'success', message: 'Imagen subida correctamente' })
     } catch (error) {
       console.error('Error uploading image:', error)
+      setSaveState('error')
       addToast({ type: 'error', message: 'Error al subir la imagen' })
     }
   }
@@ -326,6 +340,7 @@ export default function NoteEditor({ noteId, onClose }) {
             ref={fileInputRef}
             type="file"
             accept="image/*,application/pdf"
+            capture={isMobile ? "" : undefined}
             onChange={handleFileInputChange}
             className="hidden"
           />

@@ -231,8 +231,10 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
               dateFormat: 'Y-m-d H:i',
               altInput: true,
               altFormat: 'd/m/Y H:i',
-              theme: 'light',
-              static: true
+              position: 'center',
+              onOpen: (selectedDates, dateStr, instance) => {
+                instance.calendarContainer.style.zIndex = '9999'
+              }
             }}
             className="field-input"
             disabled={isPending}
@@ -256,9 +258,11 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
               dateFormat: 'Y-m-d H:i',
               altInput: true,
               altFormat: 'd/m/Y H:i',
-              theme: 'light',
-              static: true,
-              minDate: 'today'
+              position: 'center',
+              minDate: 'today',
+              onOpen: (selectedDates, dateStr, instance) => {
+                instance.calendarContainer.style.zIndex = '9999'
+              }
             }}
             className="field-input"
             disabled={isPending}

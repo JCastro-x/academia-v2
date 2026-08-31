@@ -205,7 +205,7 @@ export default function Notes() {
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <span className="text-xl">📝</span>
-                    <span className="font-medium truncate dark:text-[var(--dm-text)]">{note.titulo || 'Sin título'}</span>
+                    <span className={`font-medium truncate ${selectedNoteId === note.id ? 'text-gray-900' : 'dark:text-[var(--dm-text)]'}`}>{note.titulo || 'Sin título'}</span>
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDeleteNote(note) }}

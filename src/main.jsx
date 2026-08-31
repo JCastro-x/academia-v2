@@ -128,8 +128,12 @@ function ProtectedRoute({ children }) {
   const sessionDebugEnabled = isSessionDebugEnabled()
 
   React.useEffect(() => {
-    if (localStorage.getItem('academia-guest-mode') === 'true') {
-      localStorage.removeItem('academia-guest-mode')
+    const isGuestMode = localStorage.getItem('academia-guest-mode') === 'true'
+    
+    if (isGuestMode) {
+      setUser({ id: 'guest', email: 'guest@academia.local' })
+      setLoading(false)
+      return
     }
 
     const debugInfo = {
@@ -252,7 +256,7 @@ window.addEventListener('load', () => {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           {/* Landing / entry */}
           <Route path="/" element={<SessionRedirect />} />
