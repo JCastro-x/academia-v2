@@ -183,13 +183,15 @@ export default function Tasks() {
 
       <div className="min-w-0 pb-16">
         <AnimatePresence mode="popLayout">
-          <TaskList
-            tasks={filteredTasks}
-            subjects={subjects}
-            onToggleDone={handleToggleDone}
-            onEdit={(task) => openModal('task', { editingTask: task })}
-            onDelete={handleDeleteTask}
-          />
+          <motion.div layout>
+            <TaskList
+              tasks={filteredTasks}
+              subjects={subjects}
+              onToggleDone={handleToggleDone}
+              onEdit={(task) => openModal('task', { editingTask: task })}
+              onDelete={handleDeleteTask}
+            />
+          </motion.div>
         </AnimatePresence>
       </div>
     </div>
