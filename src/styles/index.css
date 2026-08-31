@@ -10,6 +10,7 @@
   --dm-text: #000000;         /* texto principal claro */
   --dm-text-muted: #000000;   /* texto secundario claro */
   --color-primary: #8B5CF6;   /* lila vibrante para acciones (purple-500) */
+  --color-primary-fg: #1f2937; /* texto sobre fondos primarios (modo claro) */
   --color-accent: #0EA5E9;    /* celeste/azul cielo acento (sky-500) */
   --font-family: 'Inter', system-ui, sans-serif;
 
@@ -36,6 +37,7 @@ html.dark {
   --dm-text: #FFFFFF;         /* texto principal */
   --dm-text-muted: #FFFFFF;   /* texto secundario */
   --color-primary: #A78BFA;   /* lila vibrante para acciones (purple-400) */
+  --color-primary-fg: #111827; /* texto sobre fondos primarios (modo oscuro) */
   --color-accent: #38BDF8;    /* celeste/azul cielo acento (sky-400) */
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.24), 0 6px 16px rgb(0 0 0 / 0.16);
   --shadow-md: 0 16px 36px -14px rgb(0 0 0 / 0.55);
@@ -157,7 +159,7 @@ input[type="checkbox"]:checked::after {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
+  color: var(--color-primary-fg);
   font-size: 0.875rem;
   font-weight: bold;
 }

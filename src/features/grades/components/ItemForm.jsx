@@ -7,13 +7,25 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
     porcentaje_ingresado: initialData?.porcentaje_ingresado || '',
     peso_pts: initialData?.peso_pts || '',
   })
+  const [error, setError] = useState(null)
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
+    const parsedPeso = formData.peso_pts ? parseFloat(formData.peso_pts) : null
+    const parsedPorcentaje = formData.porcentaje_ingresado ? parseFloat(formData.porcentaje_ingresado) : null
+
+    // Validación: si hay porcentaje obtenido, el peso en puntos es obligatorio y > 0
+    if (parsedPorcentaje != null && (parsedPeso == null || parsedPeso <= 0)) {
+      setError('El peso en puntos es obligatorio cuando indicas un porcentaje obtenido.')
+      return
+    }
+
+    setError(null)
     onSubmit({
       ...formData,
-      porcentaje_ingresado: formData.porcentaje_ingresado ? parseFloat(formData.porcentaje_ingresado) : null,
-      peso_pts: formData.peso_pts ? parseFloat(formData.peso_pts) : null,
+      porcentaje_ingresado: parsedPorcentaje,
+      peso_pts: parsedPeso,
     })
   }
 
@@ -50,6 +62,9 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
           autoComplete="off"
         />
         <p className="text-xs text-gray-500 mt-1 dark:text-[var(--dm-text-muted)]">Puntos máximos que vale este ítem dentro de la zona</p>
+        {error && (
+          <p className="text-xs text-red-600 mt-1 dark:text-red-400">{error}</p>
+        )}
       </div>
 
       <div className="field">
@@ -81,7 +96,7 @@ export default function ItemForm({ initialData, onSubmit, onCancel, isPending })
         </button>
         <button
           type="submit"
-          className="flex-1 bg-[var(--color-primary)] text-white py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-[color-mix(in_srgb,var(--color-primary)_70%,white)] dark:disabled:bg-[var(--dm-border)]"
+          className="flex-1 bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-[color-mix(in_srgb,var(--color-primary)_70%,white)] dark:disabled:bg-[var(--dm-border)]"
           disabled={isPending}
         >
           {isPending ? 'Guardando...' : 'Guardar'}

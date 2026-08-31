@@ -82,7 +82,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
                 onClick={() => toggleDia(dia.value)}
                 className={`px-3 py-2 rounded-lg border transition-all ${
                   diasSemana.includes(dia.value)
-                    ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+                    ? 'bg-[var(--color-primary)] text-[var(--color-primary-fg)] border-[var(--color-primary)]'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:border-[var(--dm-border)] dark:hover:bg-[var(--dm-surface)]'
                 }`}
               >

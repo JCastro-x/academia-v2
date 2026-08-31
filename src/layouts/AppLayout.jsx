@@ -10,6 +10,7 @@ import UndoToast from '../components/UndoToast.jsx'
 import Lightbox from '../components/Lightbox.jsx'
 import TopBar from '../components/TopBar.jsx'
 import GlobalModalHost from '../components/GlobalModalHost.jsx'
+import PwaSuggestBanners from '../components/PwaSuggestBanners.jsx'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
@@ -213,6 +214,7 @@ export default function AppLayout() {
       <UndoToast />
       <Lightbox />
       <GlobalModalHost />
+      <PwaSuggestBanners />
     </div>
   )
 }

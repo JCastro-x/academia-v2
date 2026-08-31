@@ -309,7 +309,7 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
             <button
               onClick={onOpenQuickAdd}
               className="rounded-lg px-3 py-1.5 text-sm font-medium text-black transition-colors"
-              style={{ backgroundColor: 'var(--color-primary)', color: '#111827' }}
+              style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-primary-fg)' }}
             >
               Agregar
             </button>

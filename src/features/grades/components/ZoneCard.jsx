@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { calculateZoneStats } from '../../../domain/grades-calc.js'
+import { getContrastTextColor } from '../../../lib/contrast.js'
 
 export default function ZoneCard({ zone, onEdit, onDelete, onAddItem, onEditItem, onDeleteItem, pendingDeletes, subjectColor }) {
   const stats = calculateZoneStats(zone.items || [], zone)
@@ -34,8 +35,8 @@ export default function ZoneCard({ zone, onEdit, onDelete, onAddItem, onEditItem
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div 
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg"
-            style={{ backgroundColor: zoneColor }}
+            className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg"
+            style={{ backgroundColor: zoneColor, color: getContrastTextColor(zoneColor) }}
           >
             {zone.nombre.charAt(0).toUpperCase()}
           </div>

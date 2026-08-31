@@ -3,15 +3,20 @@ import { motion } from 'framer-motion'
 export default function SubjectCard({ subject, onEdit, onDelete }) {
   const schedule = Array.isArray(subject.horario) ? subject.horario : []
   const hasLab = schedule.some(h => h.tipo === 'lab')
+  const cardColor = subject.color || '#8B5CF6'
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -3, boxShadow: '0 10px 24px rgba(15, 23, 42, 0.12)' }}
+      whileHover={{ y: -3 }}
       whileTap={{ scale: 0.99 }}
-      className="subject-card box-border bg-white rounded-xl shadow-[var(--shadow-sm)] p-4 border-l-4 transition-shadow min-w-0 w-full max-w-full overflow-hidden dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)]"
-      style={{ borderLeftColor: subject.color }}
+      className="subject-card box-border relative rounded-2xl backdrop-blur-md p-4 border-l-4 transition-all hover:scale-[1.02] min-w-0 w-full max-w-full overflow-hidden"
+      style={{
+        borderLeftColor: subject.color || '#8B5CF6',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        boxShadow: `0 0 30px ${cardColor}30, 0 0 60px ${cardColor}1a, inset 0 0 25px ${cardColor}15`,
+      }}
     >
       <div className="flex items-start justify-between gap-3 min-w-0">
         <div className="flex items-center gap-3 min-w-0">

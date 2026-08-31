@@ -5,14 +5,20 @@ export const habitsQueryKeys = {
   byId: (id) => ['habits', id],
 }
 
-// Helper: get today's date in YYYY-MM-DD format (local timezone)
+// Helper: get today's LOCAL date in YYYY-MM-DD format (avoids toISOString's UTC shift)
 function getTodayDate() {
-  return new Date().toISOString().split('T')[0]
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
-// Helper: get day of week (1=lunes, 7=domingo) from date string
+// Helper: get day of week (1=lunes, 7=domingo) from a YYYY-MM-DD string,
+// parsed with the LOCAL constructor (never UTC) to avoid timezone drift
 function getDayOfWeek(dateStr) {
-  const date = new Date(dateStr)
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
   const day = date.getDay()
   // Convert JS day (0=Sunday, 6=Saturday) to our format (1=Monday, 7=Sunday)
   return day === 0 ? 7 : day
@@ -36,7 +42,8 @@ export function calculateStreak(habit) {
   }
   
   while (true) {
-    const dateStr = currentDate.toISOString().split('T')[0]
+    const [yy, mm, dd] = [currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()]
+    const dateStr = `${yy}-${String(mm + 1).padStart(2, '0')}-${String(dd).padStart(2, '0')}`
     const dayOfWeek = getDayOfWeek(dateStr)
     
     if (habit.frecuencia === 'diario') {

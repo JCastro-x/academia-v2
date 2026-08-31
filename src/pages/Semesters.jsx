@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SemesterForm from '../components/SemesterForm.jsx'
+import { useUIStore } from '../stores/ui.store.js'
 import {
   useCreateSemester,
   useSemesters,
   useSetActiveSemester,
   useUpdateSemester,
+  useDeleteSemester,
 } from '../features/semesters/hooks.js'
 
 const emptyForm = {
@@ -20,6 +22,8 @@ export default function Semesters() {
   const createSemester = useCreateSemester()
   const updateSemester = useUpdateSemester()
   const setActiveSemester = useSetActiveSemester()
+  const deleteSemester = useDeleteSemester()
+  const { openConfirmDialog } = useUIStore()
 
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -94,6 +98,29 @@ export default function Semesters() {
     } catch (error) {
       console.error('Error archiving semester:', error)
     }
+  }
+
+  const handleDelete = (semester) => {
+    const isActive = semester.activo
+    openConfirmDialog({
+      title: 'Eliminar semestre',
+      message: `Esto eliminará permanentemente el semestre '${semester.nombre}' y TODO su contenido: materias, calificaciones, tareas, notas y eventos. Esta acción no se puede deshacer.${
+        isActive
+          ? '\n\n⚠️ ATENCIÓN: este es tu semestre ACTUAL. Se te quitará el contexto de trabajo activo.'
+          : ''
+      }`,
+      confirmText: 'Eliminar permanentemente',
+      onConfirm: async () => {
+        try {
+          await deleteSemester.mutateAsync(semester.id)
+          if (isActive) {
+            navigate('/semesters', { replace: true })
+          }
+        } catch (error) {
+          console.error('Error deleting semester:', error)
+        }
+      },
+    })
   }
 
   if (isLoading) {
@@ -238,6 +265,15 @@ export default function Semesters() {
                       Archivar
                     </button>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(semester)}
+                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100 dark:border-red-500/30 dark:bg-red-900/20 dark:text-red-300"
+                    disabled={deleteSemester.isPending}
+                  >
+                    {deleteSemester.isPending ? 'Eliminando…' : 'Eliminar'}
+                  </button>
                 </div>
               </div>
             </div>

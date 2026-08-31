@@ -136,7 +136,7 @@ export default function ImportModal() {
                 type="file"
                 accept="application/json"
                 onChange={handleFileChange}
-                className="block w-full text-sm text-gray-700 dark:text-[var(--dm-text)] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[var(--color-primary)] file:text-white hover:file:bg-[var(--color-primary)]"
+                className="block w-full text-sm text-gray-700 dark:text-[var(--dm-text)] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[var(--color-primary)] file:text-[var(--color-primary-fg)] hover:file:bg-[var(--color-primary)]"
               />
               {fileName && (
                 <p className="mt-2 text-sm text-gray-500 dark:text-[var(--dm-text-muted)]">Archivo seleccionado: {fileName}</p>
@@ -202,7 +202,7 @@ export default function ImportModal() {
               <button
                 onClick={handleImport}
                 disabled={isImporting || !backupData || (replaceAll && replaceConfirm.trim().toUpperCase() !== 'REEMPLAZAR')}
-                className="w-full sm:w-auto px-4 py-3 rounded-lg bg-[var(--color-primary)] text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-3 rounded-lg bg-[var(--color-primary)] text-[var(--color-primary-fg)] text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
               >
                 {isImporting ? 'Importando...' : 'Importar respaldo'}
               </button>

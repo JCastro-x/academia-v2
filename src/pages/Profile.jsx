@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useProfile, useUpsertProfile } from '../features/profile/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
-import { savePushSubscription, urlBase64ToUint8Array } from '../lib/supabase.js'
+import { enablePushNotifications, isPushSupported } from '../lib/pushNotifications.js'
 
 const THEME_COLORS = [
   { name: 'Verde lima', value: '#84cc16' },
@@ -130,7 +130,7 @@ export default function Profile() {
   }
 
   const handleEnablePushNotifications = async () => {
-    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    if (!isPushSupported()) {
       setPushStatus('unsupported')
       setPushError('Este navegador no soporta notificaciones push.')
       return
@@ -140,31 +140,7 @@ export default function Profile() {
       setPushPending(true)
       setPushError('')
 
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        setPushStatus('denied')
-        setPushError('Las notificaciones fueron rechazadas. Podés activarlas desde la configuración del navegador.')
-        return
-      }
-
-      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
-      console.log('[Profile] VAPID key from env:', vapidKey ? 'Present' : 'Missing')
-      
-      if (!vapidKey) {
-        throw new Error('Falta VITE_VAPID_PUBLIC_KEY en el entorno.')
-      }
-
-      const registration = await navigator.serviceWorker.ready
-      console.log('[Profile] Service Worker ready:', registration.scope)
-      
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      })
-      
-      console.log('[Profile] Push subscription created:', subscription.endpoint)
-
-      await savePushSubscription(subscription)
+      await enablePushNotifications()
       setPushStatus('granted')
     } catch (error) {
       console.error('[Profile] Error enabling push notifications:', {
@@ -172,7 +148,7 @@ export default function Profile() {
         name: error.name,
         stack: error.stack
       })
-      setPushStatus('error')
+      setPushStatus(error.code === 'denied' ? 'denied' : 'error')
       setPushError(error.message || 'No se pudo activar el recordatorio push.')
     } finally {
       setPushPending(false)

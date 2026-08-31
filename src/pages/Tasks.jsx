@@ -138,7 +138,7 @@ export default function Tasks() {
         </div>
         <button
           onClick={() => openModal('task', { editingTask: null })}
-          className="bg-[var(--color-primary)] text-white dark:text-black px-4 py-2 rounded-lg hover:opacity-90 w-full transition-colors sm:w-auto"
+          className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-4 py-2 rounded-lg hover:opacity-90 w-full transition-colors sm:w-auto"
         >
           + Nueva tarea
         </button>

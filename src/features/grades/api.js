@@ -6,6 +6,7 @@ export const gradesQueryKeys = {
   zoneById: (id) => ['grades', 'zones', id],
   itemsByZone: (zoneId) => ['grades', 'items', 'zone', zoneId],
   itemById: (id) => ['grades', 'items', id],
+  subjectsTotalPoints: (semesterId) => ['grades', 'subjects-total', semesterId],
 }
 
 /**
@@ -21,6 +22,40 @@ export async function getZonesBySubject(subjectId) {
   if (zonesError) throw zonesError
 
   // Fetch items for each zone
+  const zonesWithItems = await Promise.all(
+    zones.map(async (zone) => {
+      const { data: items, error: itemsError } = await supabase
+        .from('grade_items')
+        .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos, peso_pts')
+        .eq('zone_id', zone.id)
+        .order('nombre')
+
+      if (itemsError) throw itemsError
+
+      return {
+        ...zone,
+        items: items || [],
+      }
+    })
+  )
+
+  return zonesWithItems
+}
+
+/**
+ * Get all grade zones for many subjects with their items (for semester-wide totals).
+ */
+export async function getZonesForSubjects(subjectIds) {
+  if (!subjectIds || subjectIds.length === 0) return []
+
+  const { data: zones, error: zonesError } = await supabase
+    .from('grade_zones')
+    .select('id, subject_id, user_id, nombre, peso_pts, ganada_pct')
+    .in('subject_id', subjectIds)
+    .order('nombre')
+
+  if (zonesError) throw zonesError
+
   const zonesWithItems = await Promise.all(
     zones.map(async (zone) => {
       const { data: items, error: itemsError } = await supabase
@@ -146,6 +181,7 @@ export async function createItem(item) {
       nombre: item.nombre,
       porcentaje_ingresado: item.porcentaje_ingresado || null,
       puntos_netos: item.puntos_netos || null,
+      peso_pts: item.peso_pts || null,
     })
     .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos, peso_pts')
     .single()
@@ -164,6 +200,7 @@ export async function updateItem(id, updates) {
       nombre: updates.nombre,
       porcentaje_ingresado: updates.porcentaje_ingresado,
       puntos_netos: updates.puntos_netos,
+      peso_pts: updates.peso_pts,
     })
     .eq('id', id)
     .select('id, zone_id, user_id, nombre, porcentaje_ingresado, puntos_netos, peso_pts')

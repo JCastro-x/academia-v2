@@ -7,14 +7,20 @@ import HabitForm from '../components/HabitForm.jsx'
 import HabitHistoryModal from '../components/HabitHistoryModal.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 
-// Helper: get today's date in YYYY-MM-DD format
+// Helper: get today's LOCAL date in YYYY-MM-DD format (avoids toISOString's UTC shift)
 function getTodayDate() {
-  return new Date().toISOString().split('T')[0]
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
-// Helper: get day of week (1=lunes, 7=domingo) from date string
+// Helper: get day of week (1=lunes, 7=domingo) from a YYYY-MM-DD string,
+// parsed with the LOCAL constructor (never UTC) to avoid timezone drift
 function getDayOfWeek(dateStr) {
-  const date = new Date(dateStr)
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
   const day = date.getDay()
   return day === 0 ? 7 : day
 }
