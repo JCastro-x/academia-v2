@@ -49,12 +49,12 @@ export default function UndoToast() {
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 50 }}
-        className="fixed bottom-20 left-4 right-4 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between gap-3 z-50 dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] dark:border dark:border-[var(--dm-border)] md:bottom-6 md:left-1/2 md:right-auto md:transform md:-translate-x-1/2 md:px-6 md:py-4 md:gap-4 md:max-w-md"
+        className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-4 z-50 dark:bg-[var(--dm-surface)] dark:text-[var(--dm-text)] dark:border dark:border-[var(--dm-border)] md:bottom-6 md:left-1/2 md:transform md:-translate-x-1/2 md:px-6 md:py-4 md:gap-4"
       >
-        <span className="text-sm md:text-base truncate flex-1">{undoToast.message}</span>
+        <span className="md:text-base">{undoToast.message}</span>
         <button
           onClick={handleUndo}
-          className="bg-white text-gray-800 px-3 py-1 rounded font-medium hover:bg-gray-100 text-sm whitespace-nowrap dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] md:px-4 md:text-base"
+          className="bg-white text-gray-800 px-4 py-1 rounded font-medium hover:bg-gray-100 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] md:px-4"
         >
           Deshacer ({timeLeft}s)
         </button>
