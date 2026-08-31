@@ -231,17 +231,23 @@ export default function Grades() {
         <>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Calificaciones</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {subjects?.map(subject => (
-              <div
-                key={subject.id}
-                onClick={() => setSelectedSubjectId(subject.id)}
-                className="bg-white border-2 rounded-lg p-4 cursor-pointer hover:border-blue-400 hover:-translate-y-0.5 hover:shadow-md transition-all dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:hover:border-[var(--color-primary)]"
-                style={{ borderColor: subject.color || '#e5e7eb' }}
-              >
-                <h3 className="font-semibold text-lg dark:text-[var(--dm-text)]">{subject.nombre}</h3>
-                {subject.codigo && <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">{subject.codigo}</p>}
-              </div>
-            ))}
+            {subjects?.map(subject => {
+              const cardColor = subject.color || '#e5e7eb'
+              return (
+                <div
+                  key={subject.id}
+                  onClick={() => setSelectedSubjectId(subject.id)}
+                  className="relative rounded-2xl p-5 backdrop-blur-md cursor-pointer transition-all hover:scale-[1.02]"
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    boxShadow: `0 0 30px ${cardColor}30, 0 0 60px ${cardColor}1a, inset 0 0 25px ${cardColor}15`,
+                  }}
+                >
+                  <h3 className="font-semibold text-lg dark:text-[var(--dm-text)]">{subject.nombre}</h3>
+                  {subject.codigo && <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">{subject.codigo}</p>}
+                </div>
+              )
+            })}
           </div>
           {!subjects || subjects.length === 0 && (
             <div className="text-center py-12 text-gray-500">
@@ -313,19 +319,23 @@ export default function Grades() {
               {zonesLoading ? (
                 <div className="flex min-h-[24vh] items-center justify-center text-gray-500 dark:text-[var(--dm-text-muted)]">Cargando zonas...</div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {zones?.map(zone => (
-                    <ZoneCard
-                      key={zone.id}
-                      zone={zone}
-                      onEdit={(zone) => { setEditingZone(zone); openModal('zone') }}
-                      onDelete={handleDeleteZone}
-                      onAddItem={(zone) => { setAddingItemToZone(zone); openModal('item') }}
-                      onEditItem={(item) => { setEditingItem(item); openModal('item') }}
-                      onDeleteItem={handleDeleteItem}
-                      pendingDeletes={pendingDeletes}
-                    />
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {zones?.map(zone => {
+                    const selectedSubject = subjects?.find(s => s.id === selectedSubjectId)
+                    return (
+                      <ZoneCard
+                        key={zone.id}
+                        zone={zone}
+                        subjectColor={selectedSubject?.color}
+                        onEdit={(zone) => { setEditingZone(zone); openModal('zone') }}
+                        onDelete={handleDeleteZone}
+                        onAddItem={(zone) => { setAddingItemToZone(zone); openModal('item') }}
+                        onEditItem={(item) => { setEditingItem(item); openModal('item') }}
+                        onDeleteItem={handleDeleteItem}
+                        pendingDeletes={pendingDeletes}
+                      />
+                    )
+                  })}
                 </div>
               )}
 

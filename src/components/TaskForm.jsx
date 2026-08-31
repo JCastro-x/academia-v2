@@ -231,9 +231,11 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
               dateFormat: 'Y-m-d H:i',
               altInput: true,
               altFormat: 'd/m/Y H:i',
-              position: 'center',
+              appendTo: document.body,
               onOpen: (selectedDates, dateStr, instance) => {
-                instance.calendarContainer.style.zIndex = '9999'
+                if (instance.calendarContainer) {
+                  instance.calendarContainer.classList.add('calendario-centrado')
+                }
               }
             }}
             className="field-input"
@@ -258,10 +260,12 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
               dateFormat: 'Y-m-d H:i',
               altInput: true,
               altFormat: 'd/m/Y H:i',
-              position: 'center',
+              appendTo: document.body,
               minDate: 'today',
               onOpen: (selectedDates, dateStr, instance) => {
-                instance.calendarContainer.style.zIndex = '9999'
+                if (instance.calendarContainer) {
+                  instance.calendarContainer.classList.add('calendario-centrado')
+                }
               }
             }}
             className="field-input"

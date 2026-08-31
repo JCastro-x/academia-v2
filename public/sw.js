@@ -56,6 +56,8 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('push', (event) => {
   const payload = event.data ? event.data.json() : null
+  console.log('[SW] Push event received:', payload)
+  
   const title = payload?.title || 'Academia'
   const options = {
     body: payload?.body || 'Tenés una actualización importante.',
@@ -63,6 +65,7 @@ self.addEventListener('push', (event) => {
     badge: '/icon-192.png',
     tag: payload?.tag || 'academia-task-reminder',
     data: {
+      task_id: payload?.task_id || null,
       url: payload?.url || '/tasks',
     },
     vibrate: [200, 100, 200],
@@ -73,9 +76,18 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.preventDefault()
+  console.log('[SW] Notification click event:', event.notification.data)
 
-  const url = event.notification?.data?.url || '/tasks'
-  const targetUrl = new URL(url, self.location.origin).toString()
+  const taskId = event.notification?.data?.task_id
+  let targetUrl
+  
+  if (taskId) {
+    targetUrl = new URL(`/tasks`, self.location.origin).toString()
+    targetUrl += `?task=${taskId}`
+  } else {
+    targetUrl = event.notification?.data?.url || '/tasks'
+    targetUrl = new URL(targetUrl, self.location.origin).toString()
+  }
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
