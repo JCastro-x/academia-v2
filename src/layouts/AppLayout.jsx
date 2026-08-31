@@ -123,7 +123,7 @@ export default function AppLayout() {
 
   const mobileNavItems = [
     navItems[0],
-    navItems[1],
+    navItems[5],
     navItems[2],
     navItems[10],
   ]
