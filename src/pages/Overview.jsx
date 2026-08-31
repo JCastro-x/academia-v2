@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useSubjects, useCreateSubject } from '../features/subjects/hooks.js'
 import { usePendingTasks, useCreateTask, useToggleTaskDone, useDeleteTask } from '../features/tasks/hooks.js'
@@ -156,13 +157,15 @@ export default function Overview() {
           </label>
         </div>
         <div className="min-w-0 pb-16">
-          <TaskList
-            tasks={pendingTasks?.filter(t => !t.done && !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)) || []}
-            subjects={subjects}
-            onToggleDone={handleToggleDone}
-            onEdit={(task) => openModal('task', { editingTask: task })}
-            onDelete={handleDeleteTask}
-          />
+          <AnimatePresence mode="popLayout">
+            <TaskList
+              tasks={pendingTasks?.filter(t => !t.done && !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)) || []}
+              subjects={subjects}
+              onToggleDone={handleToggleDone}
+              onEdit={(task) => openModal('task', { editingTask: task })}
+              onDelete={handleDeleteTask}
+            />
+          </AnimatePresence>
         </div>
       </div>
 

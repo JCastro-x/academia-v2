@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useFolders, useCreateFolder, useDeleteFolder } from '../features/folders/hooks.js'
 import { useNotes, useCreateNote, useDeleteNote, useSearchNotes } from '../features/notes/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
@@ -17,6 +17,13 @@ export default function Notes() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [isCreatingNote, setIsCreatingNote] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
   
   const { data: folders, isLoading: foldersLoading } = useFolders(currentFolderId)
   const { data: notes, isLoading: notesLoading } = useNotes(currentFolderId)
@@ -133,26 +140,26 @@ export default function Notes() {
           <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Notas</h1>
         </div>
         
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-2 w-full sm:w-auto flex-wrap">
           <input
             type="text"
             placeholder="Buscar notas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoComplete="off"
-            className="flex-1 sm:flex-none px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="flex-1 sm:flex-none px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] min-w-0"
           />
           {!searchQuery && (
             <>
               <button
                 onClick={() => setIsCreatingFolder(true)}
-                className="bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 text-sm dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)] dark:text-[var(--dm-text)]"
+                className="bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 text-sm dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)] dark:text-[var(--dm-text)] flex-shrink-0"
               >
                 + Carpeta
               </button>
               <button
                 onClick={() => setIsCreatingNote(true)}
-                className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm"
+                className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm flex-shrink-0"
               >
                 + Nota
               </button>
@@ -164,7 +171,7 @@ export default function Notes() {
       {/* Main Content */}
       <div className="flex flex-1 gap-4 overflow-hidden">
         {/* Folder/Note List */}
-        {(!selectedNoteId || window.innerWidth >= 640) && (
+        {(!selectedNoteId || !isMobile) && (
           <div className="w-full sm:w-80 flex-shrink-0 overflow-y-auto">
             <div className="space-y-2">
               {displayFolders?.filter(folder => !pendingDeletes.some(pd => pd.type === 'folder' && pd.itemId === folder.id)).map(folder => (
@@ -225,7 +232,7 @@ export default function Notes() {
         )}
 
         {/* Note Editor */}
-        {(selectedNoteId || window.innerWidth >= 640) && (
+        {(selectedNoteId || !isMobile) && (
           <div className="flex-1 overflow-hidden">
             {selectedNoteId ? (
               <NoteEditor

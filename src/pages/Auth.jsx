@@ -47,6 +47,7 @@ export default function Auth() {
   const [typedWord, setTypedWord] = useState(0)
   const [isTyping, setIsTyping] = useState(true)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
   const resetTheme = useUIStore(s => s.resetTheme)
   const sessionDebugEnabled = isSessionDebugEnabled()
@@ -83,6 +84,8 @@ export default function Auth() {
         }
       } catch (error) {
         console.warn('Error checking existing session:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -117,6 +120,14 @@ export default function Auth() {
     } catch (error) {
       console.error('Error signing in with local dev account:', error)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#050816] flex items-center justify-center">
+        <div className="text-white text-lg">Cargando...</div>
+      </div>
+    )
   }
 
   return (

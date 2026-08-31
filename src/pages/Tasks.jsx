@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useDeleteTask, useDeleteCompletedTasks } from '../features/tasks/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
@@ -181,13 +182,15 @@ export default function Tasks() {
       </div>
 
       <div className="min-w-0 pb-16">
-        <TaskList
-          tasks={filteredTasks}
-          subjects={subjects}
-          onToggleDone={handleToggleDone}
-          onEdit={(task) => openModal('task', { editingTask: task })}
-          onDelete={handleDeleteTask}
-        />
+        <AnimatePresence mode="popLayout">
+          <TaskList
+            tasks={filteredTasks}
+            subjects={subjects}
+            onToggleDone={handleToggleDone}
+            onEdit={(task) => openModal('task', { editingTask: task })}
+            onDelete={handleDeleteTask}
+          />
+        </AnimatePresence>
       </div>
     </div>
   )

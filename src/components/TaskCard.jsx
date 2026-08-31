@@ -76,6 +76,7 @@ export default function TaskCard({ task, subject, onToggleDone, onEdit, onDelete
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 10 }}
       whileHover={{ y: -2, boxShadow: '0 8px 20px rgba(15, 23, 42, 0.12)' }}
       whileTap={{ scale: 0.995 }}
       className={`task-card bg-white rounded-xl border-[2.5px] border-gray-300 shadow-[var(--shadow-sm)] p-4 transition-all duration-200 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02)] ${task.done ? 'opacity-60' : ''}`}

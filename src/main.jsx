@@ -33,8 +33,19 @@ function SessionRedirect() {
   React.useEffect(() => {
     const checkSession = async () => {
       try {
+        const cachedSessionUser = getStoredSessionUser()
         const { data: { session } } = await getSession()
+        
         if (session?.user) {
+          const semesters = await getSemesters()
+          if (semesters && semesters.length > 0) {
+            const activeSemester = semesters.find((s) => s.activo) || semesters[0]
+            navigate(`/s/${activeSemester.id}`, { replace: true })
+          } else {
+            navigate('/create-first-semester', { replace: true })
+          }
+        } else if (cachedSessionUser) {
+          // Offline fallback: usar sesión cacheada si getSession falla
           const semesters = await getSemesters()
           if (semesters && semesters.length > 0) {
             const activeSemester = semesters.find((s) => s.activo) || semesters[0]
@@ -47,7 +58,24 @@ function SessionRedirect() {
         }
       } catch (error) {
         console.warn('Error checking session:', error)
-        navigate('/auth', { replace: true })
+        // Intentar fallback con sesión cacheada
+        const cachedSessionUser = getStoredSessionUser()
+        if (cachedSessionUser) {
+          try {
+            const semesters = await getSemesters()
+            if (semesters && semesters.length > 0) {
+              const activeSemester = semesters.find((s) => s.activo) || semesters[0]
+              navigate(`/s/${activeSemester.id}`, { replace: true })
+            } else {
+              navigate('/create-first-semester', { replace: true })
+            }
+          } catch (fallbackError) {
+            console.warn('Fallback also failed:', fallbackError)
+            navigate('/auth', { replace: true })
+          }
+        } else {
+          navigate('/auth', { replace: true })
+        }
       } finally {
         setLoading(false)
       }
