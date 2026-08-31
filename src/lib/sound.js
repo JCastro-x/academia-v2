@@ -31,7 +31,8 @@ const playTone = ({
 
   const oscillator = ctx.createOscillator()
   const gainNode = ctx.createGain()
-  const now = ctx.currentTime + startTime
+  const safeStartTime = typeof startTime === 'number' && !isNaN(startTime) ? startTime : 0
+  const now = ctx.currentTime + safeStartTime
 
   oscillator.type = type
   oscillator.frequency.setValueAtTime(frequency, now)

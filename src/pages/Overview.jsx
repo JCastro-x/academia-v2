@@ -1,11 +1,12 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useSubjects, useCreateSubject } from '../features/subjects/hooks.js'
 import { usePendingTasks, useCreateTask, useToggleTaskDone, useDeleteTask } from '../features/tasks/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
-import TaskList from '../components/TaskList.jsx'
+import TaskCard from '../components/TaskCard.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
 import SemesterForm from '../components/SemesterForm.jsx'
 import QuickAdd from '../components/QuickAdd.jsx'
@@ -156,13 +157,25 @@ export default function Overview() {
           </label>
         </div>
         <div className="min-w-0 pb-16">
-          <TaskList
-            tasks={pendingTasks?.filter(t => !t.done && !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)) || []}
-            subjects={subjects}
-            onToggleDone={handleToggleDone}
-            onEdit={(task) => openModal('task', { editingTask: task })}
-            onDelete={handleDeleteTask}
-          />
+          <AnimatePresence mode="popLayout">
+            {pendingTasks?.filter(t => !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)).map(task => (
+              <motion.div
+                key={task.id}
+                layout
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+              >
+                <TaskCard
+                  task={task}
+                  subject={subjects?.find(s => s.id === task.subject_id)}
+                  onToggleDone={handleToggleDone}
+                  onEdit={(t) => openModal('task', { editingTask: t })}
+                  onDelete={handleDeleteTask}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
 

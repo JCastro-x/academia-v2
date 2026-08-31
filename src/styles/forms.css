@@ -104,10 +104,10 @@
   grid-template-columns: 1fr 1fr;
 }
 
-/* Responsive: stack on mobile */
+/* Responsive: keep 2 columns on mobile for better space utilization */
 @media (max-width: 640px) {
   .field-row.two-cols {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 

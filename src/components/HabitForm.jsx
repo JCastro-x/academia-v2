@@ -1,10 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import '../styles/forms.css'
 
-export default function HabitForm({ onSubmit, onCancel, isPending }) {
+export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit }) {
   const [nombre, setNombre] = useState('')
   const [frecuencia, setFrecuencia] = useState('diario')
   const [diasSemana, setDiasSemana] = useState([])
+
+  useEffect(() => {
+    if (editingHabit) {
+      setNombre(editingHabit.nombre)
+      setFrecuencia(editingHabit.frecuencia)
+      setDiasSemana(editingHabit.dias_semana || [])
+    }
+  }, [editingHabit])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -98,7 +106,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending }) {
           disabled={!nombre.trim() || isPending}
           className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? 'Guardando...' : 'Crear'}
+          {isPending ? 'Guardando...' : (editingHabit ? 'Guardar' : 'Crear')}
         </button>
       </div>
     </form>

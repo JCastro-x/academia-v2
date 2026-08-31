@@ -119,6 +119,7 @@ export default function Profile() {
     }
     if (typeof window !== 'undefined') {
       localStorage.setItem('academia-profile-name', payload.nombre || '')
+      localStorage.setItem('academia-hora-formato', payload.hora_formato === '24h' ? '24h' : '12h')
     }
     console.log('[Profile] Guardando perfil:', JSON.stringify(payload, null, 2))
     try {

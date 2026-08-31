@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { signInLocalDev, signInWithGoogle } from '../lib/supabase.js'
+import { signInLocalDev, signInWithGoogle, supabase } from '../lib/supabase.js'
+import { getSemesters } from '../features/semesters/api.js'
 import { useUIStore } from '../stores/ui.store.js'
 import FirstRunTour from '../components/FirstRunTour.jsx'
 
@@ -46,6 +47,7 @@ export default function Auth() {
   const [typedWord, setTypedWord] = useState(0)
   const [isTyping, setIsTyping] = useState(true)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
   const resetTheme = useUIStore(s => s.resetTheme)
   const sessionDebugEnabled = isSessionDebugEnabled()
@@ -59,6 +61,29 @@ export default function Auth() {
   useEffect(() => {
     resetTheme()
   }, [resetTheme])
+
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          const semesters = await getSemesters()
+          if (semesters && semesters.length > 0) {
+            const activeSemester = semesters.find((s) => s.activo) || semesters[0]
+            navigate(`/s/${activeSemester.id}`, { replace: true })
+          } else {
+            navigate('/create-first-semester', { replace: true })
+          }
+        }
+      } catch (error) {
+        console.warn('Error checking existing session:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkExistingSession()
+  }, [navigate])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -88,6 +113,14 @@ export default function Auth() {
     } catch (error) {
       console.error('Error signing in with local dev account:', error)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#050816] flex items-center justify-center">
+        <div className="text-white text-lg">Cargando...</div>
+      </div>
+    )
   }
 
   return (

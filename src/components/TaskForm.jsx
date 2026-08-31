@@ -10,6 +10,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
     prioridad: initialData?.prioridad || 'media',
     subject_id: initialData?.subject_id || '',
     due: initialData?.due ? initialData.due.slice(0, 16) : '',
+    reminder_at: initialData?.reminder_at ? initialData.reminder_at.slice(0, 16) : '',
     tipo: initialData?.tipo || 'cantidad',
     total_units: initialData?.total_units || '',
     work_days: initialData?.work_days || [1, 2, 3, 4, 5],
@@ -21,6 +22,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
     prioridad: initialData.prioridad || 'media',
     subject_id: initialData.subject_id || '',
     due: initialData.due ? initialData.due.slice(0, 16) : '',
+    reminder_at: initialData.reminder_at ? initialData.reminder_at.slice(0, 16) : '',
     tipo: initialData.tipo || 'cantidad',
     total_units: initialData.total_units || '',
     work_days: initialData.work_days || [1, 2, 3, 4, 5],
@@ -35,6 +37,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       prioridad: formData.prioridad,
       subject_id: formData.subject_id || null,
       due: formData.due || null,
+      reminder_at: formData.reminder_at || null,
       tipo: formData.tipo,
       total_units: formData.tipo === 'cantidad' ? Number(formData.total_units) || null : null,
       subtasks: formData.tipo === 'checklist' ? formData.subtasks : null,
@@ -68,6 +71,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       ...formData,
       subject_id: formData.subject_id || null,
       due: formData.due || null,
+      reminder_at: formData.reminder_at || null,
       total_units: formData.tipo === 'cantidad' ? Number(formData.total_units) || null : null,
       subtasks: formData.tipo === 'checklist' ? formData.subtasks : null,
     })
@@ -231,6 +235,34 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
           }}
           className="field-input"
           disabled={isPending}
+        />
+      </div>
+
+      {/* Recordatorio personalizado */}
+      <div className="field">
+        <label htmlFor="reminder_at" className="field-label">Recordatorio (opcional)</label>
+        <Flatpickr
+          id="reminder_at"
+          value={formData.reminder_at}
+          onChange={(dates) => {
+            const selectedDate = dates[0]
+            const dateStr = selectedDate
+              ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}T${String(selectedDate.getHours()).padStart(2, '0')}:${String(selectedDate.getMinutes()).padStart(2, '0')}`
+              : ''
+            setFormData(prev => ({ ...prev, reminder_at: dateStr }))
+          }}
+          options={{
+            enableTime: true,
+            dateFormat: 'Y-m-d H:i',
+            altInput: true,
+            altFormat: 'd/m/Y H:i',
+            theme: 'light',
+            static: true,
+            minDate: 'today'
+          }}
+          className="field-input"
+          disabled={isPending}
+          placeholder="Selecciona fecha y hora..."
         />
       </div>
 

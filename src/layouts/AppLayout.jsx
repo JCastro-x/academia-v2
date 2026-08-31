@@ -68,11 +68,14 @@ export default function AppLayout() {
   useEffect(() => {
     if (!profile) return
 
+    const storedHoraFormato = typeof window !== 'undefined' ? localStorage.getItem('academia-hora-formato') : null
     const nextModoOscuro = profile.modo_oscuro ?? modoOscuro
     const nextTipografia = profile.tipografia ?? tipografia
     const nextTemaColor = profile.tema_color ?? temaColor
     const nextSonidosInteraccion = profile.sonidos_interaccion ?? sonidosInteraccion
-    const nextHoraFormato = profile.hora_formato ?? horaFormato
+    const nextHoraFormato = storedHoraFormato === '12h' || storedHoraFormato === '24h'
+      ? storedHoraFormato
+      : (profile.hora_formato === '12h' || profile.hora_formato === '24h' ? profile.hora_formato : '12h')
 
     setModoOscuro(nextModoOscuro)
     setTipografia(nextTipografia)
@@ -113,7 +116,7 @@ export default function AppLayout() {
 
   const mobileNavItems = [
     navItems[0],
-    navItems[1],
+    navItems[5],
     navItems[2],
     navItems[10],
   ]
@@ -175,7 +178,7 @@ export default function AppLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 basis-0 min-w-0 max-w-full h-full overflow-x-hidden overflow-y-auto overscroll-contain p-4 pb-0 md:p-6 md:pb-0">
+        <main className="flex-1 basis-0 min-w-0 max-w-full h-full overflow-x-hidden overflow-y-auto overscroll-contain p-4 pb-20 md:p-6 md:pb-0">
           <Outlet />
         </main>
       </div>

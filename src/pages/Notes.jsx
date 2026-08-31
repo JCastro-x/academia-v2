@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useFolders, useCreateFolder, useDeleteFolder } from '../features/folders/hooks.js'
 import { useNotes, useCreateNote, useDeleteNote, useSearchNotes } from '../features/notes/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
@@ -17,6 +17,13 @@ export default function Notes() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [isCreatingNote, setIsCreatingNote] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
   
   const { data: folders, isLoading: foldersLoading } = useFolders(currentFolderId)
   const { data: notes, isLoading: notesLoading } = useNotes(currentFolderId)
@@ -133,26 +140,26 @@ export default function Notes() {
           <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Notas</h1>
         </div>
         
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-2 w-full sm:w-auto flex-wrap">
           <input
             type="text"
             placeholder="Buscar notas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoComplete="off"
-            className="flex-1 sm:flex-none px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="flex-1 sm:flex-none px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] min-w-0"
           />
           {!searchQuery && (
             <>
               <button
                 onClick={() => setIsCreatingFolder(true)}
-                className="bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 text-sm dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)] dark:text-[var(--dm-text)]"
+                className="bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 text-sm dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)] dark:text-[var(--dm-text)] flex-shrink-0"
               >
                 + Carpeta
               </button>
               <button
                 onClick={() => setIsCreatingNote(true)}
-                className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm"
+                className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm flex-shrink-0"
               >
                 + Nota
               </button>
@@ -164,77 +171,81 @@ export default function Notes() {
       {/* Main Content */}
       <div className="flex flex-1 gap-4 overflow-hidden">
         {/* Folder/Note List */}
-        <div className="w-full sm:w-80 flex-shrink-0 overflow-y-auto">
-          <div className="space-y-2">
-            {displayFolders?.filter(folder => !pendingDeletes.some(pd => pd.type === 'folder' && pd.itemId === folder.id)).map(folder => (
-              <div
-                key={folder.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer group dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)]"
-              >
+        {(!selectedNoteId || !isMobile) && (
+          <div className="w-full sm:w-80 flex-shrink-0 overflow-y-auto">
+            <div className="space-y-2">
+              {displayFolders?.filter(folder => !pendingDeletes.some(pd => pd.type === 'folder' && pd.itemId === folder.id)).map(folder => (
                 <div
-                  className="flex items-center gap-2 flex-1"
-                  onClick={() => setCurrentFolderId(folder.id)}
+                  key={folder.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer group dark:bg-[var(--dm-bg)] dark:hover:bg-[var(--dm-border)]"
                 >
-                  <span className="text-xl">📁</span>
-                  <span className="font-medium dark:text-[var(--dm-text)]">{folder.nombre}</span>
+                  <div
+                    className="flex items-center gap-2 flex-1"
+                    onClick={() => setCurrentFolderId(folder.id)}
+                  >
+                    <span className="text-xl">📁</span>
+                    <span className="font-medium dark:text-[var(--dm-text)]">{folder.nombre}</span>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteFolder(folder)}
+                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    🗑️
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleDeleteFolder(folder)}
-                  className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 dark:text-red-400 dark:hover:text-red-300"
+              ))}
+              
+              {displayNotes?.filter(note => !pendingDeletes.some(pd => pd.type === 'note' && pd.itemId === note.id)).map(note => (
+                <div
+                  key={note.id}
+                  className={`flex items-center justify-between p-3 rounded-lg cursor-pointer group ${
+                    selectedNoteId === note.id ? 'bg-blue-100 border-2 border-blue-500' : 'bg-white border hover:bg-gray-50 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:hover:bg-[var(--dm-border)]'
+                  }`}
+                  onClick={() => setSelectedNoteId(note.id)}
                 >
-                  🗑️
-                </button>
-              </div>
-            ))}
-            
-            {displayNotes?.filter(note => !pendingDeletes.some(pd => pd.type === 'note' && pd.itemId === note.id)).map(note => (
-              <div
-                key={note.id}
-                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer group ${
-                  selectedNoteId === note.id ? 'bg-blue-100 border-2 border-blue-500' : 'bg-white border hover:bg-gray-50 dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] dark:hover:bg-[var(--dm-border)]'
-                }`}
-                onClick={() => setSelectedNoteId(note.id)}
-              >
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="text-xl">📝</span>
-                  <span className="font-medium truncate dark:text-[var(--dm-text)]">{note.titulo || 'Sin título'}</span>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className="text-xl">📝</span>
+                    <span className="font-medium truncate dark:text-[var(--dm-text)]">{note.titulo || 'Sin título'}</span>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteNote(note) }}
+                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 flex-shrink-0 dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    🗑️
+                  </button>
                 </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDeleteNote(note) }}
-                  className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 flex-shrink-0 dark:text-red-400 dark:hover:text-red-300"
-                >
-                  🗑️
-                </button>
+              ))}
+            </div>
+
+            {!searchQuery && !displayFolders?.length && !displayNotes?.length && (
+              <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
+                <p>{currentFolderId ? 'Carpeta vacía' : 'No hay notas ni carpetas'}</p>
               </div>
-            ))}
+            )}
+
+            {searchQuery && !displayNotes?.length && !searchLoading && (
+              <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
+                <p>No se encontraron notas</p>
+              </div>
+            )}
           </div>
-
-          {!searchQuery && !displayFolders?.length && !displayNotes?.length && (
-            <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
-              <p>{currentFolderId ? 'Carpeta vacía' : 'No hay notas ni carpetas'}</p>
-            </div>
-          )}
-
-          {searchQuery && !displayNotes?.length && !searchLoading && (
-            <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
-              <p>No se encontraron notas</p>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Note Editor */}
-        <div className="flex-1 overflow-hidden">
-          {selectedNoteId ? (
-            <NoteEditor
-              noteId={selectedNoteId}
-              onClose={() => setSelectedNoteId(null)}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center text-gray-400 dark:text-[var(--dm-text-muted)]">
-              <p>Selecciona una nota para editar</p>
-            </div>
-          )}
-        </div>
+        {(selectedNoteId || !isMobile) && (
+          <div className="flex-1 overflow-hidden">
+            {selectedNoteId ? (
+              <NoteEditor
+                noteId={selectedNoteId}
+                onClose={() => setSelectedNoteId(null)}
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-400 dark:text-[var(--dm-text-muted)]">
+                <p>Selecciona una nota para editar</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Create Folder Modal */}

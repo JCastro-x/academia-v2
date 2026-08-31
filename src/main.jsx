@@ -1,9 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { queryClient } from './lib/queryClient.js'
 import { getSession, onAuthStateChange, getStoredSessionUser } from './lib/supabase.js'
+import { getSemesters } from './features/semesters/api.js'
 import AppLayout from './layouts/AppLayout.jsx'
 import Auth from './pages/Auth.jsx'
 import AuthCallback from './pages/AuthCallback.jsx'
@@ -24,6 +25,75 @@ import Profile from './pages/Profile.jsx'
 import Exam from './pages/Exam.jsx'
 import { startTaskNotificationScheduler } from './lib/notificationScheduler.js'
 import './styles/index.css'
+
+function SessionRedirect() {
+  const [loading, setLoading] = React.useState(true)
+  const navigate = useNavigate()
+
+  React.useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const cachedSessionUser = getStoredSessionUser()
+        const { data: { session } } = await getSession()
+        
+        if (session?.user) {
+          const semesters = await getSemesters()
+          if (semesters && semesters.length > 0) {
+            const activeSemester = semesters.find((s) => s.activo) || semesters[0]
+            navigate(`/s/${activeSemester.id}`, { replace: true })
+          } else {
+            navigate('/create-first-semester', { replace: true })
+          }
+        } else if (cachedSessionUser) {
+          // Offline fallback: usar sesión cacheada si getSession falla
+          const semesters = await getSemesters()
+          if (semesters && semesters.length > 0) {
+            const activeSemester = semesters.find((s) => s.activo) || semesters[0]
+            navigate(`/s/${activeSemester.id}`, { replace: true })
+          } else {
+            navigate('/create-first-semester', { replace: true })
+          }
+        } else {
+          navigate('/auth', { replace: true })
+        }
+      } catch (error) {
+        console.warn('Error checking session:', error)
+        // Intentar fallback con sesión cacheada
+        const cachedSessionUser = getStoredSessionUser()
+        if (cachedSessionUser) {
+          try {
+            const semesters = await getSemesters()
+            if (semesters && semesters.length > 0) {
+              const activeSemester = semesters.find((s) => s.activo) || semesters[0]
+              navigate(`/s/${activeSemester.id}`, { replace: true })
+            } else {
+              navigate('/create-first-semester', { replace: true })
+            }
+          } catch (fallbackError) {
+            console.warn('Fallback also failed:', fallbackError)
+            navigate('/auth', { replace: true })
+          }
+        } else {
+          navigate('/auth', { replace: true })
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    checkSession()
+  }, [navigate])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600 dark:text-[var(--dm-text-muted)]">
+        Cargando...
+      </div>
+    )
+  }
+
+  return null
+}
 
 const SESSION_DEBUG_STORAGE_KEY = 'academia-debug-session'
 
@@ -185,7 +255,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <Routes>
           {/* Landing / entry */}
-          <Route path="/" element={<Navigate to="/auth" replace />} />
+          <Route path="/" element={<SessionRedirect />} />
           
           {/* Auth routes */}
           <Route path="/auth" element={<Auth />} />

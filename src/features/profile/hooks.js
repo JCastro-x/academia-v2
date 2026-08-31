@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '../../lib/supabase.js'
 import {
   getProfile,
   upsertProfile,
   profilesQueryKeys,
 } from './api.js'
-import { supabase } from '../../lib/supabase.js'
 
 export function useProfile() {
   return useQuery({

@@ -5,7 +5,6 @@ const DEFAULT_THEME = {
   tipografia: 'Inter',
   temaColor: '#84cc16',
 }
-
 export const useUIStore = create((set) => ({
   // Theme state is derived from the authenticated profile in Supabase.
   // localStorage is intentionally not used as a source of truth anymore.
@@ -18,7 +17,7 @@ export const useUIStore = create((set) => ({
   setTipografia: (val) => set({ tipografia: val }),
   setTemaColor: (val) => set({ temaColor: val }),
   setSonidosInteraccion: (val) => set({ sonidosInteraccion: val }),
-  setHoraFormato: (val) => set({ horaFormato: val }),
+  setHoraFormato: (val) => set({ horaFormato: val === '24h' ? '24h' : '12h' }),
   resetTheme: () => {
     set({
       modoOscuro: DEFAULT_THEME.modoOscuro,
@@ -61,7 +60,7 @@ export const useUIStore = create((set) => ({
   })),
 
   // Sidebar state
-  isSidebarCollapsed: false,
+  isSidebarCollapsed: true,
   toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
   setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
 

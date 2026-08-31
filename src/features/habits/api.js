@@ -109,12 +109,27 @@ export async function createHabit(habit) {
 }
 
 export async function updateHabit(id, updates) {
+  // Get current habit to recalculate streak if dias_semana changes
+  const currentHabit = await getHabitById(id)
+  
+  // Recalculate streak if dias_semana or frecuencia changes
+  let newStreak = currentHabit.racha
+  if (updates.dias_semana !== undefined || updates.frecuencia !== undefined) {
+    const updatedHabit = {
+      ...currentHabit,
+      dias_semana: updates.dias_semana !== undefined ? updates.dias_semana : currentHabit.dias_semana,
+      frecuencia: updates.frecuencia !== undefined ? updates.frecuencia : currentHabit.frecuencia,
+    }
+    newStreak = calculateStreak(updatedHabit)
+  }
+
   const { data, error } = await supabase
     .from('habits')
     .update({
       nombre: updates.nombre,
       frecuencia: updates.frecuencia,
       dias_semana: updates.dias_semana,
+      racha: newStreak,
     })
     .eq('id', id)
     .select('id, user_id, nombre, frecuencia, dias_semana, racha, historial')
