@@ -158,15 +158,16 @@ export default function Overview() {
         </div>
         <div className="min-w-0 pb-16">
           <AnimatePresence mode="popLayout">
-            <motion.div layout>
-              <TaskList
-                tasks={pendingTasks?.filter(t => !t.done && !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)) || []}
-                subjects={subjects}
+            {pendingTasks?.filter(t => !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)).map(task => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                subject={subjects?.find(s => s.id === task.subject_id)}
                 onToggleDone={handleToggleDone}
-                onEdit={(task) => openModal('task', { editingTask: task })}
+                onEdit={(t) => openModal('task', { editingTask: t })}
                 onDelete={handleDeleteTask}
               />
-            </motion.div>
+            ))}
           </AnimatePresence>
         </div>
       </div>
