@@ -261,3 +261,41 @@ button:not(:disabled):active {
   min-width: 0;
   max-width: 100%;
 }
+
+/* Custom scrollbar styling - minimalist theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dm-border);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: var(--dm-border);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dm-border) transparent;
+}
+
+html.dark * {
+  scrollbar-color: var(--dm-border) transparent;
+}
