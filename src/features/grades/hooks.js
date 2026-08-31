@@ -4,6 +4,7 @@ import {
   getZoneById,
   getItemsByZone,
   getItemById,
+  getZonesForSubjects,
   createZone,
   updateZone,
   deleteZone,
@@ -13,6 +14,8 @@ import {
   countItemsByZone,
   gradesQueryKeys,
 } from './api.js'
+import { getSubjects } from '../subjects/api.js'
+import { calculateSubjectTotalPoints, calculateSubjectMaxPoints } from '../../domain/grades-calc.js'
 
 export function useZonesBySubject(subjectId) {
   return useQuery({
@@ -121,5 +124,40 @@ export function useCountItemsByZone(zoneId) {
     queryKey: ['grades', 'items', 'count', 'zone', zoneId],
     queryFn: () => countItemsByZone(zoneId),
     enabled: !!zoneId,
+  })
+}
+
+/**
+ * Fetch total points (obtained vs max) for EVERY subject in a semester,
+ * grouping all grade zones by subject in one pass.
+ * Returns: { [subjectId]: { totalPoints, maxPoints } }
+ */
+export function useSubjectsTotalPoints(semesterId) {
+  return useQuery({
+    queryKey: gradesQueryKeys.subjectsTotalPoints(semesterId),
+    queryFn: async () => {
+      const subjects = await getSubjects(semesterId)
+      const subjectIds = (subjects || []).map((s) => s.id)
+      if (subjectIds.length === 0) return {}
+
+      const zones = await getZonesForSubjects(subjectIds)
+
+      // Group zones by subject_id
+      const grouped = {}
+      for (const zone of zones) {
+        ;(grouped[zone.subject_id] ||= []).push(zone)
+      }
+
+      const result = {}
+      for (const [subjectId, subjectZones] of Object.entries(grouped)) {
+        result[subjectId] = {
+          totalPoints: calculateSubjectTotalPoints(subjectZones),
+          maxPoints: calculateSubjectMaxPoints(subjectZones),
+        }
+      }
+
+      return result
+    },
+    enabled: !!semesterId,
   })
 }

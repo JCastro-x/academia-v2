@@ -5,10 +5,12 @@ import {
   getSemesterById,
   createSemester,
   updateSemester,
-  deleteSemester,
+  getSemesterAttachmentPaths,
+  deleteSemesterCascade,
   setActiveSemester,
   semestersQueryKeys,
 } from './api.js'
+import { deleteAttachmentFile } from '../note-attachments/api.js'
 
 const isGuestMode = () => localStorage.getItem('academia-guest-mode') === 'true'
 
@@ -103,7 +105,7 @@ export const useUpdateSemester = () => {
 
 export const useDeleteSemester = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: async (id) => {
       if (isGuestMode()) {
@@ -112,7 +114,30 @@ export const useDeleteSemester = () => {
         saveGuestSemesters(updatedSemesters)
         return id
       }
-      return deleteSemester(id)
+
+      // 1) Attachment storage paths (before the RPC, as requested)
+      let storagePaths = []
+      try {
+        storagePaths = await getSemesterAttachmentPaths(id)
+      } catch (error) {
+        console.warn('[Semesters] Could not pre-fetch attachment paths:', error)
+      }
+
+      // 2) Atomic cascade delete (transaction) — returns paths as a safety net
+      const rpcPaths = await deleteSemesterCascade(id)
+      const allPaths = [...new Set([...(storagePaths || []), ...(rpcPaths || [])])]
+
+      // 3) Storage cleanup (Postgres cannot delete Storage files).
+      //    Best-effort: rows are already gone; leftover files are harmless.
+      for (const path of allPaths) {
+        try {
+          await deleteAttachmentFile(path)
+        } catch (error) {
+          console.warn('[Semesters] Failed to delete storage file:', path, error)
+        }
+      }
+
+      return id
     },
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: semestersQueryKeys.all })

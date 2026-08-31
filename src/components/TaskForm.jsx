@@ -320,7 +320,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
               onClick={() => handleWorkDayToggle(day)}
               className={`w-10 h-10 rounded-lg border-2 font-semibold text-sm transition-all ${
                 formData.work_days.includes(day)
-                  ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                  ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-primary-fg)]'
                   : 'border-gray-300 hover:border-[var(--color-primary)] dark:border-[var(--dm-border)] dark:hover:border-[var(--color-primary)] dark:text-[var(--dm-text)]'
               }`}
               disabled={isPending}

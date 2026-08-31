@@ -82,6 +82,29 @@ export const deleteSemester = async (id) => {
   if (error) throw error
 }
 
+// Fetch the Storage paths of every note attachment in the semester,
+// BEFORE calling the RPC, so the client can clean the bucket.
+export const getSemesterAttachmentPaths = async (semesterId) => {
+  const { data, error } = await supabase
+    .from('note_attachments')
+    .select('storage_path, notes!inner(subjects!inner(semester_id))')
+    .eq('notes.subjects.semester_id', semesterId)
+
+  if (error) throw error
+  return (data || []).map((row) => row.storage_path).filter(Boolean)
+}
+
+// Atomic cascade delete via RPC. Returns the storage_path list (as a safety
+// net, merged with the pre-fetched ones) for client-side Storage cleanup.
+export const deleteSemesterCascade = async (id) => {
+  const { data, error } = await supabase.rpc('delete_semester_cascade', {
+    p_semester_id: id,
+  })
+
+  if (error) throw error
+  return Array.isArray(data) ? data : []
+}
+
 export const setActiveSemester = async (id) => {
   // First, deactivate all semesters
   const { error: deactivateError } = await supabase

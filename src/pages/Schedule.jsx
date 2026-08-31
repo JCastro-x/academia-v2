@@ -6,6 +6,7 @@ import { useEvents } from '../features/events/hooks.js'
 import { useSemester } from '../features/semesters/hooks.js'
 import { getSemesterStats, getWeekStartDateForWeek } from '../domain/semester-weeks.js'
 import { parseDate, formatDate, diffDays } from '../domain/task-stats.js'
+import { getContrastTextColor } from '../lib/contrast.js'
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 const DAY_NAMES_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
@@ -186,8 +187,8 @@ export default function Schedule() {
                         {item.schedules.map((schedule, sIdx) => (
                           <div
                             key={sIdx}
-                            className="text-xs p-1 rounded text-white mb-1"
-                            style={{ backgroundColor: item.subject.color }}
+                            className="text-xs p-1 rounded mb-1"
+                            style={{ backgroundColor: item.subject.color, color: getContrastTextColor(item.subject.color) }}
                           >
                             <div className="font-semibold truncate">{item.subject.nombre}</div>
                             <div className="opacity-90 truncate">{schedule.hora_inicio} - {schedule.hora_fin}</div>

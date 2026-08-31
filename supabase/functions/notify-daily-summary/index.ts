@@ -22,35 +22,112 @@ webPush.setVapidDetails(
 
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 
-function asLocalDate(date: Date) {
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+const DEFAULT_TIMEZONE = 'America/Guatemala'
+const SUMMARY_WINDOW_MINUTES = 15 // cron corre cada 15 min; ventana de disparo del resumen
+
+interface ZonedParts {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+  second: number
 }
 
-function startOfDay(date: Date) {
-  const next = new Date(date)
-  next.setHours(0, 0, 0, 0)
-  return next
+// Partes de "hora de pared" de un instante, en un timezone IANA dado.
+// Usa Intl.DateTimeFormat (built-in, ICU completo en Deno) en lugar de
+// date-fns-tz/Temporal para no agregar dependencias al bundle de la Edge Function.
+function getZonedParts(date: Date, timeZone: string): ZonedParts {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  })
+
+  const parts: Record<string, number> = {}
+  for (const part of formatter.formatToParts(date)) {
+    if (part.type !== 'literal') {
+      parts[part.type] = Number(part.value)
+    }
+  }
+
+  return {
+    year: parts.year,
+    month: parts.month,
+    day: parts.day,
+    hour: parts.hour,
+    minute: parts.minute,
+    second: parts.second,
+  }
 }
 
-function endOfDay(date: Date) {
-  const next = new Date(date)
-  next.setHours(23, 59, 59, 999)
-  return next
+// Offset (ms) del timezone en el instante dado: hora de pared local - UTC.
+function getZonedOffsetMs(date: Date, timeZone: string) {
+  const p = getZonedParts(date, timeZone)
+  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second)
+  return asUtc - date.getTime()
 }
 
-function getCalendarDayDiff(dateA: Date, dateB: Date) {
-  const a = startOfDay(dateA)
-  const b = startOfDay(dateB)
-  return Math.round((a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24))
+// Convierte una fecha 'YYYY-MM-DD' + hora 'HH:MM:SS' de pared en un instante
+// UTC real. Doble pasada del offset: correcta incluso con DST (Guatemala no
+// tiene, pero el helper es genérico para cualquier profiles.timezone).
+function wallTimeToInstant(dateKey: string, timeKey: string, timeZone: string): Date {
+  const [y, mo, d] = dateKey.split('-').map(Number)
+  const [h, mi, s] = timeKey.split(':').map(Number)
+  const naive = Date.UTC(y, mo - 1, d, h || 0, mi || 0, s || 0)
+  const offset1 = getZonedOffsetMs(new Date(naive), timeZone)
+  const offset2 = getZonedOffsetMs(new Date(naive - offset1), timeZone)
+  return new Date(naive - offset2)
 }
 
-function buildReminderNotification(task: { id: string; titulo: string }, type: 'day_before' | 'three_hours_before') {
+// Clave de día local 'YYYY-MM-DD' de un instante en el timezone dado.
+function zonedDayKey(date: Date, timeZone: string) {
+  const p = getZonedParts(date, timeZone)
+  return `${p.year}-${String(p.month).padStart(2, '0')}-${String(p.day).padStart(2, '0')}`
+}
+
+// Diferencia de días calendario entre dos claves 'YYYY-MM-DD'.
+function dayKeyDiff(a: string, b: string) {
+  const [ay, am, ad] = a.split('-').map(Number)
+  const [by, bm, bd] = b.split('-').map(Number)
+  return Math.round((Date.UTC(ay, am - 1, ad) - Date.UTC(by, bm - 1, bd)) / (1000 * 60 * 60 * 24))
+}
+
+// true si la hora local del usuario está en la ventana [hour:00, hour:15).
+function isInLocalWindow(date: Date, timeZone: string, hour: number) {
+  const p = getZonedParts(date, timeZone)
+  return p.hour === hour && p.minute < SUMMARY_WINDOW_MINUTES
+}
+
+function getProfileTimezone(timezone: string | null | undefined) {
+  return timezone && timezone.trim() ? timezone : DEFAULT_TIMEZONE
+}
+
+function buildReminderNotification(
+  task: { id: string; titulo: string },
+  type: 'day_before' | 'three_hours_before' | 'custom_reminder',
+) {
   if (type === 'day_before') {
     return {
       taskId: task.id,
       type,
       title: `Mañana vence: ${task.titulo}`,
       body: 'Falta 1 día para que venza esta tarea. Organizate para completarla.',
+      url: '/tasks',
+    }
+  }
+
+  if (type === 'custom_reminder') {
+    return {
+      taskId: task.id,
+      type,
+      title: `Recordatorio: ${task.titulo}`,
+      body: 'Tu recordatorio programado para esta tarea. Échale un vistazo.',
       url: '/tasks',
     }
   }
@@ -99,7 +176,10 @@ function buildEveningSummary(tasks: Array<{ id: string; titulo: string; due: str
   }
 }
 
-async function sendToUserSubscriptions(userId: string, payload: { title: string; body: string; url: string }) {
+async function sendToUserSubscriptions(
+  userId: string,
+  payload: { title: string; body: string; url: string; taskId?: string; tag?: string },
+) {
   const { data: subscriptions, error } = await supabase
     .from('push_subscriptions')
     .select('*')
@@ -133,8 +213,11 @@ async function sendToUserSubscriptions(userId: string, payload: { title: string;
       await webPush.sendNotification(pushSubscription as any, JSON.stringify({
         title: payload.title,
         body: payload.body,
-        url: payload.url,
-        tag: payload.url || 'academia-task-reminder',
+        url: payload.taskId ? `/tasks?task=${payload.taskId}` : payload.url,
+        task_id: payload.taskId ?? undefined,
+        tag: payload.taskId
+          ? `academia-task-${payload.taskId}`
+          : (payload.tag || 'academia-task-reminder'),
       }))
 
       sentCount += 1
@@ -179,35 +262,94 @@ async function markEveningSummarySent(userId: string, now: Date) {
   }
 }
 
-function isReminderDue(task: { due: string | null; last_push_notified_at: string | null }, now: Date) {
-  if (!task.due) return false
+const REMINDER_DEDUP_WINDOW_MS = 1000 * 60 * 60 * 24 // 24h between pushes for the same task
+
+function isReminderDue(
+  task: { due: string | null; due_time: string | null; reminder_at: string | null; last_push_notified_at: string | null },
+  now: Date,
+  timeZone: string,
+) {
+  // Dedup: skip if we already pushed for this task in the last 24h
   const lastSentAt = task.last_push_notified_at ? new Date(task.last_push_notified_at).getTime() : null
-  if (lastSentAt && now.getTime() - lastSentAt < 1000 * 60 * 60 * 24) {
+  if (lastSentAt && now.getTime() - lastSentAt < REMINDER_DEDUP_WINDOW_MS) {
     return false
   }
 
-  const dueDate = new Date(`${task.due}T23:59:59`)
-  const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+  // Fixed windows based on the due date (-1 day / -3 hours).
+  // due es date (sin hora); se combina con due_time (o 23:59:59 si es null)
+  // y se interpreta en el timezone del usuario, no en UTC.
+  if (task.due) {
+    const dueDate = wallTimeToInstant(task.due, task.due_time ?? '23:59:59', timeZone)
+    const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)
 
-  const startOfToday = startOfDay(now)
-  const startOfDueDate = startOfDay(dueDate)
-  const calendarDayDiff = Math.round((startOfDueDate.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24))
+    const calendarDayDiff = dayKeyDiff(zonedDayKey(dueDate, timeZone), zonedDayKey(now, timeZone))
 
-  const isThreeHoursBefore = diffHours > 0 && diffHours <= 3
-  const isOneDayBefore = calendarDayDiff === 1 && diffHours > 3 && diffHours <= 48
+    const isThreeHoursBefore = diffHours > 0 && diffHours <= 3
+    const isOneDayBefore = calendarDayDiff === 1 && diffHours > 3 && diffHours <= 48
 
-  return isThreeHoursBefore || isOneDayBefore
+    if (isThreeHoursBefore || isOneDayBefore) return true
+  }
+
+  // User-configured reminder (reminder_at): fire when it is due within the
+  // cron tick (next 15 min) or just passed (up to 60 min late, cron tolerance).
+  if (task.reminder_at) {
+    const reminderAt = new Date(task.reminder_at)
+    if (!Number.isNaN(reminderAt.getTime())) {
+      const diffMinutes = (reminderAt.getTime() - now.getTime()) / (1000 * 60)
+      if (diffMinutes <= 15 && diffMinutes >= -60) return true
+    }
+  }
+
+  return false
+}
+
+function resolveReminderType(
+  task: { due: string | null; due_time: string | null; reminder_at: string | null },
+  now: Date,
+  timeZone: string,
+): 'day_before' | 'three_hours_before' | 'custom_reminder' | null {
+  // Custom reminder takes priority if it is due now
+  if (task.reminder_at) {
+    const reminderAt = new Date(task.reminder_at)
+    if (!Number.isNaN(reminderAt.getTime())) {
+      const diffMinutes = (reminderAt.getTime() - now.getTime()) / (1000 * 60)
+      if (diffMinutes <= 15 && diffMinutes >= -60) return 'custom_reminder'
+    }
+  }
+
+  if (task.due) {
+    const dueDate = wallTimeToInstant(task.due, task.due_time ?? '23:59:59', timeZone)
+    const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+    const calendarDayDiff = dayKeyDiff(zonedDayKey(dueDate, timeZone), zonedDayKey(now, timeZone))
+
+    if (calendarDayDiff === 1 && diffHours > 3 && diffHours <= 48) return 'day_before'
+    if (diffHours > 0 && diffHours <= 3) return 'three_hours_before'
+  }
+
+  return null
 }
 
 async function runReminderNotifications(now: Date) {
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('user_id, timezone')
+
+  if (profilesError) {
+    throw profilesError
+  }
+
   const { data: tasks, error } = await supabase
     .from('tasks')
-    .select('id, user_id, titulo, due, done, last_push_notified_at')
+    .select('id, user_id, titulo, due, due_time, reminder_at, done, last_push_notified_at')
     .eq('done', false)
 
   if (error) {
     throw error
   }
+
+  const timezoneByUser = new Map<string, string>(
+    (profiles ?? []).map((p: { user_id: string; timezone: string | null }) => [p.user_id, getProfileTimezone(p.timezone)]),
+  )
 
   const tasksByUser = new Map<string, Array<any>>()
   for (const task of tasks ?? []) {
@@ -220,21 +362,12 @@ async function runReminderNotifications(now: Date) {
   const sentNotifications: Array<{ userId: string; title: string; body: string; url: string; taskId?: string }> = []
 
   for (const [userId, userTasks] of tasksByUser.entries()) {
+    const timeZone = timezoneByUser.get(userId) ?? DEFAULT_TIMEZONE
+
     for (const task of userTasks) {
-      if (!isReminderDue(task, now)) continue
+      if (!isReminderDue(task, now, timeZone)) continue
 
-      const reminderType = (() => {
-        const dueDate = new Date(`${task.due}T23:59:59`)
-        const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)
-        const startOfToday = startOfDay(now)
-        const startOfDueDate = startOfDay(dueDate)
-        const calendarDayDiff = Math.round((startOfDueDate.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24))
-
-        if (calendarDayDiff === 1 && diffHours > 3 && diffHours <= 48) return 'day_before'
-        if (diffHours > 0 && diffHours <= 3) return 'three_hours_before'
-        return null
-      })()
-
+      const reminderType = resolveReminderType(task, now, timeZone)
       if (!reminderType) continue
 
       const notification = buildReminderNotification(task, reminderType)
@@ -242,6 +375,7 @@ async function runReminderNotifications(now: Date) {
         title: notification.title,
         body: notification.body,
         url: notification.url,
+        taskId: notification.taskId,
       })
 
       if (sentCount > 0) {
@@ -257,7 +391,7 @@ async function runReminderNotifications(now: Date) {
 async function runMorningSummary(now: Date) {
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('user_id, last_morning_summary_at')
+    .select('user_id, timezone, last_morning_summary_at')
 
   if (profilesError) {
     throw profilesError
@@ -277,11 +411,8 @@ async function runMorningSummary(now: Date) {
 
   for (const task of tasks ?? []) {
     if (!task.user_id) continue
-    const dueDate = task.due ? new Date(`${task.due}T23:59:59`) : null
-    if (!dueDate) continue
-    const sameDay = startOfDay(dueDate).getTime() === startOfDay(now).getTime()
-    if (!sameDay) continue
-
+    // Sin prefiltrado de fecha: cada usuario tiene su propio día local,
+    // se filtra más abajo contra zonedDayKey(now, tz) del usuario.
     const bucket = tasksByUser.get(task.user_id) ?? []
     bucket.push(task)
     tasksByUser.set(task.user_id, bucket)
@@ -290,14 +421,22 @@ async function runMorningSummary(now: Date) {
   const sentSummaryNotifications: Array<{ userId: string; title: string; body: string; url: string }> = []
 
   for (const profile of users) {
-    const lastSent = profile.last_morning_summary_at ? new Date(profile.last_morning_summary_at).getTime() : null
-    const todayStamp = startOfDay(now).getTime()
+    const timeZone = getProfileTimezone(profile.timezone)
 
-    if (lastSent && startOfDay(new Date(lastSent)).getTime() === todayStamp) {
+    // Disparar solo dentro de la ventana local 7:00–7:15am del usuario.
+    if (!isInLocalWindow(now, timeZone, 7)) {
       continue
     }
 
-    const pendingToday = tasksByUser.get(profile.user_id) ?? []
+    const lastSent = profile.last_morning_summary_at ? new Date(profile.last_morning_summary_at).getTime() : null
+    const todayKey = zonedDayKey(now, timeZone)
+
+    // Dedup por día LOCAL del usuario (antes era día UTC del servidor).
+    if (lastSent && zonedDayKey(new Date(lastSent), timeZone) === todayKey) {
+      continue
+    }
+
+    const pendingToday = (tasksByUser.get(profile.user_id) ?? []).filter((t) => t.due === todayKey)
     const summary = buildMorningSummary(pendingToday)
     if (!summary) continue
 
@@ -305,6 +444,7 @@ async function runMorningSummary(now: Date) {
       title: summary.title,
       body: summary.body,
       url: summary.url,
+      tag: 'academia-summary-morning',
     })
 
     if (sentCount > 0) {
@@ -319,7 +459,7 @@ async function runMorningSummary(now: Date) {
 async function runEveningSummary(now: Date) {
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('user_id, last_evening_summary_at')
+    .select('user_id, timezone, last_evening_summary_at')
 
   if (profilesError) {
     throw profilesError
@@ -339,11 +479,8 @@ async function runEveningSummary(now: Date) {
 
   for (const task of tasks ?? []) {
     if (!task.user_id) continue
-    const dueDate = task.due ? new Date(`${task.due}T23:59:59`) : null
-    if (!dueDate) continue
-    const sameDay = startOfDay(dueDate).getTime() === startOfDay(now).getTime()
-    if (!sameDay) continue
-
+    // Sin prefiltrado de fecha: cada usuario tiene su propio día local,
+    // se filtra más abajo contra zonedDayKey(now, tz) del usuario.
     const bucket = tasksByUser.get(task.user_id) ?? []
     bucket.push(task)
     tasksByUser.set(task.user_id, bucket)
@@ -352,19 +489,28 @@ async function runEveningSummary(now: Date) {
   const sentSummaryNotifications: Array<{ userId: string; title: string; body: string; url: string }> = []
 
   for (const profile of users) {
-    const lastSent = profile.last_evening_summary_at ? new Date(profile.last_evening_summary_at).getTime() : null
-    const todayStamp = startOfDay(now).getTime()
+    const timeZone = getProfileTimezone(profile.timezone)
 
-    if (lastSent && startOfDay(new Date(lastSent)).getTime() === todayStamp) {
+    // Disparar solo dentro de la ventana local 7:00–7:15pm del usuario.
+    if (!isInLocalWindow(now, timeZone, 19)) {
       continue
     }
 
-    const pendingToday = tasksByUser.get(profile.user_id) ?? []
+    const lastSent = profile.last_evening_summary_at ? new Date(profile.last_evening_summary_at).getTime() : null
+    const todayKey = zonedDayKey(now, timeZone)
+
+    // Dedup por día LOCAL del usuario (antes era día UTC del servidor).
+    if (lastSent && zonedDayKey(new Date(lastSent), timeZone) === todayKey) {
+      continue
+    }
+
+    const pendingToday = (tasksByUser.get(profile.user_id) ?? []).filter((t) => t.due === todayKey)
     const summary = buildEveningSummary(pendingToday)
     const sentCount = await sendToUserSubscriptions(profile.user_id, {
       title: summary.title,
       body: summary.body,
       url: summary.url,
+      tag: 'academia-summary-evening',
     })
 
     if (sentCount > 0) {

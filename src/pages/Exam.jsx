@@ -137,7 +137,7 @@ export default function Exam() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Modo Examen</h1>
 
         {/* Timer display */}
-        <div className="rounded-2xl py-12 px-16 inline-block text-gray-900" style={{ backgroundColor: 'var(--color-primary)' }}>
+        <div className="rounded-2xl py-12 px-16 inline-block text-[var(--color-primary-fg)]" style={{ backgroundColor: 'var(--color-primary)' }}>
           <div className="text-8xl font-bold">
             {formatTime(remainingSeconds)}
           </div>
@@ -166,7 +166,7 @@ export default function Exam() {
           {!isRunning && !isPaused && (
             <button
               onClick={handleStart}
-              className="text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors"
+              className="text-[var(--color-primary-fg)] px-8 py-3 rounded-lg font-medium text-lg transition-colors"
               style={{ backgroundColor: 'var(--color-primary)' }}
             >
               Iniciar

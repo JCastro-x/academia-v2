@@ -157,7 +157,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 bg-[var(--color-primary)] text-white py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="flex-1 bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isPending ? 'Guardando...' : (initialData ? 'Guardar cambios' : 'Crear')}
         </button>

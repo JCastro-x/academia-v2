@@ -77,7 +77,7 @@ export default function ZoneForm({ initialData, onSubmit, onCancel, isPending })
         </button>
         <button
           type="submit"
-          className="flex-1 bg-[var(--color-primary)] text-white py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-[color-mix(in_srgb,var(--color-primary)_70%,white)]"
+          className="flex-1 bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-[color-mix(in_srgb,var(--color-primary)_70%,white)]"
           disabled={isPending}
         >
           {isPending ? 'Guardando...' : 'Guardar'}
