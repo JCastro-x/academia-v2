@@ -172,7 +172,12 @@ function buildMorningSummary(tasks: Array<{ id: string; titulo: string; due: str
   const count = tasks.length
 
   if (count === 0) {
-    return null
+    return {
+      title: '¡Felicidades, no tienes tareas pendientes para hoy! 🎉',
+      body: 'Día libre sin tareas pendientes ✅',
+      url: '/tasks',
+      count: 0,
+    }
   }
 
   const plural = count === 1 ? 'tarea' : 'tareas'
@@ -483,7 +488,6 @@ async function runMorningSummary(now: Date) {
 
     const pendingToday = (tasksByUser.get(profile.user_id) ?? []).filter((t) => t.due === todayKey)
     const summary = buildMorningSummary(pendingToday)
-    if (!summary) continue
 
     const sentCount = await sendToUserSubscriptions(profile.user_id, {
       title: summary.title,
