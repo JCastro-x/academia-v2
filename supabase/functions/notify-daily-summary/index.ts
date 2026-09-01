@@ -221,8 +221,23 @@ async function sendToUserSubscriptions(
       }))
 
       sentCount += 1
-    } catch (error) {
-      console.warn(`[notify] failed to send to subscription for ${userId}`, error)
+    } catch (error: any) {
+      const statusCode = error?.statusCode
+      // 404/410: la suscripción expiró o fue revocada en el navegador → desactivarla
+      if (statusCode === 404 || statusCode === 410) {
+        const { error: updateError } = await supabase
+          .from('push_subscriptions')
+          .update({ is_active: false })
+          .eq('user_id', userId)
+          .eq('endpoint', subscription.endpoint)
+        if (updateError) {
+          console.error(`[notify] failed to deactivate dead subscription for ${userId}`, updateError)
+        } else {
+          console.warn(`[notify] deactivated dead subscription (HTTP ${statusCode}) for ${userId}`)
+        }
+      } else {
+        console.warn(`[notify] failed to send to subscription for ${userId}`, error)
+      }
     }
   }
 

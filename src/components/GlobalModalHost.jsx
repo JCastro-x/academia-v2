@@ -136,7 +136,7 @@ export default function GlobalModalHost() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-[3px] flex items-end justify-center z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-[3px] flex items-end justify-center z-[70]"
             onClick={closeModal}
           >
             <motion.div
@@ -181,7 +181,7 @@ export default function GlobalModalHost() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-[70] p-4"
             onClick={closeModal}
           >
             <motion.div
@@ -209,7 +209,7 @@ export default function GlobalModalHost() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 overflow-y-auto"
+            className="fixed inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-[70] p-4 overflow-y-auto"
             onClick={closeModal}
           >
             <motion.div
@@ -217,7 +217,7 @@ export default function GlobalModalHost() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.96, y: 12, opacity: 0 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
-              className="modal-panel bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
+              className="modal-panel bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain p-6 max-w-md pb-[max(1.5rem,env(safe-area-inset-bottom))] mx-4"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTask ? 'Editar tarea' : 'Nueva tarea'}</h3>
@@ -241,7 +241,7 @@ export default function GlobalModalHost() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 overflow-y-auto"
+            className="fixed inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-[70] p-4 overflow-y-auto"
             onClick={closeModal}
           >
             <motion.div
@@ -249,7 +249,7 @@ export default function GlobalModalHost() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.96, y: 12, opacity: 0 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
-              className="modal-panel bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain p-6 w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto mx-4"
+              className="modal-panel bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain p-6 max-w-md pb-[max(1.5rem,env(safe-area-inset-bottom))] mx-4"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingSubject ? 'Editar materia' : 'Nueva materia'}</h3>
