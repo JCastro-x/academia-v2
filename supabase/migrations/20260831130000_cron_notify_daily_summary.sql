@@ -28,7 +28,7 @@ create extension if not exists pg_net;
 -- only if we unschedule first; use the named variant to be safe).
 do $$
 declare
-  v_job_name text := 'notify-daily-summary-every-15min';
+  v_job_name text := 'notify-daily-summary-every-10min';
 begin
   -- Unschedule any previous version of the job
   perform cron.unschedule(jobid)
@@ -37,7 +37,7 @@ begin
 
   perform cron.schedule(
     v_job_name,
-    '*/15 * * * *',
+    '*/10 * * * *',
     $cron$
     select net.http_post(
       url := (select decrypted_secret from vault.decrypted_secrets

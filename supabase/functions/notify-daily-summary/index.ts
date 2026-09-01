@@ -23,7 +23,7 @@ webPush.setVapidDetails(
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 
 const DEFAULT_TIMEZONE = 'America/Guatemala'
-const SUMMARY_WINDOW_MINUTES = 15 // cron corre cada 15 min; ventana de disparo del resumen
+const SUMMARY_WINDOW_MINUTES = 10 // cron corre cada 10 min; ventana de disparo del resumen
 
 interface ZonedParts {
   year: number
@@ -341,16 +341,16 @@ function isReminderDue(
   }
 
   // User-configured reminder (reminder_at): fire when it is due within the
-  // cron tick (next 30 min) or just passed (up to 90 min late, cron tolerance).
+  // cron tick (next 5 min) or just passed (up to 10 min late, cron tolerance).
   // reminder_at is stored as UTC, but we compare it directly since the user set it
   // in their local time and it was converted to UTC on save.
   if (task.reminder_at) {
     const reminderAt = new Date(task.reminder_at)
     if (!Number.isNaN(reminderAt.getTime())) {
       const diffMinutes = (reminderAt.getTime() - now.getTime()) / (1000 * 60)
-      // Increased window: -90 to +30 minutes to handle timezone offsets and cron timing
+      // Window: -10 to +5 minutes for 10-minute cron cycle
       console.log(`[notify] reminder_at check: reminderAt=${reminderAt.toISOString()}, now=${now.toISOString()}, diffMinutes=${diffMinutes}`)
-      if (diffMinutes <= 30 && diffMinutes >= -90) return true
+      if (diffMinutes <= 5 && diffMinutes >= -10) return true
     }
   }
 
@@ -363,12 +363,12 @@ function resolveReminderType(
   timeZone: string,
 ): 'day_before' | 'three_hours_before' | 'custom_reminder' | null {
   // Custom reminder takes priority if it is due now
-  // Same window as isReminderDue: -90 to +30 minutes
+  // Same window as isReminderDue: -10 to +5 minutes
   if (task.reminder_at) {
     const reminderAt = new Date(task.reminder_at)
     if (!Number.isNaN(reminderAt.getTime())) {
       const diffMinutes = (reminderAt.getTime() - now.getTime()) / (1000 * 60)
-      if (diffMinutes <= 30 && diffMinutes >= -90) return 'custom_reminder'
+      if (diffMinutes <= 5 && diffMinutes >= -10) return 'custom_reminder'
     }
   }
 
