@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { queryClient } from './lib/queryClient.js'
 import { getSession, onAuthStateChange, getStoredSessionUser } from './lib/supabase.js'
 import { getSemesters } from './features/semesters/api.js'
@@ -23,7 +23,11 @@ import Habits from './pages/Habits.jsx'
 import Clock from './pages/Clock.jsx'
 import Profile from './pages/Profile.jsx'
 import Exam from './pages/Exam.jsx'
-import { startTaskNotificationScheduler } from './lib/notificationScheduler.js'
+// NOTA: el scheduler local de notificaciones (src/lib/notificationScheduler.js)
+// está DESACTIVADO: duplicaba el cron server-side (notify-daily-summary) y
+// generaba notificaciones redundantes/apiladas. El archivo se conserva por si
+// hay que revertir — bastaría con re-agregar el listener de 'load' de abajo.
+// import { startTaskNotificationScheduler } from './lib/notificationScheduler.js'
 import './styles/index.css'
 
 function SessionRedirect() {
@@ -259,14 +263,87 @@ if ('serviceWorker' in navigator) {
   })
 }
 
-window.addEventListener('load', () => {
-  startTaskNotificationScheduler()
-})
+// Scheduler local desactivado: ver nota en los imports de arriba.
+// window.addEventListener('load', () => {
+//   startTaskNotificationScheduler()
+// })
+
+// Último semestre activo conocido — fallback para deep links de push
+// notifications cuando la URL actual no vive bajo /s/:semesterId.
+const LAST_SEMESTER_STORAGE_KEY = 'academia:lastSemesterId'
+
+function getLastSemesterId() {
+  try {
+    return localStorage.getItem(LAST_SEMESTER_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+function getLastSemesterIdFromPath() {
+  return window.location.pathname.match(/^\/s\/([^/]+)/)?.[1] ?? null
+}
+
+// Navegación disparada desde el service worker (click en push notification).
+// El SW enfoca la ventana existente y manda un postMessage; acá resolvemos la
+// URL dentro del contexto actual (las rutas de app viven bajo /s/:semesterId).
+function PushNavigationHandler() {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  // Persistir el semesterId activo y reportar el path al SW (para el fallback openWindow).
+  useEffect(() => {
+    const semesterId = getLastSemesterIdFromPath()
+    if (semesterId) {
+      try {
+        localStorage.setItem(LAST_SEMESTER_STORAGE_KEY, semesterId)
+      } catch {
+        // localStorage lleno/bloqueado: el fallback simplemente no estará disponible
+      }
+    }
+    navigator.serviceWorker?.controller?.postMessage({ type: 'academia:path', path: `${location.pathname}${location.search}` })
+  }, [location])
+
+  useEffect(() => {
+    const handler = (event) => {
+      if (event.data?.type !== 'academia:navigate' || !event.data.url) return
+      let url = event.data.url
+      const semesterId = getLastSemesterIdFromPath() ?? getLastSemesterId()
+      if (semesterId && !url.startsWith(`/s/${semesterId}/`)) {
+        url = `/s/${semesterId}${url}`
+      }
+      navigate(url)
+    }
+    navigator.serviceWorker?.addEventListener('message', handler)
+    return () => navigator.serviceWorker?.removeEventListener('message', handler)
+  }, [navigate])
+
+  return null
+}
+
+// Fallback de arranque "en frío" (app cerrada, SW despertado por openWindow):
+// el SW abre /tasks?task=X sin semestre; si hay un semestre guardado en
+// localStorage, redirige conservando el query param. Si no, va a /auth.
+function ColdStartRedirect() {
+  const navigate = useNavigate()
+
+  React.useEffect(() => {
+    const semesterId = getLastSemesterId()
+    if (semesterId && /^\/tasks\/?$/.test(window.location.pathname)) {
+      navigate(`/s/${semesterId}${window.location.pathname}${window.location.search}`, { replace: true })
+    } else {
+      navigate('/auth', { replace: true })
+    }
+  }, [navigate])
+
+  return null
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <PushNavigationHandler />
         <Routes>
           {/* Landing / entry */}
           <Route path="/" element={<SessionRedirect />} />
@@ -319,8 +396,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             }
           />
           
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/auth" replace />} />
+          {/* Fallback: deep links de push sin semestre → redirigir con el último semestre */}
+          <Route path="*" element={<ColdStartRedirect />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

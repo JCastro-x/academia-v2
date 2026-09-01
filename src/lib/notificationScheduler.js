@@ -38,11 +38,12 @@ function sendNotification({ title, body, url }) {
     navigator.serviceWorker.ready.then((registration) => {
       registration.showNotification(title, {
         body,
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
+        badge: '/badge-96.png',
         tag: url || 'academia-task-reminder',
+        renotify: true,
         data: { url },
         vibrate: [200, 100, 200],
+        silent: false,
       }).catch(() => {
         new Notification(title, {
           body,

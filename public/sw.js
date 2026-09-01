@@ -57,47 +57,67 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   const payload = event.data ? event.data.json() : null
   console.log('[SW] Push event received:', payload)
-  
+
   const title = payload?.title || 'Academia'
   const options = {
     body: payload?.body || 'Tenés una actualización importante.',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    // Sin `icon`: en la PWA instalada Chrome ya muestra el ícono del manifest
+    // y pasarlo aparte generaba el logo duplicado/superpuesto.
+    // El `badge` es un checkmark monocromático (public/badge-96.png) que
+    // Android siluetea en la barra de estado.
+    badge: '/badge-96.png',
     tag: payload?.tag || 'academia-task-reminder',
+    // Con el mismo `tag`, Android REEMPLAZA la notificación previa no leída en
+    // vez de apilarla (protección extra si vuelven a duplicarse suscripciones).
+    // `renotify` hace que al reemplazar sí vuelva a vibrar/sonar.
+    renotify: true,
     data: {
       task_id: payload?.task_id || null,
       url: payload?.url || '/tasks',
     },
     vibrate: [200, 100, 200],
+    silent: false, // usa el sonido de notificación del sistema (Android)
   }
 
   event.waitUntil(self.registration.showNotification(title, options))
 })
 
+// Último path conocido de la app (lo reporta PushNavigationHandler en main.jsx).
+// Sirve para armar la URL correcta (bajo /s/:semesterId) en el fallback openWindow.
+let lastAppPath = null
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'academia:path' && typeof event.data.path === 'string') {
+    lastAppPath = event.data.path
+  }
+})
+
 self.addEventListener('notificationclick', (event) => {
   event.preventDefault()
+  event.notification.close()
   console.log('[SW] Notification click event:', event.notification.data)
 
-  const taskId = event.notification?.data?.task_id
-  let targetUrl
-  
-  if (taskId) {
-    targetUrl = new URL(`/tasks`, self.location.origin).toString()
-    targetUrl += `?task=${taskId}`
-  } else {
-    targetUrl = event.notification?.data?.url || '/tasks'
-    targetUrl = new URL(targetUrl, self.location.origin).toString()
-  }
+  const { task_id: taskId, url } = event.notification?.data || {}
+  // Tarea específica → /tasks?task=<id> (el cliente resuelve el semestre y
+  // Tasks.jsx hace scroll + highlight). Resumen → lista de tareas del día.
+  const tasksBase = lastAppPath ? lastAppPath.split('?')[0].replace(/\/tasks.*$/, '') : ''
+  const targetUrl = taskId ? `${tasksBase}/tasks?task=${taskId}` : (url || `${tasksBase}/tasks`)
+  const absoluteUrl = new URL(targetUrl, self.location.origin).toString()
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       for (const client of windowClients) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus().then(() => client.navigate(targetUrl))
+        if (client.url.startsWith(self.location.origin)) {
+          // Ya hay una ventana abierta: enfocarla y navegar sin recargar (SPA).
+          return client.focus().then((focused) => {
+            if ('postMessage' in focused) {
+              focused.postMessage({ type: 'academia:navigate', url: targetUrl })
+            }
+            return focused
+          })
         }
       }
-
-      return clients.openWindow(targetUrl)
+      return clients.openWindow(absoluteUrl)
     })
   )
 })

@@ -108,16 +108,35 @@ function getProfileTimezone(timezone: string | null | undefined) {
   return timezone && timezone.trim() ? timezone : DEFAULT_TIMEZONE
 }
 
+// Elige una variante de texto de forma determinista según el id, para dar
+// variedad sin repetir siempre el mismo mensaje.
+function pickVariant(seed: string, variants: string[]) {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  return variants[hash % variants.length]
+}
+
+// Recorta el título de la tarea para que el body no se corte en Android (~60 chars).
+function clip(text: string, max = 45) {
+  return text.length <= max ? text : `${text.slice(0, max - 1)}…`
+}
+
 function buildReminderNotification(
   task: { id: string; titulo: string },
   type: 'day_before' | 'three_hours_before' | 'custom_reminder',
 ) {
+  const t = clip(task.titulo)
+
   if (type === 'day_before') {
     return {
       taskId: task.id,
       type,
-      title: `Mañana vence: ${task.titulo}`,
-      body: 'Falta 1 día para que venza esta tarea. Organizate para completarla.',
+      title: 'Vence mañana 🗓️',
+      body: pickVariant(task.id, [
+        `Mañana vence: ${t}`,
+        `Te queda 1 día: ${t}`,
+        `Se acerca el plazo: ${t}`,
+      ]),
       url: '/tasks',
     }
   }
@@ -126,8 +145,12 @@ function buildReminderNotification(
     return {
       taskId: task.id,
       type,
-      title: `Recordatorio: ${task.titulo}`,
-      body: 'Tu recordatorio programado para esta tarea. Échale un vistazo.',
+      title: 'Recordatorio 👋',
+      body: pickVariant(task.id, [
+        `No te olvides: ${t}`,
+        `Tienes pendiente: ${t}`,
+        `Hey, esta tarea te espera: ${t}`,
+      ]),
       url: '/tasks',
     }
   }
@@ -135,8 +158,12 @@ function buildReminderNotification(
   return {
     taskId: task.id,
     type,
-    title: `Recordatorio: ${task.titulo}`,
-    body: 'Vence en menos de 3 horas. Revisá la tarea antes de que se te pase.',
+    title: '⏰ Vence en 3 horas',
+    body: pickVariant(task.id, [
+      `Últimas 3h para: ${t}`,
+      `¡Corrí! Vence hoy: ${t}`,
+      `Por vencer: ${t}`,
+    ]),
     url: '/tasks',
   }
 }
@@ -148,9 +175,10 @@ function buildMorningSummary(tasks: Array<{ id: string; titulo: string; due: str
     return null
   }
 
+  const plural = count === 1 ? 'tarea' : 'tareas'
   return {
-    title: `Tienes ${count} tarea${count === 1 ? '' : 's'} pendiente${count === 1 ? '' : 's'} para hoy`,
-    body: `Tenés ${count} tarea${count === 1 ? '' : 's'} que vencen hoy. Revisá tus pendientes.`,
+    title: `Tienes ${count} ${plural} para hoy`,
+    body: `Vencen hoy: ${count} ${plural} ✅`,
     url: '/tasks',
     count,
   }
@@ -161,16 +189,17 @@ function buildEveningSummary(tasks: Array<{ id: string; titulo: string; due: str
 
   if (count === 0) {
     return {
-      title: 'Felicidades, no tenés tareas para esta noche 🎉',
-      body: 'No tenés tareas pendientes para hoy. ¡Felicidades! 🎉',
+      title: 'Felicidades, día libre 🎉',
+      body: 'No tienes tareas pendientes para hoy 🎉',
       url: '/tasks',
       count: 0,
     }
   }
 
+  const plural = count === 1 ? 'tarea' : 'tareas'
   return {
-    title: `Quedan ${count} tarea${count === 1 ? '' : 's'} por hoy`,
-    body: `Todavía tenés ${count} tarea${count === 1 ? '' : 's'} pendiente${count === 1 ? '' : 's'} para hoy. Volvé a revisarlas.`,
+    title: `Quedan ${count} ${plural} de hoy`,
+    body: `Día de cierre: ${count} ${plural} sin terminar 📝`,
     url: '/tasks',
     count,
   }
@@ -223,17 +252,18 @@ async function sendToUserSubscriptions(
       sentCount += 1
     } catch (error: any) {
       const statusCode = error?.statusCode
-      // 404/410: la suscripción expiró o fue revocada en el navegador → desactivarla
+      // 404/410: la suscripción expiró o fue revocada en el navegador → borrarla
+      // (si solo se desactivara, la fila seguiría acumulándose en la tabla).
       if (statusCode === 404 || statusCode === 410) {
-        const { error: updateError } = await supabase
+        const { error: deleteError } = await supabase
           .from('push_subscriptions')
-          .update({ is_active: false })
+          .delete()
           .eq('user_id', userId)
           .eq('endpoint', subscription.endpoint)
-        if (updateError) {
-          console.error(`[notify] failed to deactivate dead subscription for ${userId}`, updateError)
+        if (deleteError) {
+          console.error(`[notify] failed to delete dead subscription for ${userId}`, deleteError)
         } else {
-          console.warn(`[notify] deactivated dead subscription (HTTP ${statusCode}) for ${userId}`)
+          console.warn(`[notify] deleted dead subscription (HTTP ${statusCode}) for ${userId}`)
         }
       } else {
         console.warn(`[notify] failed to send to subscription for ${userId}`, error)

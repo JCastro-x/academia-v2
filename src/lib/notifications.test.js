@@ -15,7 +15,7 @@ describe('daily summary notifications', () => {
     const result = buildDailySummaryContent(tasks, 'morning', '2026-08-29T07:00:00')
 
     expect(result.title).toContain('2')
-    expect(result.body).toContain('tareas pendientes para hoy')
+    expect(result.body).toContain('Vencen hoy')
     expect(result.url).toBe('/tasks')
   })
 
