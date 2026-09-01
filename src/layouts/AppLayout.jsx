@@ -24,7 +24,19 @@ export default function AppLayout() {
     modoOscuro, tipografia, temaColor, sonidosInteraccion, horaFormato,
     setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato, setMuted,
     setOnline, setOffline,
+    addToast,
   } = useUIStore()
+
+  useEffect(() => {
+    const handleGlobalToast = (event) => {
+      const { type = 'error', message } = event.detail || {}
+      if (!message) return
+      addToast({ type, message })
+    }
+
+    window.addEventListener('academia:toast', handleGlobalToast)
+    return () => window.removeEventListener('academia:toast', handleGlobalToast)
+  }, [addToast])
 
   useEffect(() => {
     if (prevPathRef.current !== location.pathname) {

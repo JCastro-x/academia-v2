@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { queryClient } from './lib/queryClient.js'
-import { getSession, onAuthStateChange, getStoredSessionUser } from './lib/supabase.js'
+import { getSession, onAuthStateChange, getStoredSessionUser, ensurePushSubscriptionForCurrentUser } from './lib/supabase.js'
 import { getSemesters } from './features/semesters/api.js'
 import AppLayout from './layouts/AppLayout.jsx'
 import Auth from './pages/Auth.jsx'
@@ -150,6 +150,16 @@ function ProtectedRoute({ children }) {
       isPwaInstalled: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true,
     }
 
+    const syncPushSubscription = async (nextUser) => {
+      if (!nextUser || nextUser.id === 'guest') return
+
+      try {
+        await ensurePushSubscriptionForCurrentUser({ silent: true })
+      } catch (error) {
+        console.warn('[push] auto-sync check failed', error)
+      }
+    }
+
     const localStorageKeys = Object.keys(localStorage)
     const supabaseKeys = localStorageKeys.filter((key) => key.startsWith('sb-'))
     debugInfo.hasSupabaseStorageKeys = supabaseKeys.length > 0
@@ -171,7 +181,11 @@ function ProtectedRoute({ children }) {
           hasUser: Boolean(session?.user),
           sessionStorageFallback: Boolean(cachedSessionUser),
         })
-        setUser(session?.user ?? cachedSessionUser ?? null)
+        const nextUser = session?.user ?? cachedSessionUser ?? null
+        setUser(nextUser)
+        if (nextUser) {
+          await syncPushSubscription(nextUser)
+        }
       } catch (error) {
         logSessionDebug('No active Supabase session', {
           errorName: error?.name ?? 'UnknownError',
@@ -182,8 +196,13 @@ function ProtectedRoute({ children }) {
 
         if (navigator.onLine && cachedSessionUser) {
           setUser(cachedSessionUser)
+          await syncPushSubscription(cachedSessionUser)
         } else {
-          setUser(cachedSessionUser ?? null)
+          const nextUser = cachedSessionUser ?? null
+          setUser(nextUser)
+          if (nextUser) {
+            await syncPushSubscription(nextUser)
+          }
         }
       } finally {
         if (isActive) setLoading(false)
@@ -192,14 +211,22 @@ function ProtectedRoute({ children }) {
 
     syncSession()
 
-    const { data: { subscription } } = onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = onAuthStateChange(async (_event, session) => {
       if (!isActive) return
       logSessionDebug('auth state changed', {
         event: _event,
         hasSession: Boolean(session),
         hasUser: Boolean(session?.user),
       })
-      setUser(session?.user ?? getStoredSessionUser() ?? null)
+      const nextUser = session?.user ?? getStoredSessionUser() ?? null
+      setUser(nextUser)
+      if (nextUser) {
+        try {
+          await syncPushSubscription(nextUser)
+        } catch (error) {
+          console.warn('[push] auth-state sync failed', error)
+        }
+      }
       setLoading(false)
     })
 

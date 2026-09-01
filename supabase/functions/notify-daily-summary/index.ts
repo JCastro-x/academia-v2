@@ -334,23 +334,23 @@ function isReminderDue(
 
     const calendarDayDiff = dayKeyDiff(zonedDayKey(dueDate, timeZone), zonedDayKey(now, timeZone))
 
-    const isThreeHoursBefore = diffHours > 0 && diffHours <= 3
-    const isOneDayBefore = calendarDayDiff === 1 && diffHours > 3 && diffHours <= 48
+    const isThreeHoursBefore = diffHours > 0 && diffHours <= 3.033 // +2 min padding for server delay
+    const isOneDayBefore = calendarDayDiff === 1 && diffHours > 3 && diffHours <= 48.033 // +2 min padding for server delay
 
     if (isThreeHoursBefore || isOneDayBefore) return true
   }
 
   // User-configured reminder (reminder_at): fire when it is due within the
-  // cron tick (next 5 min) or just passed (up to 10 min late, cron tolerance).
+  // cron tick (next 7 min) or just passed (up to 12 min late, cron tolerance).
   // reminder_at is stored as UTC, but we compare it directly since the user set it
   // in their local time and it was converted to UTC on save.
   if (task.reminder_at) {
     const reminderAt = new Date(task.reminder_at)
     if (!Number.isNaN(reminderAt.getTime())) {
       const diffMinutes = (reminderAt.getTime() - now.getTime()) / (1000 * 60)
-      // Window: -10 to +5 minutes for 10-minute cron cycle
+      // Window: -12 to +7 minutes for 10-minute cron cycle (with server delay padding)
       console.log(`[notify] reminder_at check: reminderAt=${reminderAt.toISOString()}, now=${now.toISOString()}, diffMinutes=${diffMinutes}`)
-      if (diffMinutes <= 5 && diffMinutes >= -10) return true
+      if (diffMinutes <= 7 && diffMinutes >= -12) return true
     }
   }
 
@@ -363,12 +363,12 @@ function resolveReminderType(
   timeZone: string,
 ): 'day_before' | 'three_hours_before' | 'custom_reminder' | null {
   // Custom reminder takes priority if it is due now
-  // Same window as isReminderDue: -10 to +5 minutes
+  // Same window as isReminderDue: -12 to +7 minutes (with server delay padding)
   if (task.reminder_at) {
     const reminderAt = new Date(task.reminder_at)
     if (!Number.isNaN(reminderAt.getTime())) {
       const diffMinutes = (reminderAt.getTime() - now.getTime()) / (1000 * 60)
-      if (diffMinutes <= 5 && diffMinutes >= -10) return 'custom_reminder'
+      if (diffMinutes <= 7 && diffMinutes >= -12) return 'custom_reminder'
     }
   }
 
@@ -377,8 +377,8 @@ function resolveReminderType(
     const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)
     const calendarDayDiff = dayKeyDiff(zonedDayKey(dueDate, timeZone), zonedDayKey(now, timeZone))
 
-    if (calendarDayDiff === 1 && diffHours > 3 && diffHours <= 48) return 'day_before'
-    if (diffHours > 0 && diffHours <= 3) return 'three_hours_before'
+    if (calendarDayDiff === 1 && diffHours > 3 && diffHours <= 48.033) return 'day_before' // +2 min padding for server delay
+    if (diffHours > 0 && diffHours <= 3.033) return 'three_hours_before' // +2 min padding for server delay
   }
 
   return null

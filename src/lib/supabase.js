@@ -154,6 +154,88 @@ export const urlBase64ToUint8Array = (base64String) => {
   return output
 }
 
+const arrayBufferToBase64 = (value) => {
+  if (!value) return null
+
+  const bytes = value instanceof Uint8Array ? value : new Uint8Array(value)
+  let binary = ''
+
+  for (let i = 0; i < bytes.byteLength; i += 1) {
+    binary += String.fromCharCode(bytes[i])
+  }
+
+  return btoa(binary)
+}
+
+const dispatchGlobalToast = (type, message) => {
+  if (typeof window === 'undefined' || !message) return
+
+  window.dispatchEvent(new CustomEvent('academia:toast', {
+    detail: {
+      type: type || 'error',
+      message,
+    },
+  }))
+}
+
+export const getActivePushSubscription = async () => {
+  if (typeof window === 'undefined') return null
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return null
+  if (Notification.permission !== 'granted') return null
+
+  try {
+    const registration = await navigator.serviceWorker.ready
+    return await registration.pushManager.getSubscription()
+  } catch (error) {
+    console.error('[push] failed to read active browser subscription', error)
+    return null
+  }
+}
+
+export const serializePushSubscription = (subscription) => {
+  const p256dh = subscription?.getKey ? subscription.getKey('p256dh') : subscription?.keys?.p256dh
+  const auth = subscription?.getKey ? subscription.getKey('auth') : subscription?.keys?.auth
+
+  return {
+    endpoint: subscription?.endpoint,
+    p256dh: p256dh ? arrayBufferToBase64(p256dh) : null,
+    auth: auth ? arrayBufferToBase64(auth) : null,
+  }
+}
+
+export const normalizeStoredPushSubscription = (subscription = {}) => {
+  const endpoint = subscription.endpoint || subscription.end_point || null
+  const p256dh = subscription.p256dh || subscription.p256dh_key || null
+  const auth = subscription.auth || subscription.auth_key || null
+
+  return {
+    endpoint,
+    p256dh: typeof p256dh === 'string' ? p256dh : p256dh ? arrayBufferToBase64(p256dh) : null,
+    auth: typeof auth === 'string' ? auth : auth ? arrayBufferToBase64(auth) : null,
+  }
+}
+
+export const hasPushSubscriptionMismatch = (activeSubscription, existingSubscriptions = []) => {
+  if (!activeSubscription) return false
+
+  const activeNormalized = normalizeStoredPushSubscription({
+    endpoint: activeSubscription.endpoint,
+    p256dh: activeSubscription.keys?.p256dh,
+    auth: activeSubscription.keys?.auth,
+  })
+
+  if (!activeNormalized.endpoint) return false
+
+  if (!existingSubscriptions.length) return true
+
+  return !existingSubscriptions.some((row) => {
+    const stored = normalizeStoredPushSubscription(row)
+    return stored.endpoint === activeNormalized.endpoint &&
+      stored.p256dh === activeNormalized.p256dh &&
+      stored.auth === activeNormalized.auth
+  })
+}
+
 export const savePushSubscription = async (subscription) => {
   const { data: userData } = await supabase.auth.getUser()
   const user = userData?.user
@@ -162,14 +244,11 @@ export const savePushSubscription = async (subscription) => {
     throw new Error('No authenticated user available to save push subscription')
   }
 
-  const p256dh = subscription.getKey('p256dh')
-  const auth = subscription.getKey('auth')
-
   const payload = {
     user_id: user.id,
     endpoint: subscription.endpoint,
-    p256dh: p256dh ? btoa(String.fromCharCode(...new Uint8Array(p256dh))) : null,
-    auth: auth ? btoa(String.fromCharCode(...new Uint8Array(auth))) : null,
+    p256dh: serializePushSubscription(subscription).p256dh,
+    auth: serializePushSubscription(subscription).auth,
     user_agent: navigator.userAgent,
     is_active: true,
   }
@@ -178,7 +257,11 @@ export const savePushSubscription = async (subscription) => {
     .from('push_subscriptions')
     .upsert(payload, { onConflict: 'endpoint' })
 
-  if (error) throw error
+  if (error) {
+    console.error('[push] failed to save subscription', error)
+    dispatchGlobalToast('error', 'La suscripción push no pudo guardarse. Reintentá en unos segundos.')
+    throw error
+  }
 
   // Dedup: cada re-registro del SW (recargas, reinstalación de la PWA) genera
   // un endpoint nuevo; sin esto el mismo usuario acumula filas y el cron le
@@ -192,6 +275,39 @@ export const savePushSubscription = async (subscription) => {
   if (cleanupError) {
     console.warn('[push] failed to clean up stale subscriptions', cleanupError)
   }
+}
+
+export const ensurePushSubscriptionForCurrentUser = async ({ silent = false } = {}) => {
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return false
+  }
+
+  const activeSubscription = await getActivePushSubscription()
+  if (!activeSubscription) {
+    return false
+  }
+
+  const { data: stored, error } = await supabase
+    .from('push_subscriptions')
+    .select('endpoint, p256dh, auth, is_active')
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('[push] failed to read existing subscriptions', error)
+    if (!silent) {
+      dispatchGlobalToast('error', 'No se pudo verificar la suscripción push registrada.')
+    }
+    throw error
+  }
+
+  if (hasPushSubscriptionMismatch(activeSubscription, stored ?? [])) {
+    await savePushSubscription(activeSubscription)
+    return true
+  }
+
+  return true
 }
 
 export const deletePushSubscription = async (endpoint) => {
