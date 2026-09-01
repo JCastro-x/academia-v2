@@ -132,6 +132,7 @@ function ProtectedRoute({ children }) {
   const [loading, setLoading] = React.useState(true)
   const [sessionDebug, setSessionDebug] = React.useState(null)
   const sessionDebugEnabled = isSessionDebugEnabled()
+  const pushSyncUserRef = React.useRef(null)
 
   React.useEffect(() => {
     const isGuestMode = localStorage.getItem('academia-guest-mode') === 'true'
@@ -151,8 +152,16 @@ function ProtectedRoute({ children }) {
     }
 
     const syncPushSubscription = async (nextUser) => {
-      console.log('[push-sync] syncPushSubscription called, user:', nextUser?.id)
-      if (!nextUser || nextUser.id === 'guest') return
+      if (!nextUser || nextUser.id === 'guest') {
+        pushSyncUserRef.current = null
+        return
+      }
+
+      if (pushSyncUserRef.current === nextUser.id) {
+        return
+      }
+
+      pushSyncUserRef.current = nextUser.id
 
       try {
         await ensurePushSubscriptionForCurrentUser({ silent: true })

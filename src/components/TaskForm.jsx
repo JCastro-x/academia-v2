@@ -32,6 +32,13 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
     subtasks: initialData?.subtasks || [],
   })
   const [saveState, setSaveState] = useState('saved')
+  const dueOptionsRef = useRef(null)
+  const reminderOptionsRef = useRef(null)
+  useEffect(() => {
+    dueOptionsRef.current = null
+    reminderOptionsRef.current = null
+  }, [initialData?.id])
+
   const lastSavedRef = useRef(initialData ? JSON.stringify({
     titulo: initialData.titulo || '',
     prioridad: initialData.prioridad || 'media',
@@ -43,6 +50,41 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
     subtasks: initialData.tipo === 'checklist' ? (initialData.subtasks || []) : null,
     work_days: initialData.work_days || [1, 2, 3, 4, 5],
   }) : '')
+
+  if (!dueOptionsRef.current) {
+    dueOptionsRef.current = {
+      enableTime: true,
+      dateFormat: 'Y-m-d H:i',
+      altInput: true,
+      altFormat: 'd/m/Y H:i',
+      appendTo: document.body,
+      closeOnSelect: false,
+      defaultDate: formData.due || 'today',
+      onOpen: (selectedDates, dateStr, instance) => {
+        if (instance.calendarContainer) {
+          instance.calendarContainer.classList.add('calendario-centrado')
+        }
+      },
+    }
+  }
+
+  if (!reminderOptionsRef.current) {
+    reminderOptionsRef.current = {
+      enableTime: true,
+      dateFormat: 'Y-m-d H:i',
+      altInput: true,
+      altFormat: 'd/m/Y H:i',
+      appendTo: document.body,
+      minDate: 'today',
+      closeOnSelect: false,
+      defaultDate: formData.reminder_at || 'today',
+      onOpen: (selectedDates, dateStr, instance) => {
+        if (instance.calendarContainer) {
+          instance.calendarContainer.classList.add('calendario-centrado')
+        }
+      },
+    }
+  }
 
   useEffect(() => {
     if (!initialData?.id || !onAutoSave) return
@@ -233,7 +275,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
           <label htmlFor="due" className="field-label">Fecha de entrega</label>
           <Flatpickr
             id="due"
-            value={formData.due}
+            value={formData.due || ''}
             onChange={(dates) => {
               const selectedDate = dates[0]
               const dateStr = selectedDate
@@ -241,20 +283,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
                 : ''
               setFormData(prev => ({ ...prev, due: dateStr }))
             }}
-            options={{
-              enableTime: true,
-              dateFormat: 'Y-m-d H:i',
-              altInput: true,
-              altFormat: 'd/m/Y H:i',
-              appendTo: document.body,
-              defaultDate: formData.due || 'today',
-              closeOnSelect: false,
-              onOpen: (selectedDates, dateStr, instance) => {
-                if (instance.calendarContainer) {
-                  instance.calendarContainer.classList.add('calendario-centrado')
-                }
-              }
-            }}
+            options={dueOptionsRef.current}
             className="field-input"
             disabled={isPending}
           />
@@ -264,7 +293,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
           <label htmlFor="reminder_at" className="field-label">Recordatorio (opcional)</label>
           <Flatpickr
             id="reminder_at"
-            value={formData.reminder_at}
+            value={formData.reminder_at || ''}
             onChange={(dates) => {
               const selectedDate = dates[0]
               const dateStr = selectedDate
@@ -272,21 +301,7 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
                 : ''
               setFormData(prev => ({ ...prev, reminder_at: dateStr }))
             }}
-            options={{
-              enableTime: true,
-              dateFormat: 'Y-m-d H:i',
-              altInput: true,
-              altFormat: 'd/m/Y H:i',
-              appendTo: document.body,
-              minDate: 'today',
-              defaultDate: formData.reminder_at || 'today',
-              closeOnSelect: false,
-              onOpen: (selectedDates, dateStr, instance) => {
-                if (instance.calendarContainer) {
-                  instance.calendarContainer.classList.add('calendario-centrado')
-                }
-              }
-            }}
+            options={reminderOptionsRef.current}
             className="field-input"
             disabled={isPending}
             placeholder="Selecciona fecha y hora..."
