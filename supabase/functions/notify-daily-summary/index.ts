@@ -341,12 +341,16 @@ function isReminderDue(
   }
 
   // User-configured reminder (reminder_at): fire when it is due within the
-  // cron tick (next 15 min) or just passed (up to 60 min late, cron tolerance).
+  // cron tick (next 30 min) or just passed (up to 90 min late, cron tolerance).
+  // reminder_at is stored as UTC, but we compare it directly since the user set it
+  // in their local time and it was converted to UTC on save.
   if (task.reminder_at) {
     const reminderAt = new Date(task.reminder_at)
     if (!Number.isNaN(reminderAt.getTime())) {
       const diffMinutes = (reminderAt.getTime() - now.getTime()) / (1000 * 60)
-      if (diffMinutes <= 15 && diffMinutes >= -60) return true
+      // Increased window: -90 to +30 minutes to handle timezone offsets and cron timing
+      console.log(`[notify] reminder_at check: reminderAt=${reminderAt.toISOString()}, now=${now.toISOString()}, diffMinutes=${diffMinutes}`)
+      if (diffMinutes <= 30 && diffMinutes >= -90) return true
     }
   }
 
@@ -359,11 +363,12 @@ function resolveReminderType(
   timeZone: string,
 ): 'day_before' | 'three_hours_before' | 'custom_reminder' | null {
   // Custom reminder takes priority if it is due now
+  // Same window as isReminderDue: -90 to +30 minutes
   if (task.reminder_at) {
     const reminderAt = new Date(task.reminder_at)
     if (!Number.isNaN(reminderAt.getTime())) {
       const diffMinutes = (reminderAt.getTime() - now.getTime()) / (1000 * 60)
-      if (diffMinutes <= 15 && diffMinutes >= -60) return 'custom_reminder'
+      if (diffMinutes <= 30 && diffMinutes >= -90) return 'custom_reminder'
     }
   }
 

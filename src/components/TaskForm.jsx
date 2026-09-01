@@ -248,7 +248,6 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
               altFormat: 'd/m/Y H:i',
               appendTo: document.body,
               defaultDate: formData.due || 'today',
-              time_24hr: true,
               closeOnSelect: false,
               onOpen: (selectedDates, dateStr, instance) => {
                 if (instance.calendarContainer) {
@@ -281,7 +280,6 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
               appendTo: document.body,
               minDate: 'today',
               defaultDate: formData.reminder_at || 'today',
-              time_24hr: true,
               closeOnSelect: false,
               onOpen: (selectedDates, dateStr, instance) => {
                 if (instance.calendarContainer) {
