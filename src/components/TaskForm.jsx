@@ -4,13 +4,28 @@ import 'flatpickr/dist/flatpickr.css'
 import '../styles/forms.css'
 import { getTaskStats, countWorkDays, todayStr, parseDate } from '../domain/task-stats.js'
 
+// Convierte un string local "YYYY-MM-DDTHH:mm" al ISO UTC real usando el TZ del navegador
+const localToUtcIso = (localStr) => {
+  if (!localStr) return ''
+  const d = new Date(localStr) // sin offset → se interpreta en el TZ local del usuario
+  return isNaN(d.getTime()) ? '' : d.toISOString()
+}
+// Convierte un ISO UTC de la DB a string local "YYYY-MM-DDTHH:mm" para el picker
+const utcIsoToLocal = (iso) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export default function TaskForm({ semesterId, subjects, initialData, onSubmit, onAutoSave, onCancel, isPending }) {
   const [formData, setFormData] = useState({
     titulo: initialData?.titulo || '',
     prioridad: initialData?.prioridad || 'media',
     subject_id: initialData?.subject_id || '',
     due: initialData?.due ? initialData.due.slice(0, 16) : '',
-    reminder_at: initialData?.reminder_at ? initialData.reminder_at.slice(0, 16) : '',
+    reminder_at: utcIsoToLocal(initialData?.reminder_at),
     tipo: initialData?.tipo || 'cantidad',
     total_units: initialData?.total_units || '',
     work_days: initialData?.work_days || [1, 2, 3, 4, 5],
@@ -21,12 +36,12 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
     titulo: initialData.titulo || '',
     prioridad: initialData.prioridad || 'media',
     subject_id: initialData.subject_id || '',
-    due: initialData.due ? initialData.due.slice(0, 16) : '',
-    reminder_at: initialData.reminder_at ? initialData.reminder_at.slice(0, 16) : '',
+    due: initialData.due ? initialData.due.slice(0, 10) : '',
+    reminder_at: localToUtcIso(utcIsoToLocal(initialData.reminder_at)) || null,
     tipo: initialData.tipo || 'cantidad',
-    total_units: initialData.total_units || '',
+    total_units: initialData.tipo === 'cantidad' ? Number(initialData.total_units) || null : null,
+    subtasks: initialData.tipo === 'checklist' ? (initialData.subtasks || []) : null,
     work_days: initialData.work_days || [1, 2, 3, 4, 5],
-    subtasks: initialData.subtasks || [],
   }) : '')
 
   useEffect(() => {
@@ -36,8 +51,8 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       titulo: formData.titulo,
       prioridad: formData.prioridad,
       subject_id: formData.subject_id || null,
-      due: formData.due || null,
-      reminder_at: formData.reminder_at || null,
+      due: formData.due ? formData.due.slice(0, 10) : null,
+      reminder_at: localToUtcIso(formData.reminder_at) || null,
       tipo: formData.tipo,
       total_units: formData.tipo === 'cantidad' ? Number(formData.total_units) || null : null,
       subtasks: formData.tipo === 'checklist' ? formData.subtasks : null,
@@ -70,8 +85,8 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       semester_id: semesterId,
       ...formData,
       subject_id: formData.subject_id || null,
-      due: formData.due || null,
-      reminder_at: formData.reminder_at || null,
+      due: formData.due ? formData.due.slice(0, 10) : null,
+      reminder_at: localToUtcIso(formData.reminder_at) || null,
       total_units: formData.tipo === 'cantidad' ? Number(formData.total_units) || null : null,
       subtasks: formData.tipo === 'checklist' ? formData.subtasks : null,
     })

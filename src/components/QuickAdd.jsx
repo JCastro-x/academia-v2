@@ -29,7 +29,7 @@ export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-end justify-center z-50"
+            className="fixed inset-0 bg-black/50 flex items-end justify-center z-[70]"
             onClick={closeModal}
           >
             <motion.div

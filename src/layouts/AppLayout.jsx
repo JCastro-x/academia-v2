@@ -133,7 +133,7 @@ export default function AppLayout() {
   const handleOpenQuickAdd = () => openModal('quickadd')
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-[var(--dm-bg)] overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-gray-50 dark:bg-[var(--dm-bg)] overflow-hidden">
       <TopBar onOpenClassModal={handleOpenClassModal} onOpenQuickAdd={handleOpenQuickAdd} />
 
       <div className="flex relative flex-1 min-h-0 overflow-visible">
@@ -184,7 +184,10 @@ export default function AppLayout() {
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-0.5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden">
+      <nav
+        className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-0.5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden"
+        style={{ paddingBottom: 'max(2px, env(safe-area-inset-bottom))' }}
+      >
         <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
           {mobileNavItems.map((item) => {
             const active = isActive(item.path)
