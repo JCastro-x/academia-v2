@@ -1,3 +1,13 @@
+function pickVariant(seed, variants) {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  return variants[hash % variants.length]
+}
+
+function clip(text, max = 45) {
+  return text.length <= max ? text : `${text.slice(0, max - 1)}…`
+}
+
 export function buildDailySummaryContent(tasks, period, nowIso) {
   const pending = Array.isArray(tasks) ? tasks.filter((task) => !task.done) : []
   const count = pending.length
@@ -5,10 +15,9 @@ export function buildDailySummaryContent(tasks, period, nowIso) {
   const isMorning = period === 'morning'
 
   if (count === 0) {
-    const timeLabel = isMorning ? 'mañana' : 'noche'
     return {
-      title: `Felicidades, no tienes tareas para esta ${timeLabel} 🎉`,
-      body: `No tienes tareas para esta ${timeLabel}. ¡Felicidades! 🎉`,
+      title: isMorning ? 'Felicidades, día libre 🎉' : 'Felicidades, día cerrado 🎉',
+      body: 'No tienes tareas pendientes 🎉',
       url: '/tasks',
       count: 0,
       period,
@@ -16,15 +25,16 @@ export function buildDailySummaryContent(tasks, period, nowIso) {
     }
   }
 
+  const plural = count === 1 ? 'tarea' : 'tareas'
   const title = isMorning
-    ? `Tienes ${count} tarea${count === 1 ? '' : 's'} pendiente${count === 1 ? '' : 's'} para hoy`
-    : `Tienes ${count} tarea${count === 1 ? '' : 's'} pendiente${count === 1 ? '' : 's'} de hoy`
+    ? `Tienes ${count} ${plural} para hoy`
+    : `Quedan ${count} ${plural} de hoy`
 
   return {
     title,
     body: isMorning
-      ? `Tienes ${count} tarea${count === 1 ? '' : 's'} pendientes para hoy. Revisá tus tareas.`
-      : `Quedan ${count} tarea${count === 1 ? '' : 's'} pendientes hoy. Volvé a revisarlas.`,
+      ? `Vencen hoy: ${count} ${plural} ✅`
+      : `Día de cierre: ${count} ${plural} sin terminar 📝`,
     url: '/tasks',
     count,
     period,
@@ -59,8 +69,12 @@ export function getTaskRemindersForNow(tasks, nowIso) {
       results.push({
         taskId: task.id,
         type: 'three_hours_before',
-        title: `Recordatorio: ${task.titulo}`,
-        body: `Vence en menos de 3 horas. Revisá la tarea antes de que se te pase.`,
+        title: '⏰ Vence en 3 horas',
+        body: pickVariant(task.id, [
+          `Últimas 3h para: ${clip(task.titulo)}`,
+          `¡Corrí! Vence hoy: ${clip(task.titulo)}`,
+          `Por vencer: ${clip(task.titulo)}`,
+        ]),
         url: '/tasks',
       })
     }
@@ -69,8 +83,12 @@ export function getTaskRemindersForNow(tasks, nowIso) {
       results.push({
         taskId: task.id,
         type: 'day_before',
-        title: `Mañana vence: ${task.titulo}`,
-        body: `Falta 1 día para que venza esta tarea. Organizate para completarla.`,
+        title: 'Vence mañana 🗓️',
+        body: pickVariant(task.id, [
+          `Mañana vence: ${clip(task.titulo)}`,
+          `Te queda 1 día: ${clip(task.titulo)}`,
+          `Se acerca el plazo: ${clip(task.titulo)}`,
+        ]),
         url: '/tasks',
       })
     }

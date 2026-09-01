@@ -1,5 +1,5 @@
-import { useParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useDeleteTask, useDeleteCompletedTasks } from '../features/tasks/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
@@ -23,6 +23,16 @@ export default function Tasks() {
   const [filterPriority, setFilterPriority] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+
+  // Deep link desde push notification: /tasks?task=<id> → scroll + highlight.
+  const [searchParams] = useSearchParams()
+  const highlightTaskId = searchParams.get('task')
+
+  useEffect(() => {
+    if (!highlightTaskId) return
+    const el = document.getElementById(`task-${highlightTaskId}`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [highlightTaskId, tasks])
 
   const handleCreateTask = async (taskData) => {
     try {
@@ -190,14 +200,19 @@ export default function Tasks() {
       <div className="min-w-0 pb-16">
         <AnimatePresence mode="popLayout">
           {sortedTasks.map(task => (
-            <TaskCard
+            <div
               key={task.id}
-              task={task}
-              subject={subjects?.find(s => s.id === task.subject_id)}
-              onToggleDone={handleToggleDone}
-              onEdit={(t) => openModal('task', { editingTask: t })}
-              onDelete={handleDeleteTask}
-            />
+              id={`task-${task.id}`}
+              className={highlightTaskId === task.id ? 'rounded-xl ring-2 ring-[var(--color-primary)] ring-offset-2 ring-offset-[var(--dm-bg)] transition' : ''}
+            >
+              <TaskCard
+                task={task}
+                subject={subjects?.find(s => s.id === task.subject_id)}
+                onToggleDone={handleToggleDone}
+                onEdit={(t) => openModal('task', { editingTask: t })}
+                onDelete={handleDeleteTask}
+              />
+            </div>
           ))}
         </AnimatePresence>
       </div>
