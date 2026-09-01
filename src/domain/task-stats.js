@@ -195,12 +195,12 @@ export function statusFromProgress(stats) {
 
   if (stats.remaining > 0 && stats.ritmoActual === 0 && stats.daysRemainingDisplay > 2) return 'notstarted'
 
-  const urgencyRatio = stats.urgencyRatio || stats.exigencia || 1
+  const cargaDiaria = stats.necesitasHoy || 0
 
-  if (urgencyRatio <= 1.05) return 'ongreen'      // Excelente (al día o adelantado)
-  if (urgencyRatio <= 1.25) return 'onyellow'     // Bien (un poco atrasado)
-  if (urgencyRatio <= 1.50) return 'onattention'  // Atención (regular)
-  return 'critical'                                // Crítico (muy atrasado)
+  if (cargaDiaria <= 5) return 'ongreen'      // Excelente (carga muy ligera)
+  if (cargaDiaria <= 7) return 'onyellow'     // Bien (carga manejable)
+  if (cargaDiaria <= 9) return 'onattention'  // Atención (carga pesada)
+  return 'critical'                           // Crítico (carga insostenible, > 9)
 }
 
 // ============================================================
@@ -322,7 +322,8 @@ export function computeCantidadStats(task) {
     ritmoNecesario,
     ritmoOriginal,
     diasDeAtraso,
-    exigencia
+    exigencia,
+    necesitasHoy
   }
   const status = statusFromProgress(statsForStatus)
   
@@ -384,6 +385,8 @@ export function computeChecklistStats(task) {
   const workDaysTotal = countWorkDays(startStr, endStr, workDays)
   const workDaysRemaining = countWorkDays(todayStr(), endStr, workDays)
   const workDaysElapsed = workDaysTotal - workDaysRemaining
+
+  const necesitasHoy = isDone ? 0 : Math.ceil(remaining / Math.max(1, workDaysRemaining))
   
   const ritmoActual = workDaysElapsed > 0 ? doneSub / Math.max(1, workDaysElapsed) : 0
   
@@ -410,7 +413,8 @@ export function computeChecklistStats(task) {
     ritmoActual,
     ritmoNecesario,
     ritmoOriginal,
-    diasDeAtraso
+    diasDeAtraso,
+    necesitasHoy
   }
   const status = statusFromProgress(statsForStatus)
   
@@ -427,6 +431,7 @@ export function computeChecklistStats(task) {
     totalSub,
     doneSub,
     remaining,
+    necesitasHoy,
     ritmoActual,
     ritmoNecesario,
     ritmoOriginal,

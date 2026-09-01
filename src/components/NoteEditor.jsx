@@ -17,6 +17,8 @@ export default function NoteEditor({ noteId, onClose }) {
   const editorRef = useRef(null)
   const fileInputRef = useRef(null)
   const lastSavedSnapshotRef = useRef('')
+  const isInitialLoadRef = useRef(true)
+  const prevNoteIdRef = useRef(null)
   
   const { data: note, isLoading } = useNote(noteId)
   const updateNote = useUpdateNote()
@@ -32,8 +34,16 @@ export default function NoteEditor({ noteId, onClose }) {
     storagePaths.map((path, index) => [path, signedUrlsResults[index]?.data])
   )
 
+  // Reset initial load flag when noteId changes
   useEffect(() => {
-    if (note) {
+    if (prevNoteIdRef.current !== noteId) {
+      isInitialLoadRef.current = true
+      prevNoteIdRef.current = noteId
+    }
+  }, [noteId])
+
+  useEffect(() => {
+    if (note && isInitialLoadRef.current) {
       const nextTitulo = note.titulo || ''
       const nextContenido = note.contenido || ''
       setTitulo(nextTitulo)
@@ -42,8 +52,9 @@ export default function NoteEditor({ noteId, onClose }) {
       if (editorRef.current) {
         editorRef.current.innerHTML = nextContenido
       }
+      isInitialLoadRef.current = false
     }
-  }, [note])
+  }, [note, noteId])
 
   useEffect(() => {
     const checkMobile = () => {

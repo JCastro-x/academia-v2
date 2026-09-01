@@ -162,7 +162,11 @@ $$ language plpgsql security definer;
 
 create or replace function set_user_id_from_subject() returns trigger as $$
 begin
-  new.user_id := (select user_id from subjects where id = new.subject_id);
+  if new.subject_id is not null then
+    new.user_id := (select user_id from subjects where id = new.subject_id);
+  else
+    new.user_id := auth.uid();
+  end if;
   return new;
 end;
 $$ language plpgsql security definer;
