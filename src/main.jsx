@@ -23,10 +23,12 @@ import Habits from './pages/Habits.jsx'
 import Clock from './pages/Clock.jsx'
 import Profile from './pages/Profile.jsx'
 import Exam from './pages/Exam.jsx'
-// NOTA: el scheduler local de notificaciones (src/lib/notificationScheduler.js)
-// está DESACTIVADO: duplicaba el cron server-side (notify-daily-summary) y
-// generaba notificaciones redundantes/apiladas. El archivo se conserva por si
-// hay que revertir — bastaría con re-agregar el listener de 'load' de abajo.
+// NOTA: El scheduler local de notificaciones (src/lib/notificationScheduler.js) está DESACTIVADO
+// a propósito. Fue reemplazado por el cron server-side de Supabase (Push Notifications) que
+// cubre la misma funcionalidad: resumen matutino/nocturno, recordatorios de 1 día y 3 horas
+// antes, y reminder_at manual. Reactivar este scheduler generaría notificaciones duplicadas.
+// El archivo se conserva por si hay que revertir — basta con descomentar el import y la
+// llamada a startTaskNotificationScheduler() en el listener de 'load' más abajo.
 // import { startTaskNotificationScheduler } from './lib/notificationScheduler.js'
 import './styles/index.css'
 

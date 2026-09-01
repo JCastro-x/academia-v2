@@ -1,3 +1,8 @@
+// NOTA: Este scheduler local de notificaciones está DESACTIVADO a propósito.
+// Fue reemplazado por el cron server-side de Supabase (Push Notifications) que
+// cubre la misma funcionalidad: resumen matutino/nocturno, recordatorios de 1 día
+// y 3 horas antes, y reminder_at manual. Reactivar este scheduler generaría
+// notificaciones duplicadas. Ver main.jsx para más contexto.
 import { supabase } from './supabase.js'
 import { buildDailySummaryContent, getTaskRemindersForNow } from './notifications.js'
 

@@ -183,6 +183,7 @@ export function baseTimeStats(startStr, endStr) {
 
 /**
  * Determine task status based on progress statistics.
+ * Ported from Ritmo (js/taskStats.js) - uses diasDeAtraso exclusively.
  * @param {Object} stats - Progress statistics from computeCantidadStats or computeChecklistStats
  * @returns {string} Status: 'done', 'notstarted', 'overdue', 'critical', 'ongreen', 'onyellow', 'onattention'
  */
@@ -190,25 +191,16 @@ export function statusFromProgress(stats) {
   if (stats.isDone) return 'done'
   if (stats.notStarted) return 'notstarted'
   if (stats.isOverdue) return 'overdue'
-  if (stats.urgencyRatio != null) {
-    if (stats.urgencyRatio <= 1.25) return 'ongreen'
-    if (stats.urgencyRatio <= 1.75) return 'onyellow'
-    if (stats.urgencyRatio <= 2.5) return 'onattention'
-    return 'critical'
-  }
-  if (stats.progressPercent >= 80 && stats.daysRemainingDisplay > 2) return 'ongreen'
   if (stats.daysRemainingDisplay <= 2 && stats.remaining > 0) return 'critical'
-  
+
   if (stats.remaining > 0 && stats.ritmoActual === 0 && stats.daysRemainingDisplay > 2) return 'notstarted'
-  
-  const diasDeAtraso = stats.diasDeAtraso || 0
-  const buffer = stats.ritmoOriginal > 0 ? 0.5 / stats.ritmoOriginal : 0.3
-  const extraTolerance = Math.max(0, buffer - 0.3)
-  
-  if (diasDeAtraso >= -0.3 - extraTolerance) return 'ongreen'
-  if (diasDeAtraso >= -1.0 - extraTolerance) return 'onyellow'
-  if (diasDeAtraso >= -2.0 - extraTolerance) return 'onattention'
-  return 'critical'
+
+  const urgencyRatio = stats.urgencyRatio || stats.exigencia || 1
+
+  if (urgencyRatio <= 1.05) return 'ongreen'      // Excelente (al día o adelantado)
+  if (urgencyRatio <= 1.25) return 'onyellow'     // Bien (un poco atrasado)
+  if (urgencyRatio <= 1.50) return 'onattention'  // Atención (regular)
+  return 'critical'                                // Crítico (muy atrasado)
 }
 
 // ============================================================
@@ -224,9 +216,12 @@ export function computeCantidadStats(task) {
   // Handle null/undefined values defensively
   const logDates = Object.keys(task.log || {}).filter((date) => parseDate(date))
   const earliestLogDate = logDates.sort()[0]
-  const startStr = task.created_at
-    ? truncateToDate(task.created_at)
-    : earliestLogDate || todayStr()
+  // Ajuste 1: Usar start_date o startDate si existe, fallback a created_at
+  const startStr = task.start_date || task.startDate
+    ? truncateToDate(task.start_date || task.startDate)
+    : task.created_at
+      ? truncateToDate(task.created_at)
+      : earliestLogDate || todayStr()
   const endStr = task.due ? truncateToDate(task.due) : todayStr()
   const bt = baseTimeStats(startStr, endStr)
   
@@ -268,33 +263,34 @@ export function computeCantidadStats(task) {
   const remaining = Math.max(0, totalUnits - totalDone)
   
   const tKey = todayStr()
-  const tomorrow = parseDate(tKey)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const remainingStart = formatDate(tomorrow)
+  // Ajuste 3: workDaysRemaining cuenta desde HOY inclusive (no desde mañana)
   const doneToday = Number(log[tKey]) || 0
   const doneBeforeToday = totalDone - doneToday
   const remainingBeforeToday = Math.max(0, totalUnits - doneBeforeToday)
-  
+
   const workDays = task.work_days && task.work_days.length > 0 ? task.work_days : [1, 2, 3, 4, 5]
   const workDaysTotal = countWorkDays(startStr, endStr, workDays)
-  const workDaysRemaining = countWorkDays(remainingStart, endStr, workDays)
+  const workDaysRemaining = countWorkDays(tKey, endStr, workDays)
   const workDaysElapsed = countWorkDays(startStr, tKey, workDays)
-  
-  const metaDiariaOriginal = Math.ceil(totalUnits / Math.max(1, workDaysTotal))
-  const necesitasHoy = Math.ceil(remaining / Math.max(1, workDaysRemaining))
-  const recomendado = Math.ceil(necesitasHoy * 1.15)
-  const exigencia = metaDiariaOriginal > 0 ? necesitasHoy / metaDiariaOriginal : 1
 
-  // metaHoyRestante: decreciente conforme se registra avance hoy
-  const metaHoyRestante = Math.max(0, necesitasHoy - doneToday)
+  const metaDiariaOriginal = Math.ceil(totalUnits / Math.max(1, workDaysTotal))
+
+  // Base diaria calculada con "foto" de lo que faltaba al despertar (evita saltos por Math.ceil)
+  const baseDiaria = Math.ceil(remainingBeforeToday / Math.max(1, workDaysRemaining))
+  const necesitasHoy = baseDiaria
+  const recomendado = Math.ceil(baseDiaria * 1.15)
+  const exigencia = metaDiariaOriginal > 0 ? baseDiaria / metaDiariaOriginal : 1
+
+  // metaHoyRestante: lo que aún falta hacer hoy (base estática menos lo ya hecho)
+  const metaHoyRestante = Math.max(0, baseDiaria - doneToday)
 
   let metaHoy
   if (isDone) {
     metaHoy = 0
   } else if (bt.isOverdue) {
-    metaHoy = remainingBeforeToday
+    metaHoy = remaining // Si está atrasada, la meta es terminarla toda
   } else {
-    metaHoy = Math.ceil(remaining / Math.max(1, workDaysRemaining))
+    metaHoy = Math.max(0, baseDiaria - doneToday)
   }
   
   const daysElapsedForPace = workDaysElapsed > 0 ? workDaysElapsed : 1
@@ -368,7 +364,12 @@ export function computeCantidadStats(task) {
  * @returns {Object} Comprehensive statistics for checklist tasks
  */
 export function computeChecklistStats(task) {
-  const startStr = task.created_at ? truncateToDate(task.created_at) : todayStr()
+  // Ajuste 1: Usar start_date o startDate si existe, fallback a created_at
+  const startStr = task.start_date || task.startDate
+    ? truncateToDate(task.start_date || task.startDate)
+    : task.created_at
+      ? truncateToDate(task.created_at)
+      : todayStr()
   const endStr = task.due ? truncateToDate(task.due) : todayStr()
   const bt = baseTimeStats(startStr, endStr)
   

@@ -14,10 +14,27 @@ import {
   tasksQueryKeys,
 } from './api.js'
 
+const isGuestMode = () => localStorage.getItem('academia-guest-mode') === 'true'
+
+const getGuestTasks = () => {
+  const data = localStorage.getItem('guest-tasks')
+  return data ? JSON.parse(data) : []
+}
+
+const saveGuestTasks = (tasks) => {
+  localStorage.setItem('guest-tasks', JSON.stringify(tasks))
+}
+
 export function useTasks(semesterId) {
   return useQuery({
     queryKey: tasksQueryKeys.bySemester(semesterId),
-    queryFn: () => getTasks(semesterId),
+    queryFn: () => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        return tasks.filter(t => t.semester_id === semesterId)
+      }
+      return getTasks(semesterId)
+    },
     enabled: !!semesterId,
   })
 }
@@ -25,7 +42,13 @@ export function useTasks(semesterId) {
 export function usePendingTasks(semesterId) {
   return useQuery({
     queryKey: tasksQueryKeys.pending(semesterId),
-    queryFn: () => getPendingTasks(semesterId),
+    queryFn: () => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        return tasks.filter(t => t.semester_id === semesterId && !t.done)
+      }
+      return getPendingTasks(semesterId)
+    },
     enabled: !!semesterId,
   })
 }
@@ -33,7 +56,13 @@ export function usePendingTasks(semesterId) {
 export function useTasksBySubject(subjectId) {
   return useQuery({
     queryKey: tasksQueryKeys.bySubject(subjectId),
-    queryFn: () => getTasksBySubject(subjectId),
+    queryFn: () => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        return tasks.filter(t => t.subject_id === subjectId)
+      }
+      return getTasksBySubject(subjectId)
+    },
     enabled: !!subjectId,
   })
 }
@@ -41,7 +70,13 @@ export function useTasksBySubject(subjectId) {
 export function useTask(id) {
   return useQuery({
     queryKey: tasksQueryKeys.byId(id),
-    queryFn: () => getTaskById(id),
+    queryFn: () => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        return tasks.find(t => t.id === id) || null
+      }
+      return getTaskById(id)
+    },
     enabled: !!id,
   })
 }
@@ -50,7 +85,23 @@ export function useCreateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: createTask,
+    mutationFn: async (task) => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        const newTask = {
+          ...task,
+          id: `guest-${Date.now()}`,
+          done: false,
+          subtasks: task.subtasks || [],
+          attachments: task.attachments || [],
+          log: task.log || [],
+          updated_at: new Date().toISOString(),
+        }
+        saveGuestTasks([...tasks, newTask])
+        return newTask
+      }
+      return createTask(task)
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.bySemester(data.semester_id) })
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.pending(data.semester_id) })
@@ -62,7 +113,17 @@ export function useUpdateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, updates }) => updateTask(id, updates),
+    mutationFn: async ({ id, updates }) => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        const updatedTasks = tasks.map(t =>
+          t.id === id ? { ...t, ...updates, updated_at: new Date().toISOString() } : t
+        )
+        saveGuestTasks(updatedTasks)
+        return updatedTasks.find(t => t.id === id)
+      }
+      return updateTask(id, updates)
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.byId(data.id) })
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.bySemester(data.semester_id) })
@@ -75,7 +136,17 @@ export function useToggleTaskDone() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, done }) => toggleTaskDone(id, done),
+    mutationFn: async ({ id, done }) => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        const updatedTasks = tasks.map(t =>
+          t.id === id ? { ...t, done, updated_at: new Date().toISOString() } : t
+        )
+        saveGuestTasks(updatedTasks)
+        return updatedTasks.find(t => t.id === id)
+      }
+      return toggleTaskDone(id, done)
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.byId(data.id) })
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.bySemester(data.semester_id) })
@@ -88,7 +159,15 @@ export function useDeleteTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: deleteTask,
+    mutationFn: async (id) => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        const updatedTasks = tasks.filter(t => t.id !== id)
+        saveGuestTasks(updatedTasks)
+        return id
+      }
+      return deleteTask(id)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.all })
     },
@@ -99,7 +178,15 @@ export function useDeleteCompletedTasks() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: deleteCompletedTasks,
+    mutationFn: async (semesterId) => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        const updatedTasks = tasks.filter(t => t.semester_id !== semesterId || !t.done)
+        saveGuestTasks(updatedTasks)
+        return semesterId
+      }
+      return deleteCompletedTasks(semesterId)
+    },
     onSuccess: (_, semesterId) => {
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.bySemester(semesterId) })
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.pending(semesterId) })
@@ -110,7 +197,13 @@ export function useDeleteCompletedTasks() {
 export function useCountTasksBySubject(subjectId) {
   return useQuery({
     queryKey: ['tasks', 'count', 'subject', subjectId],
-    queryFn: () => countTasksBySubject(subjectId),
+    queryFn: () => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        return tasks.filter(t => t.subject_id === subjectId).length
+      }
+      return countTasksBySubject(subjectId)
+    },
     enabled: !!subjectId,
   })
 }
@@ -119,7 +212,45 @@ export function useIncrementTaskLogUnit() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ taskId, dateStr, delta }) => incrementTaskLogUnit(taskId, dateStr, delta),
+    mutationFn: async ({ taskId, dateStr, delta }) => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        const task = tasks.find(t => t.id === taskId)
+        if (!task) throw new Error('Task not found')
+
+        const log = task.log || {}
+        const currentValue = Number(log[dateStr]) || 0
+        const newValue = currentValue + delta
+
+        // Capping: prevent negative values
+        const cappedValue = Math.max(0, newValue)
+
+        // Calculate totalDone for capping against total_units
+        const totalDone = Object.keys(log).reduce((sum, k) => sum + (Number(log[k]) || 0), 0)
+        const totalUnits = Number(task.total_units) || 0
+
+        // Capping: prevent exceeding total_units (if defined)
+        const totalDoneWithNewValue = totalDone - currentValue + cappedValue
+        const finalValue = totalUnits > 0 && totalDoneWithNewValue > totalUnits
+          ? cappedValue - (totalDoneWithNewValue - totalUnits)
+          : cappedValue
+
+        // Update log with new value
+        const updatedLog = { ...log }
+        if (finalValue === 0) {
+          delete updatedLog[dateStr]
+        } else {
+          updatedLog[dateStr] = finalValue
+        }
+
+        const updatedTasks = tasks.map(t =>
+          t.id === taskId ? { ...t, log: updatedLog, updated_at: new Date().toISOString() } : t
+        )
+        saveGuestTasks(updatedTasks)
+        return updatedTasks.find(t => t.id === taskId)
+      }
+      return incrementTaskLogUnit(taskId, dateStr, delta)
+    },
     onMutate: async ({ taskId, dateStr, delta }) => {
       // Cancel outgoing refetches for all relevant query keys
       await queryClient.cancelQueries({ queryKey: tasksQueryKeys.byId(taskId) })
@@ -168,8 +299,8 @@ export function useIncrementTaskLogUnit() {
       if (previousSemesterId) {
         queryClient.setQueryData(tasksQueryKeys.bySemester(previousSemesterId), (old) => {
           if (!old) return old
-          return old.map(task => 
-            task.id === taskId 
+          return old.map(task =>
+            task.id === taskId
               ? { ...task, log: queryClient.getQueryData(tasksQueryKeys.byId(taskId))?.log, updated_at: new Date().toISOString() }
               : task
           )

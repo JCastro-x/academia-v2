@@ -34,31 +34,34 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, 
     },
     ongreen: {
       label: 'Excelente',
-      className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
     },
     onyellow: {
       label: 'Bien',
-      className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+      className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
     },
     onattention: {
       label: 'Atención',
-      className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
     },
     critical: {
       label: 'Crítico',
-      className: 'bg-red-600 text-white dark:bg-red-700 dark:text-white'
+      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
     },
     overdue: {
       label: 'Crítico',
       className: 'bg-red-700 text-white dark:bg-red-800 dark:text-white'
     },
     notstarted: {
-      label: 'Bien',
+      label: 'No iniciada',
       className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
     }
   }
 
-  const badgeConfig = statusBadgeConfig[stats.status] || statusBadgeConfig.notstarted
+  // Only show status badge for tasks with total_units configured (cantidad tasks)
+  // For checklist tasks or cantidad tasks without total_units, don't show the badge
+  const showStatusBadge = task.tipo === 'cantidad' && task.total_units > 0
+  const badgeConfig = showStatusBadge ? (statusBadgeConfig[stats.status] || statusBadgeConfig.notstarted) : null
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Sin fecha'
@@ -100,9 +103,11 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, 
             <h4 className={`font-medium ${task.done ? 'line-through' : ''}`} style={task.done ? { color: 'var(--text3)', transition: 'all 0.3s ease' } : { color: 'var(--dm-text)' }}>
               {task.titulo}
             </h4>
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeConfig.className}`}>
-              {badgeConfig.label}
-            </span>
+            {badgeConfig && (
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeConfig.className}`}>
+                {badgeConfig.label}
+              </span>
+            )}
           </div>
 
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
