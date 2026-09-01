@@ -279,12 +279,14 @@ export const savePushSubscription = async (subscription) => {
 
 export const ensurePushSubscriptionForCurrentUser = async ({ silent = false } = {}) => {
   const { data: { user } } = await supabase.auth.getUser()
+  console.log('[push-sync] ensurePushSubscriptionForCurrentUser called for user:', user?.id)
 
   if (!user) {
     return false
   }
 
   const activeSubscription = await getActivePushSubscription()
+  console.log('[push-sync] active browser subscription:', activeSubscription)
   if (!activeSubscription) {
     return false
   }
@@ -294,6 +296,8 @@ export const ensurePushSubscriptionForCurrentUser = async ({ silent = false } = 
     .select('endpoint, p256dh, auth, is_active')
     .eq('user_id', user.id)
 
+  console.log('[push-sync] stored subscriptions:', stored)
+
   if (error) {
     console.error('[push] failed to read existing subscriptions', error)
     if (!silent) {
@@ -302,7 +306,10 @@ export const ensurePushSubscriptionForCurrentUser = async ({ silent = false } = 
     throw error
   }
 
-  if (hasPushSubscriptionMismatch(activeSubscription, stored ?? [])) {
+  const mismatchDetected = hasPushSubscriptionMismatch(activeSubscription, stored ?? [])
+  console.log('[push-sync] mismatch detected:', mismatchDetected)
+
+  if (mismatchDetected) {
     await savePushSubscription(activeSubscription)
     return true
   }

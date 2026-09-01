@@ -151,6 +151,7 @@ function ProtectedRoute({ children }) {
     }
 
     const syncPushSubscription = async (nextUser) => {
+      console.log('[push-sync] syncPushSubscription called, user:', nextUser?.id)
       if (!nextUser || nextUser.id === 'guest') return
 
       try {
