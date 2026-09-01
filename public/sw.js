@@ -1,4 +1,4 @@
-const CACHE_NAME = 'academia-v2-cache-v2'
+const CACHE_NAME = 'academia-v2-cache-v3'
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -20,6 +20,13 @@ self.addEventListener('activate', (event) => {
       Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     ).then(() => self.clients.claim())
   )
+})
+
+// Escuchar mensaje para forzar activación del nuevo service worker
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
 })
 
 self.addEventListener('fetch', (event) => {

@@ -252,6 +252,27 @@ if ('serviceWorker' in navigator) {
     try {
       navigator.serviceWorker.register('/sw.js').then((registration) => {
         console.log('[SW] Service Worker registered successfully:', registration)
+
+        // Detectar actualizaciones del service worker
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[SW] New service worker available, reloading...')
+                // Forzar recarga para activar la nueva versión
+                window.location.reload()
+              }
+            })
+          }
+        })
+
+        // Verificar si hay una actualización pendiente al cargar
+        if (registration.waiting) {
+          console.log('[SW] Service worker waiting, activating...')
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+          window.location.reload()
+        }
       }).catch((error) => {
         console.error('[SW] Service Worker registration failed:', {
           message: error.message,
