@@ -1,4 +1,4 @@
-const CACHE_NAME = 'academia-v2-cache-v3'
+const CACHE_NAME = 'academia-v2-cache-v4'
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -39,6 +39,24 @@ self.addEventListener('fetch', (event) => {
   const isSupabaseRequest = requestUrl.hostname.includes('supabase')
 
   if (!isSameOrigin || isSupabaseRequest) {
+    return
+  }
+
+  if (request.destination === 'document') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const cloned = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned))
+          return response
+        })
+        .catch(() => caches.match(request))
+    )
+    return
+  }
+
+  if (request.destination === 'script' || request.destination === 'style') {
+    event.respondWith(fetch(request))
     return
   }
 
