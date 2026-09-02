@@ -11,7 +11,7 @@ export default function SubjectCard({ subject, onEdit, onDelete }) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.99 }}
-      className="subject-card box-border relative rounded-2xl backdrop-blur-md p-4 border-l-4 transition-all hover:scale-[1.02] min-w-0 w-full max-w-full overflow-hidden"
+      className="subject-card box-border relative rounded-2xl backdrop-blur-md p-4 border-l transition-all hover:scale-[1.02] min-w-0 w-full max-w-full overflow-hidden"
       style={{
         borderLeftColor: subject.color || '#8B5CF6',
         backgroundColor: 'rgba(255, 255, 255, 0.05)',

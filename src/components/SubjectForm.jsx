@@ -104,6 +104,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
           <div className="flex items-center gap-2">
             <input
               type="color"
+              name="color"
               value={formData.color}
               onChange={handleChange}
               className="w-10 h-8 border border-gray-300 rounded cursor-pointer dark:border-[var(--dm-border)]"
