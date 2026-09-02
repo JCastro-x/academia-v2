@@ -182,8 +182,8 @@ export function baseTimeStats(startStr, endStr) {
 // ============================================================
 
 /**
- * Determine task status based on progress statistics.
- * Ported from Ritmo (js/taskStats.js) - uses diasDeAtraso exclusively.
+ * Determine task status based on remaining daily load.
+ * Uses necesitasHoy exclusively; it does not depend on task start date.
  * @param {Object} stats - Progress statistics from computeCantidadStats or computeChecklistStats
  * @returns {string} Status: 'done', 'notstarted', 'overdue', 'critical', 'ongreen', 'onyellow', 'onattention'
  */
@@ -197,10 +197,10 @@ export function statusFromProgress(stats) {
 
   const cargaDiaria = stats.necesitasHoy || 0
 
-  if (cargaDiaria <= 5) return 'ongreen'      // Excelente (carga muy ligera)
-  if (cargaDiaria <= 7) return 'onyellow'     // Bien (carga manejable)
-  if (cargaDiaria <= 9) return 'onattention'  // Atención (carga pesada)
-  return 'critical'                           // Crítico (carga insostenible, > 9)
+  if (cargaDiaria <= 4) return 'ongreen'      // Excelente (carga muy ligera)
+  if (cargaDiaria <= 6) return 'onyellow'     // Bien (carga manejable)
+  if (cargaDiaria <= 8) return 'onattention'  // Atención (carga pesada)
+  return 'critical'                           // Crítico (carga insostenible, > 8)
 }
 
 // ============================================================
@@ -471,6 +471,48 @@ export function daysRemainingLabel(stats) {
   if (stats.isOverdue) return 'Venció'
   if (stats.daysRemainingDisplay === 0) return 'Vence hoy'
   return `${stats.daysRemainingDisplay} ${pluralDias(stats.daysRemainingDisplay)} restantes`
+}
+
+export function getDueRemainingLabel(task, stats = {}) {
+  if (!task) return daysRemainingLabel(stats)
+
+  if (stats.isDone) return 'Completada'
+  if (stats.notStarted) return 'Aún no inicia'
+  if (stats.isOverdue) return 'Venció'
+
+  const dueValue = task.due || null
+  if (!dueValue) return daysRemainingLabel(stats)
+
+  const now = new Date()
+  const dueDate = new Date(dueValue)
+  if (Number.isNaN(dueDate.getTime())) return daysRemainingLabel(stats)
+
+  const currentTime = new Date(now)
+  const todayStart = new Date(currentTime)
+  todayStart.setHours(0, 0, 0, 0)
+
+  const dueStart = new Date(dueDate)
+  dueStart.setHours(0, 0, 0, 0)
+
+  const dayDiff = Math.round((dueStart - todayStart) / 86400000)
+
+  if (dayDiff === 0) {
+    const diffHours = Math.max(0, (dueDate.getTime() - now.getTime()) / 3600000)
+    if (diffHours > 0 && diffHours <= 12) {
+      const hoursLeft = Math.max(1, Math.ceil(diffHours))
+      return `Vence en ${hoursLeft} ${hoursLeft === 1 ? 'hora' : 'horas'}`
+    }
+
+    const timePart = task.due_time
+      ? task.due_time.slice(0, 5)
+      : (String(task.due).includes('T') ? dueDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false }) : '')
+    return timePart ? `Vence hoy, ${timePart}` : 'Vence hoy'
+  }
+
+  if (dayDiff === 1) return 'Vence mañana'
+
+  const daysRemaining = Math.max(0, dayDiff)
+  return `${daysRemaining} ${pluralDias(daysRemaining)} restantes`
 }
 
 /**

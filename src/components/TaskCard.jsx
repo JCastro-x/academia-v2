@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { forwardRef } from 'react'
-import { getTaskStats, daysRemainingLabel, todayStr } from '../domain/task-stats.js'
+import { getTaskStats, getDueRemainingLabel, todayStr } from '../domain/task-stats.js'
 import { useIncrementTaskLogUnit } from '../features/tasks/hooks.js'
 
 const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, ref) => {
@@ -120,7 +120,7 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, 
               {task.prioridad}
             </span>
             <span className={`text-gray-600 dark:text-[var(--dm-text-muted)] ${isOverdue ? 'text-red-600 font-medium dark:text-red-400' : ''}`}>
-              {daysRemainingLabel(stats)}
+              {getDueRemainingLabel(task, stats)}
             </span>
             {stats.type === 'cantidad' && stats.exigencia && (
               <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded dark:bg-purple-900/30 dark:text-purple-400">
@@ -130,7 +130,8 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, 
           </div>
 
           <div className="mt-2 text-xs text-gray-500 dark:text-[var(--dm-text-muted)]">
-            {(stats.type !== 'checklist' || (task.subtasks && task.subtasks.length > 0)) && (
+            {((stats.type === 'cantidad' && Number(task.total_units) > 0) ||
+              (stats.type === 'checklist' && Array.isArray(task.subtasks) && task.subtasks.length > 0)) && (
               <span>{stats.progressLabel}</span>
             )}
             {!task.done && stats.remaining > 0 && (

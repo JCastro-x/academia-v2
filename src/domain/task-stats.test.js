@@ -13,6 +13,7 @@ import {
   computeChecklistStats,
   getTaskStats,
   daysRemainingLabel,
+  getDueRemainingLabel,
 } from './task-stats.js'
 
 describe('task-stats', () => {
@@ -228,52 +229,79 @@ describe('task-stats', () => {
       expect(statusFromProgress(stats)).toBe('notstarted')
     })
 
-    it('should return "ongreen" for tasks on schedule', () => {
-      const stats = { 
-        isDone: false, 
-        notStarted: false, 
-        isOverdue: false, 
-        daysRemainingDisplay: 10, 
-        remaining: 50,
-        ritmoActual: 5,
-        ritmoOriginal: 5,
-        ritmoNecesario: 5,
-        diasDeAtraso: 0,
+    it('should return "ongreen" when necesitasHoy is 4 or less', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 10,
+        remaining: 40,
+        ritmoActual: 4,
+        necesitaHoy: 4,
+        necesitasHoy: 4,
         exigencia: 1
       }
       expect(statusFromProgress(stats)).toBe('ongreen')
     })
 
-    it('should return "onyellow" for tasks slightly behind', () => {
-      const stats = { 
-        isDone: false, 
-        notStarted: false, 
-        isOverdue: false, 
-        daysRemainingDisplay: 10, 
+    it('should return "onyellow" when necesidadesHoy is between 5 and 6', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 10,
         remaining: 60,
         ritmoActual: 4,
-        ritmoOriginal: 5,
-        ritmoNecesario: 6,
-        diasDeAtraso: -0.5,
+        necesitaHoy: 6,
+        necesitasHoy: 6,
         exigencia: 1.2
       }
       expect(statusFromProgress(stats)).toBe('onyellow')
     })
 
-    it('should return "onattention" for tasks significantly behind', () => {
-      const stats = { 
-        isDone: false, 
-        notStarted: false, 
-        isOverdue: false, 
-        daysRemainingDisplay: 10, 
+    it('should return "onattention" when necesidadesHoy is between 7 and 8', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 10,
         remaining: 80,
         ritmoActual: 2,
-        ritmoOriginal: 5,
-        ritmoNecesario: 8,
-        diasDeAtraso: -1.5,
+        necesitaHoy: 8,
+        necesitasHoy: 8,
         exigencia: 1.6
       }
       expect(statusFromProgress(stats)).toBe('onattention')
+    })
+
+    it('should return "critical" when necesidadesHoy is greater than 8', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 10,
+        remaining: 90,
+        ritmoActual: 1,
+        necesitaHoy: 9,
+        necesitasHoy: 9,
+        exigencia: 1.8
+      }
+      expect(statusFromProgress(stats)).toBe('critical')
+    })
+
+    it('should return "ongreen" for 30 exercises with 25 days remaining regardless of start date', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 25,
+        remaining: 30,
+        ritmoActual: 1,
+        necesitaHoy: 1.2,
+        necesitasHoy: 1.2,
+        exigencia: 1
+      }
+      expect(statusFromProgress(stats)).toBe('ongreen')
     })
   })
 
@@ -652,6 +680,29 @@ describe('task-stats', () => {
     it('should use singular "día" for 1 day', () => {
       const stats = { isDone: false, notStarted: false, isOverdue: false, daysRemainingDisplay: 1 }
       expect(daysRemainingLabel(stats)).toBe('1 día restantes')
+    })
+
+    it('should show hours when the task expires later today within a short window', () => {
+      const now = new Date()
+      const due = new Date(now.getTime() + 4 * 60 * 60 * 1000)
+
+      const task = {
+        due: due.toISOString(),
+        due_time: '21:00:00',
+      }
+
+      const stats = { isDone: false, notStarted: false, isOverdue: false, daysRemainingDisplay: 0 }
+      expect(getDueRemainingLabel(task, stats)).toBe('Vence en 4 horas')
+    })
+
+    it('should show "Vence mañana" for next-calendar-day deadlines', () => {
+      const now = new Date()
+      const due = new Date(now)
+      due.setDate(due.getDate() + 1)
+
+      const task = { due: due.toISOString() }
+      const stats = { isDone: false, notStarted: false, isOverdue: false, daysRemainingDisplay: 1 }
+      expect(getDueRemainingLabel(task, stats)).toBe('Vence mañana')
     })
   })
 })
