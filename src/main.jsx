@@ -41,7 +41,7 @@ function SessionRedirect() {
     const checkSession = async () => {
       try {
         const cachedSessionUser = getStoredSessionUser()
-        const { data: { session } } = await getSession()
+        const session = await getSession()
         
         if (session?.user) {
           const semesters = await getSemesters()

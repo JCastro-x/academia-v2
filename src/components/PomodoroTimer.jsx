@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTimerStore } from '../features/pomodoro/timerStore';
 import { useCreatePomodoroSession, usePomodoroSessionsByDate } from '../features/pomodoro/hooks';
 import { calculatePomodoroStats } from '../features/pomodoro/api';
+import { cancelPomodoroNotification, schedulePomodoroNotification } from '../features/pomodoro/api';
 import { initAudio, playSound, startAudioKeepAlive, stopAudioKeepAlive } from '../lib/sound';
 
 export default function PomodoroTimer() {
@@ -62,10 +63,12 @@ export default function PomodoroTimer() {
         if (remaining <= 0) {
           clearInterval(intervalRef.current);
           lastCountdownSecondRef.current = null;
+          initAudio();
           playSound('pomodoro-complete');
           if (pomodoroState.currentPhase === 'trabajo') {
             const durationMin = Math.round(pomodoroConfig.workDuration);
             createSession.mutate({
+              id: pomodoroState.sessionId,
               started_at: new Date(pomodoroState.startedAt).toISOString(),
               ended_at: new Date().toISOString(),
               duration_min: durationMin,
@@ -158,19 +161,57 @@ export default function PomodoroTimer() {
     setPomodoroConfig(configValues);
     setShowConfig(false);
     lastCountdownSecondRef.current = null;
-    resetPomodoro();
+    handleReset();
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     initAudio();
     startAudioKeepAlive();
     startPomodoro();
+    const { pomodoroState: nextState } = useTimerStore.getState();
+    const scheduledAt = new Date(Date.now() + nextState.remainingSeconds * 1000).toISOString();
+    try {
+      await schedulePomodoroNotification(nextState.sessionId, nextState.currentPhase, scheduledAt);
+    } catch (error) {
+      console.warn('[pomodoro] Failed to schedule notification', error);
+    }
   };
 
-  const handleResume = () => {
+  const handleResume = async () => {
     initAudio();
     startAudioKeepAlive();
     resumePomodoro();
+    const { pomodoroState: nextState } = useTimerStore.getState();
+    const scheduledAt = new Date(Date.now() + nextState.remainingSeconds * 1000).toISOString();
+    try {
+      await schedulePomodoroNotification(nextState.sessionId, nextState.currentPhase, scheduledAt);
+    } catch (error) {
+      console.warn('[pomodoro] Failed to reschedule notification', error);
+    }
+  };
+
+  const handlePause = async () => {
+    const sessionId = useTimerStore.getState().pomodoroState.sessionId;
+    pausePomodoro();
+    if (sessionId) {
+      try {
+        await cancelPomodoroNotification(sessionId);
+      } catch (error) {
+        console.warn('[pomodoro] Failed to cancel notification', error);
+      }
+    }
+  };
+
+  const handleReset = async () => {
+    const sessionId = useTimerStore.getState().pomodoroState.sessionId;
+    resetPomodoro();
+    if (sessionId) {
+      try {
+        await cancelPomodoroNotification(sessionId);
+      } catch (error) {
+        console.warn('[pomodoro] Failed to cancel notification', error);
+      }
+    }
   };
 
   return (
@@ -219,7 +260,7 @@ export default function PomodoroTimer() {
         )}
         {pomodoroState.isRunning && (
           <button
-            onClick={pausePomodoro}
+            onClick={handlePause}
             className="bg-yellow-500 text-white px-8 py-3 rounded-lg hover:bg-yellow-600 font-medium"
           >
             Pausar
@@ -234,7 +275,7 @@ export default function PomodoroTimer() {
           </button>
         )}
         <button
-          onClick={resetPomodoro}
+          onClick={handleReset}
           className="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-medium dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
         >
           Reset

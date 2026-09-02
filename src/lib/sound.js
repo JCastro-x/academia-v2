@@ -1,7 +1,7 @@
 let audioContext = null
 let isMuted = false
 let effectsVolume = Number(localStorage.getItem('academia_effects_volume'))
-if (!Number.isFinite(effectsVolume)) effectsVolume = 1
+if (!Number.isFinite(effectsVolume) || effectsVolume <= 0) effectsVolume = 1
 let keepAliveSource = null
 let keepAliveGain = null
 
@@ -15,7 +15,9 @@ const getAudioContext = () => {
   }
 
   if (audioContext.state === 'suspended') {
-    audioContext.resume().catch(() => {})
+    audioContext.resume().catch((error) => {
+      console.warn('[sound] Failed to resume AudioContext', error)
+    })
   }
 
   return audioContext
@@ -91,7 +93,11 @@ export const startAudioKeepAlive = () => {
     keepAliveGain = gain
   }
 
-  if (ctx.state === 'suspended') ctx.resume().then(start).catch(() => {})
+  if (ctx.state === 'suspended') {
+    ctx.resume().then(start).catch((error) => {
+      console.warn('[sound] Failed to resume AudioContext keep-alive', error)
+    })
+  }
   else start()
 }
 
@@ -155,13 +161,13 @@ export const playSound = (type = 'click') => {
       playTone({ frequency: 180, duration: 0.14, type: 'square', volume: 0.14, startTime: 0.08, endFrequency: 90 })
       break
     case 'countdown':
-      playTone({ frequency: 760, duration: 0.08, type: 'triangle', volume: 0.24, endFrequency: 620 })
+      playTone({ frequency: 760, duration: 0.08, type: 'triangle', volume: 0.65, endFrequency: 620 })
       break
     case 'pomodoro-complete':
-      playTone({ frequency: 440, duration: 0.18, type: 'triangle', volume: 0.28, endFrequency: 520 })
-      playTone({ frequency: 554.37, duration: 0.2, type: 'sine', volume: 0.28, startTime: 0.2, endFrequency: 660 })
-      playTone({ frequency: 698.46, duration: 0.28, type: 'triangle', volume: 0.24, startTime: 0.42, endFrequency: 820 })
-      playTone({ frequency: 880, duration: 0.24, type: 'sine', volume: 0.2, startTime: 0.72, endFrequency: 980 })
+      playTone({ frequency: 440, duration: 0.18, type: 'triangle', volume: 0.68, endFrequency: 520 })
+      playTone({ frequency: 554.37, duration: 0.2, type: 'sine', volume: 0.68, startTime: 0.2, endFrequency: 660 })
+      playTone({ frequency: 698.46, duration: 0.28, type: 'triangle', volume: 0.62, startTime: 0.42, endFrequency: 820 })
+      playTone({ frequency: 880, duration: 0.24, type: 'sine', volume: 0.58, startTime: 0.72, endFrequency: 980 })
       break
     default:
       playTone({ frequency: 760, duration: 0.1, type: 'sine', volume: 0.24 })

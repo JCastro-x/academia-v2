@@ -14,6 +14,7 @@ export const useTimerStore = create(
       
       // Pomodoro state
       pomodoroState: {
+        sessionId: null,
         isRunning: false,
         isPaused: false,
         currentPhase: 'trabajo', // 'trabajo' | 'descanso_corto' | 'descanso_largo'
@@ -42,6 +43,7 @@ export const useTimerStore = create(
         return {
           pomodoroState: {
             ...state.pomodoroState,
+            sessionId: crypto.randomUUID(),
             isRunning: true,
             isPaused: false,
             startedAt: Date.now(),
@@ -82,6 +84,7 @@ export const useTimerStore = create(
             isRunning: false,
             isPaused: false,
             startedAt: null,
+            sessionId: null,
             remainingSeconds: duration,
             totalDuration: duration,
             currentPhase: 'trabajo',
@@ -127,6 +130,7 @@ export const useTimerStore = create(
             isRunning: false,
             isPaused: false,
             startedAt: null,
+            sessionId: null,
             currentPhase: nextPhase,
             remainingSeconds: nextDuration,
             totalDuration: nextDuration,

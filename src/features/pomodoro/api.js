@@ -121,6 +121,7 @@ export async function createPomodoroSession(session) {
   const { data, error } = await supabase
     .from('pomodoro_sessions')
     .insert({
+      id: session.id,
       started_at: session.started_at,
       ended_at: session.ended_at,
       duration_min: session.duration_min,
@@ -131,6 +132,32 @@ export async function createPomodoroSession(session) {
     .select('id, user_id, started_at, ended_at, duration_min, tipo, task_id, subject_id')
     .single();
   
+  if (error) throw error;
+  return data;
+}
+
+export async function schedulePomodoroNotification(sessionId, phase, scheduledAtISO) {
+  const { data, error } = await supabase.functions.invoke('pomodoro-schedule', {
+    body: {
+      action: 'schedule',
+      session_id: sessionId,
+      phase,
+      scheduled_at: scheduledAtISO,
+    },
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function cancelPomodoroNotification(sessionId) {
+  const { data, error } = await supabase.functions.invoke('pomodoro-schedule', {
+    body: {
+      action: 'cancel',
+      session_id: sessionId,
+    },
+  });
+
   if (error) throw error;
   return data;
 }
