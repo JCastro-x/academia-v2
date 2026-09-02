@@ -52,9 +52,11 @@ const playTone = ({
     oscillator.frequency.linearRampToValueAtTime(endFrequency, now + sweepDuration)
   }
 
+  const peakVolume = Math.max(0.0001, volume * effectsVolume)
   gainNode.gain.setValueAtTime(0.0001, now)
-  gainNode.gain.exponentialRampToValueAtTime(volume * effectsVolume, now + 0.02)
+  gainNode.gain.exponentialRampToValueAtTime(peakVolume, now + 0.02)
   gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration)
+  gainNode.gain.setValueAtTime(0, now + duration)
 
   oscillator.connect(gainNode)
   gainNode.connect(ctx.destination)
