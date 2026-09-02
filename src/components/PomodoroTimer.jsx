@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useTimerStore } from '../features/pomodoro/timerStore';
 import { useCreatePomodoroSession, usePomodoroSessionsByDate } from '../features/pomodoro/hooks';
 import { calculatePomodoroStats } from '../features/pomodoro/api';
-import { playSound } from '../lib/sound';
+import { initAudio, playSound, startAudioKeepAlive, stopAudioKeepAlive } from '../lib/sound';
 
 export default function PomodoroTimer() {
   const {
@@ -23,6 +23,11 @@ export default function PomodoroTimer() {
   const [configValues, setConfigValues] = useState(pomodoroConfig);
   const intervalRef = useRef(null);
   const lastCountdownSecondRef = useRef(null);
+
+  useEffect(() => {
+    if (pomodoroState.isRunning) startAudioKeepAlive();
+    else stopAudioKeepAlive();
+  }, [pomodoroState.isRunning]);
 
   const triggerCountdownSound = (remainingSeconds) => {
     if (remainingSeconds > 10 || remainingSeconds <= 0) {
@@ -156,6 +161,18 @@ export default function PomodoroTimer() {
     resetPomodoro();
   };
 
+  const handleStart = () => {
+    initAudio();
+    startAudioKeepAlive();
+    startPomodoro();
+  };
+
+  const handleResume = () => {
+    initAudio();
+    startAudioKeepAlive();
+    resumePomodoro();
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
       {/* Stats panel */}
@@ -194,7 +211,7 @@ export default function PomodoroTimer() {
       <div className="flex gap-3 justify-center">
         {!pomodoroState.isRunning && !pomodoroState.isPaused && (
           <button
-            onClick={() => startPomodoro()}
+            onClick={handleStart}
             className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium"
           >
             Iniciar
@@ -210,7 +227,7 @@ export default function PomodoroTimer() {
         )}
         {pomodoroState.isPaused && (
           <button
-            onClick={resumePomodoro}
+            onClick={handleResume}
             className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-medium"
           >
             Reanudar
