@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import webPush from 'npm:web-push'
+import { dayKeyDiff, getZonedOffsetMs, getZonedParts, resolveEventReminderType, wallTimeToInstant, zonedDayKey } from './eventReminderLogic.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -24,79 +25,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 
 const DEFAULT_TIMEZONE = 'America/Guatemala'
 const SUMMARY_WINDOW_MINUTES = 10 // cron corre cada 10 min; ventana de disparo del resumen
-
-interface ZonedParts {
-  year: number
-  month: number
-  day: number
-  hour: number
-  minute: number
-  second: number
-}
-
-// Partes de "hora de pared" de un instante, en un timezone IANA dado.
-// Usa Intl.DateTimeFormat (built-in, ICU completo en Deno) en lugar de
-// date-fns-tz/Temporal para no agregar dependencias al bundle de la Edge Function.
-function getZonedParts(date: Date, timeZone: string): ZonedParts {
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hourCycle: 'h23',
-  })
-
-  const parts: Record<string, number> = {}
-  for (const part of formatter.formatToParts(date)) {
-    if (part.type !== 'literal') {
-      parts[part.type] = Number(part.value)
-    }
-  }
-
-  return {
-    year: parts.year,
-    month: parts.month,
-    day: parts.day,
-    hour: parts.hour,
-    minute: parts.minute,
-    second: parts.second,
-  }
-}
-
-// Offset (ms) del timezone en el instante dado: hora de pared local - UTC.
-function getZonedOffsetMs(date: Date, timeZone: string) {
-  const p = getZonedParts(date, timeZone)
-  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second)
-  return asUtc - date.getTime()
-}
-
-// Convierte una fecha 'YYYY-MM-DD' + hora 'HH:MM:SS' de pared en un instante
-// UTC real. Doble pasada del offset: correcta incluso con DST (Guatemala no
-// tiene, pero el helper es genérico para cualquier profiles.timezone).
-function wallTimeToInstant(dateKey: string, timeKey: string, timeZone: string): Date {
-  const [y, mo, d] = dateKey.split('-').map(Number)
-  const [h, mi, s] = timeKey.split(':').map(Number)
-  const naive = Date.UTC(y, mo - 1, d, h || 0, mi || 0, s || 0)
-  const offset1 = getZonedOffsetMs(new Date(naive), timeZone)
-  const offset2 = getZonedOffsetMs(new Date(naive - offset1), timeZone)
-  return new Date(naive - offset2)
-}
-
-// Clave de día local 'YYYY-MM-DD' de un instante en el timezone dado.
-function zonedDayKey(date: Date, timeZone: string) {
-  const p = getZonedParts(date, timeZone)
-  return `${p.year}-${String(p.month).padStart(2, '0')}-${String(p.day).padStart(2, '0')}`
-}
-
-// Diferencia de días calendario entre dos claves 'YYYY-MM-DD'.
-function dayKeyDiff(a: string, b: string) {
-  const [ay, am, ad] = a.split('-').map(Number)
-  const [by, bm, bd] = b.split('-').map(Number)
-  return Math.round((Date.UTC(ay, am - 1, ad) - Date.UTC(by, bm - 1, bd)) / (1000 * 60 * 60 * 24))
-}
 
 // true si la hora local del usuario está en la ventana [hour:00, hour:15).
 function isInLocalWindow(date: Date, timeZone: string, hour: number) {
@@ -168,6 +96,53 @@ function buildReminderNotification(
   }
 }
 
+function buildEventReminderNotification(
+  event: { id: string; nombre: string },
+  type: 'three_days_before' | 'day_before' | 'three_hours_before',
+) {
+  const t = clip(event.nombre)
+
+  if (type === 'three_days_before') {
+    return {
+      eventId: event.id,
+      type,
+      title: 'Recordatorio de evento 📅',
+      body: pickVariant(event.id, [
+        `En 3 días: ${t}`,
+        `Evento en 3 días: ${t}`,
+        `Quedan 3 días para: ${t}`,
+      ]),
+      url: '/calendar',
+    }
+  }
+
+  if (type === 'day_before') {
+    return {
+      eventId: event.id,
+      type,
+      title: 'Recordatorio de evento 🗓️',
+      body: pickVariant(event.id, [
+        `Mañana es: ${t}`,
+        `Evento mañana: ${t}`,
+        `Te queda 1 día para: ${t}`,
+      ]),
+      url: '/calendar',
+    }
+  }
+
+  return {
+    eventId: event.id,
+    type,
+    title: 'Recordatorio de evento ⏰',
+    body: pickVariant(event.id, [
+      `En 3 horas: ${t}`,
+      `¡Evento pronto!: ${t}`,
+      `Falta poco para: ${t}`,
+    ]),
+    url: '/calendar',
+  }
+}
+
 function buildMorningSummary(tasks: Array<{ id: string; titulo: string; due: string | null }>) {
   const count = tasks.length
 
@@ -212,7 +187,7 @@ function buildEveningSummary(tasks: Array<{ id: string; titulo: string; due: str
 
 async function sendToUserSubscriptions(
   userId: string,
-  payload: { title: string; body: string; url: string; taskId?: string; tag?: string },
+  payload: { title: string; body: string; url: string; taskId?: string; eventId?: string; tag?: string },
 ) {
   const { data: subscriptions, error } = await supabase
     .from('push_subscriptions')
@@ -244,14 +219,23 @@ async function sendToUserSubscriptions(
         },
       }
 
+      const deepLinkUrl = payload.taskId
+        ? `/tasks?task=${payload.taskId}`
+        : payload.eventId
+          ? `/calendar?event=${payload.eventId}`
+          : payload.url
+
       await webPush.sendNotification(pushSubscription as any, JSON.stringify({
         title: payload.title,
         body: payload.body,
-        url: payload.taskId ? `/tasks?task=${payload.taskId}` : payload.url,
+        url: deepLinkUrl,
         task_id: payload.taskId ?? undefined,
+        event_id: payload.eventId ?? undefined,
         tag: payload.taskId
           ? `academia-task-${payload.taskId}`
-          : (payload.tag || 'academia-task-reminder'),
+          : payload.eventId
+            ? `academia-event-${payload.eventId}`
+            : (payload.tag || 'academia-task-reminder'),
       }))
 
       sentCount += 1
@@ -287,6 +271,32 @@ async function markReminderSent(taskId: string, now: Date) {
 
   if (error) {
     console.error(`[notify] failed to mark task reminder sent: ${taskId}`, error)
+  }
+}
+
+async function hasEventReminderBeenSent(eventId: string, reminderType: string) {
+  const { data, error } = await supabase
+    .from('event_notification_log')
+    .select('id')
+    .eq('event_id', eventId)
+    .eq('reminder_type', reminderType)
+    .maybeSingle()
+
+  if (error) {
+    console.error(`[notify] failed to check event reminder log: ${eventId}/${reminderType}`, error)
+    return true
+  }
+
+  return Boolean(data)
+}
+
+async function markEventReminderSent(eventId: string, reminderType: string, now: Date) {
+  const { error } = await supabase
+    .from('event_notification_log')
+    .insert({ event_id: eventId, reminder_type: reminderType, sent_at: now.toISOString() })
+
+  if (error && error.code !== '23505') {
+    console.error(`[notify] failed to mark event reminder sent: ${eventId}/${reminderType}`, error)
   }
 }
 
@@ -393,13 +403,21 @@ async function runReminderNotifications(now: Date) {
     throw profilesError
   }
 
-  const { data: tasks, error } = await supabase
+  const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
     .select('id, user_id, titulo, due, due_time, reminder_at, done, last_push_notified_at')
     .eq('done', false)
 
-  if (error) {
-    throw error
+  if (tasksError) {
+    throw tasksError
+  }
+
+  const { data: events, error: eventsError } = await supabase
+    .from('events')
+    .select('id, user_id, nombre, tipo, start_at, end_at, descripcion')
+
+  if (eventsError) {
+    throw eventsError
   }
 
   const timezoneByUser = new Map<string, string>(
@@ -414,10 +432,21 @@ async function runReminderNotifications(now: Date) {
     tasksByUser.set(task.user_id, bucket)
   }
 
-  const sentNotifications: Array<{ userId: string; title: string; body: string; url: string; taskId?: string }> = []
+  const eventsByUser = new Map<string, Array<any>>()
+  for (const event of events ?? []) {
+    if (!event.user_id) continue
+    const bucket = eventsByUser.get(event.user_id) ?? []
+    bucket.push(event)
+    eventsByUser.set(event.user_id, bucket)
+  }
 
-  for (const [userId, userTasks] of tasksByUser.entries()) {
+  const sentNotifications: Array<{ userId: string; title: string; body: string; url: string; taskId?: string; eventId?: string }> = []
+
+  for (const profile of profiles ?? []) {
+    const userId = profile.user_id
     const timeZone = timezoneByUser.get(userId) ?? DEFAULT_TIMEZONE
+    const userTasks = tasksByUser.get(userId) ?? []
+    const userEvents = eventsByUser.get(userId) ?? []
 
     for (const task of userTasks) {
       if (!isReminderDue(task, now, timeZone)) continue
@@ -436,6 +465,25 @@ async function runReminderNotifications(now: Date) {
       if (sentCount > 0) {
         sentNotifications.push({ userId, ...notification })
         await markReminderSent(task.id, now)
+      }
+    }
+
+    for (const event of userEvents) {
+      const reminderType = resolveEventReminderType(event.start_at, now, timeZone)
+      if (!reminderType) continue
+      if (await hasEventReminderBeenSent(event.id, reminderType)) continue
+
+      const notification = buildEventReminderNotification(event, reminderType)
+      const sentCount = await sendToUserSubscriptions(userId, {
+        title: notification.title,
+        body: notification.body,
+        url: notification.url,
+        eventId: notification.eventId,
+      })
+
+      if (sentCount > 0) {
+        sentNotifications.push({ userId, ...notification })
+        await markEventReminderSent(event.id, reminderType, now)
       }
     }
   }

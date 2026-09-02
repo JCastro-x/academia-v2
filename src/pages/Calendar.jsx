@@ -1,4 +1,4 @@
-import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useParams, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useEventsByMonth, useCreateEvent, useUpdateEvent, useDeleteEvent } from '../features/events/hooks.js'
@@ -12,9 +12,11 @@ export default function Calendar() {
   const { semesterId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
   const [editingEvent, setEditingEvent] = useState(null)
+  const highlightEventId = searchParams.get('event')
   
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -190,6 +192,12 @@ export default function Calendar() {
   const monthEventsAndTasks = getEventsAndTasksForMonth()
   const selectedDayEvents = selectedDate ? getEventsForDay(selectedDate.getDate()) : []
 
+  useEffect(() => {
+    if (!highlightEventId) return
+    const el = document.getElementById(`event-${highlightEventId}`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [highlightEventId, monthEventsAndTasks])
+
   return (
     <div className="space-y-6 pb-16">
       <div className="flex items-center justify-between">
@@ -306,6 +314,7 @@ export default function Calendar() {
               return (
                 <motion.div
                   key={item.id}
+                  id={item.type === 'event' ? `event-${item.id}` : undefined}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ y: -2 }}
@@ -316,7 +325,7 @@ export default function Calendar() {
                       : item.done
                       ? 'border-green-200 bg-green-50'
                       : 'border-orange-200 bg-orange-50'
-                  } ${item.type === 'event' ? '' : 'dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]'}`}
+                  } ${highlightEventId === item.id ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-[var(--dm-surface)]' : ''} ${item.type === 'event' ? '' : 'dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]'}`}
                 >
                   <div className="flex items-start justify-between gap-3 min-w-0">
                     <div className="flex-1 min-w-0">

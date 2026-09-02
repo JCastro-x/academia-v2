@@ -389,7 +389,9 @@ function ColdStartRedirect() {
 
   React.useEffect(() => {
     const semesterId = getLastSemesterId()
-    if (semesterId && /^\/tasks\/?$/.test(window.location.pathname)) {
+    const shouldRedirectToSemester = /^\/(tasks|calendar)\/?$/.test(window.location.pathname)
+
+    if (semesterId && shouldRedirectToSemester) {
       navigate(`/s/${semesterId}${window.location.pathname}${window.location.search}`, { replace: true })
     } else {
       navigate('/auth', { replace: true })
