@@ -104,7 +104,16 @@ self.addEventListener('push', (event) => {
     silent: false, // usa el sonido de notificación del sistema (Android)
   }
 
-  event.waitUntil(self.registration.showNotification(title, options))
+  const shouldShowNotification = payload?.type !== 'pomodoro-complete'
+    ? Promise.resolve(true)
+    : clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) =>
+      !windowClients.some((client) => client.visibilityState === 'visible')
+    )
+
+  event.waitUntil(shouldShowNotification.then((shouldShow) => {
+    if (!shouldShow) return undefined
+    return self.registration.showNotification(title, options)
+  }))
 })
 
 // Último path conocido de la app (lo reporta PushNavigationHandler en main.jsx).
