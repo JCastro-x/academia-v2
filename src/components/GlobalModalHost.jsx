@@ -50,11 +50,6 @@ export default function GlobalModalHost() {
     }
   }
 
-  const handleAutoSaveTask = async (payload) => {
-    if (!editingTask?.id) return
-    await updateTask.mutateAsync({ id: editingTask.id, updates: payload })
-  }
-
   const handleCreateSubject = async (subjectData) => {
     try {
       await createSubject.mutateAsync(subjectData)
@@ -226,7 +221,6 @@ export default function GlobalModalHost() {
                 subjects={subjects}
                 initialData={editingTask}
                 onSubmit={editingTask ? (data) => handleUpdateTask(editingTask.id, data) : handleCreateTask}
-                onAutoSave={handleAutoSaveTask}
                 onCancel={closeModal}
                 isPending={editingTask ? updateTask.isPending : createTask.isPending}
               />

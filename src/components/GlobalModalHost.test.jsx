@@ -26,7 +26,7 @@ vi.mock('../features/tasks/hooks.js', () => ({
   useUpdateTask: () => ({ mutateAsync: mockUpdateTaskMutateAsync, isPending: false }),
 }))
 
-describe('GlobalModalHost autosave', () => {
+describe('GlobalModalHost task editing', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     useUIStore.setState({
@@ -54,7 +54,38 @@ describe('GlobalModalHost autosave', () => {
     vi.useRealTimers()
   })
 
-  it('llama al autosave cuando el usuario edita una tarea existente', async () => {
+  it('solo guarda cambios al pulsar Guardar', async () => {
+    const { unmount } = render(<GlobalModalHost />)
+
+    const secondInput = screen.getByLabelText(/Título/i)
+    fireEvent.change(secondInput, { target: { value: 'Tarea nueva' } })
+
+    await act(async () => {
+      vi.advanceTimersByTime(800)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(mockUpdateTaskMutateAsync).not.toHaveBeenCalled()
+    unmount()
+
+    useUIStore.setState({
+      isModalOpen: true,
+      modalContent: 'task',
+      modalPayload: {
+        editingTask: {
+          id: 'task-1',
+          titulo: 'Tarea vieja',
+          prioridad: 'media',
+          subject_id: 'subject-1',
+          due: '',
+          tipo: 'cantidad',
+          total_units: 10,
+          work_days: [1, 2, 3, 4, 5],
+          subtasks: [],
+        },
+      },
+    })
     render(<GlobalModalHost />)
 
     const input = screen.getByLabelText(/Título/i)
@@ -62,6 +93,12 @@ describe('GlobalModalHost autosave', () => {
 
     await act(async () => {
       vi.advanceTimersByTime(800)
+    })
+
+    expect(mockUpdateTaskMutateAsync).not.toHaveBeenCalled()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
     })
 
     expect(mockUpdateTaskMutateAsync).toHaveBeenCalledTimes(1)
