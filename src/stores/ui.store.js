@@ -78,6 +78,12 @@ export const useUIStore = create((set) => ({
   setOnline: () => set({ isOnline: true }),
   setOffline: () => set({ isOnline: false }),
 
+  // Service worker update state
+  serviceWorkerUpdate: { pending: false, fallbackVisible: false },
+  setServiceWorkerUpdate: (serviceWorkerUpdate) => set({ serviceWorkerUpdate }),
+  hasUnsavedChanges: false,
+  setUnsavedChanges: (hasUnsavedChanges) => set({ hasUnsavedChanges }),
+
   // Sound state
   isMuted: false,
   toggleMute: () => set((state) => ({ isMuted: !state.isMuted })),

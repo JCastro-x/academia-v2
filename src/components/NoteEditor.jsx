@@ -25,7 +25,7 @@ export default function NoteEditor({ noteId, onClose }) {
   const { data: attachments } = useAttachmentsByNote(noteId)
   const createAttachment = useCreateAttachment()
   const deleteAttachment = useDeleteAttachment()
-  const { openConfirmDialog, showUndoToast, addToast, addPendingDelete, removePendingDelete, pendingDeletes, openLightbox } = useUIStore()
+  const { openConfirmDialog, showUndoToast, addToast, addPendingDelete, removePendingDelete, pendingDeletes, openLightbox, setUnsavedChanges } = useUIStore()
   
   // Get all storage paths for signed URLs
   const storagePaths = attachments?.map(a => a.storage_path) || []
@@ -90,6 +90,11 @@ export default function NoteEditor({ noteId, onClose }) {
 
     return () => clearTimeout(timeoutId)
   }, [titulo, contenido, noteId, note, updateNote])
+
+  useEffect(() => {
+    setUnsavedChanges(Boolean(note && saveState !== 'saved'))
+    return () => setUnsavedChanges(false)
+  }, [note, saveState, setUnsavedChanges])
 
   const handleFormat = (command) => {
     document.execCommand(command, false, null)

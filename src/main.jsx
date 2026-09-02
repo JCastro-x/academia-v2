@@ -23,6 +23,7 @@ import Habits from './pages/Habits.jsx'
 import Clock from './pages/Clock.jsx'
 import Profile from './pages/Profile.jsx'
 import Exam from './pages/Exam.jsx'
+import { startServiceWorkerUpdateCoordinator } from './lib/serviceWorkerUpdate.js'
 // NOTA: El scheduler local de notificaciones (src/lib/notificationScheduler.js) está DESACTIVADO
 // a propósito. Fue reemplazado por el cron server-side de Supabase (Push Notifications) que
 // cubre la misma funcionalidad: resumen matutino/nocturno, recordatorios de 1 día y 3 horas
@@ -284,44 +285,7 @@ function ProtectedRoute({ children }) {
   )
 }
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    try {
-      navigator.serviceWorker.register('/sw.js').then((registration) => {
-        console.log('[SW] Service Worker registered successfully:', registration)
-
-        // Detectar actualizaciones del service worker
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[SW] New service worker available, reloading...')
-                // Forzar recarga para activar la nueva versión
-                window.location.reload()
-              }
-            })
-          }
-        })
-
-        // Verificar si hay una actualización pendiente al cargar
-        if (registration.waiting) {
-          console.log('[SW] Service worker waiting, activating...')
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-          window.location.reload()
-        }
-      }).catch((error) => {
-        console.error('[SW] Service Worker registration failed:', {
-          message: error.message,
-          name: error.name,
-          stack: error.stack
-        })
-      })
-    } catch (error) {
-      console.error('[SW] Unexpected error during Service Worker registration:', error)
-    }
-  })
-}
+startServiceWorkerUpdateCoordinator()
 
 // Scheduler local desactivado: ver nota en los imports de arriba.
 // window.addEventListener('load', () => {

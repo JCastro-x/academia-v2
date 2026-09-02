@@ -11,6 +11,7 @@ import Lightbox from '../components/Lightbox.jsx'
 import TopBar from '../components/TopBar.jsx'
 import GlobalModalHost from '../components/GlobalModalHost.jsx'
 import PwaSuggestBanners from '../components/PwaSuggestBanners.jsx'
+import ServiceWorkerUpdateBanner from '../components/ServiceWorkerUpdateBanner.jsx'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
@@ -230,6 +231,7 @@ export default function AppLayout() {
       <Lightbox />
       <GlobalModalHost />
       <PwaSuggestBanners />
+      <ServiceWorkerUpdateBanner />
     </div>
   )
 }
