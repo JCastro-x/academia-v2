@@ -262,19 +262,6 @@ export const savePushSubscription = async (subscription) => {
     dispatchGlobalToast('error', 'La suscripción push no pudo guardarse. Reintentá en unos segundos.')
     throw error
   }
-
-  // Dedup: cada re-registro del SW (recargas, reinstalación de la PWA) genera
-  // un endpoint nuevo; sin esto el mismo usuario acumula filas y el cron le
-  // envía N notificaciones apiladas por cada envío. Dejamos solo la actual.
-  const { error: cleanupError } = await supabase
-    .from('push_subscriptions')
-    .delete()
-    .eq('user_id', user.id)
-    .neq('endpoint', subscription.endpoint)
-
-  if (cleanupError) {
-    console.warn('[push] failed to clean up stale subscriptions', cleanupError)
-  }
 }
 
 export const ensurePushSubscriptionForCurrentUser = async ({ silent = false } = {}) => {
