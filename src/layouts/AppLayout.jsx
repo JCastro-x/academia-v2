@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { Outlet, useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUIStore } from '../stores/ui.store.js'
-import { useProfile } from '../features/profile/hooks.js'
+import { useProfile, useProfileRealtimeSync } from '../features/profile/hooks.js'
 import { useSemesters } from '../features/semesters/hooks.js'
 import { playSound } from '../lib/sound.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -12,6 +12,7 @@ import TopBar from '../components/TopBar.jsx'
 import GlobalModalHost from '../components/GlobalModalHost.jsx'
 import PwaSuggestBanners from '../components/PwaSuggestBanners.jsx'
 import ServiceWorkerUpdateBanner from '../components/ServiceWorkerUpdateBanner.jsx'
+import ToastContainer from '../components/ToastContainer.jsx'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
@@ -61,6 +62,7 @@ export default function AppLayout() {
 
   // Hidratación: perfil guardado → ui.store (al montar AppLayout)
   const { data: profile } = useProfile()
+  useProfileRealtimeSync()
   const { data: semesters, isLoading: semestersLoading, error: semestersError } = useSemesters()
 
   useEffect(() => {
@@ -96,7 +98,14 @@ export default function AppLayout() {
     setTemaColor(nextTemaColor)
     setSonidosInteraccion(nextSonidosInteraccion)
     setHoraFormato(nextHoraFormato)
-  }, [profile, setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato, modoOscuro, tipografia, temaColor, sonidosInteraccion, horaFormato])
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('academia-theme-dark', String(nextModoOscuro))
+      localStorage.setItem('academia-theme-font', nextTipografia)
+      localStorage.setItem('academia-theme-color', nextTemaColor)
+      localStorage.setItem('academia-hora-formato', nextHoraFormato)
+    }
+  }, [profile, setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato])
 
   // Mapeo de nombre corto de tipografía a CSS font-family
   const FONT_MAP = {
@@ -130,7 +139,7 @@ export default function AppLayout() {
 
   const mobileNavItems = [
     navItems[0],
-    navItems[5],
+    navItems[1],
     navItems[2],
     navItems[10],
   ]
@@ -146,7 +155,7 @@ export default function AppLayout() {
   const handleOpenQuickAdd = () => openModal('quickadd')
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-gray-50 dark:bg-[var(--dm-bg)] overflow-hidden">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-[var(--dm-bg)] overflow-hidden">
       <TopBar onOpenClassModal={handleOpenClassModal} onOpenQuickAdd={handleOpenQuickAdd} />
 
       <div className="flex relative flex-1 min-h-0 overflow-visible">
@@ -192,15 +201,12 @@ export default function AppLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 basis-0 min-w-0 max-w-full h-full overflow-x-hidden overflow-y-auto overscroll-contain p-4 pb-20 md:p-6 md:pb-0">
+        <main className="flex-1 basis-0 min-w-0 max-w-full h-full overflow-x-hidden overflow-y-auto overscroll-contain p-4 pb-0 md:p-6 md:pb-0">
           <Outlet />
         </main>
       </div>
 
-      <nav
-        className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-0.5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden"
-        style={{ paddingBottom: 'max(2px, env(safe-area-inset-bottom))' }}
-      >
+      <nav className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
           {mobileNavItems.map((item) => {
             const active = isActive(item.path)
@@ -232,6 +238,7 @@ export default function AppLayout() {
       <GlobalModalHost />
       <PwaSuggestBanners />
       <ServiceWorkerUpdateBanner />
+      <ToastContainer />
     </div>
   )
 }

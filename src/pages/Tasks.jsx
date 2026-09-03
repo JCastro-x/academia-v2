@@ -1,11 +1,10 @@
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { AnimatePresence } from 'framer-motion'
 import { useTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useDeleteTask, useDeleteCompletedTasks } from '../features/tasks/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
-import TaskCard from '../components/TaskCard.jsx'
+import TaskList from '../components/TaskList.jsx'
 import TaskForm from '../components/TaskForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 
@@ -23,8 +22,6 @@ export default function Tasks() {
   const [filterPriority, setFilterPriority] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-
-  // Deep link desde push notification: /tasks?task=<id> → scroll + highlight.
   const [searchParams] = useSearchParams()
   const highlightTaskId = searchParams.get('task')
 
@@ -49,6 +46,7 @@ export default function Tasks() {
       await updateTask.mutateAsync({ id, updates })
       playSound('save')
       closeModal()
+      setEditingTask(null)
     } catch (error) {
       console.error('Error updating task:', error)
     }
@@ -120,46 +118,37 @@ export default function Tasks() {
     return true
   }) || []
 
-  // Sort: completed tasks go to the end (legacy behavior)
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    if (a.done !== b.done) {
-      return a.done ? 1 : -1
-    }
-    return 0
-  })
-
   if (isLoading) {
     return <div className="flex min-h-[40vh] items-center justify-center text-gray-500 dark:text-[var(--dm-text-muted)]">Cargando...</div>
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-16">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <div className="flex items-center gap-3 flex-1">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-[var(--dm-text)] sm:text-2xl whitespace-nowrap">Tareas</h1>
+    <div className="space-y-6 pb-16">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Tareas</h1>
+        <button
+          onClick={() => openModal('task', { editingTask: null })}
+          className="bg-[var(--color-primary)] text-white dark:text-black px-4 py-2 rounded-lg hover:opacity-90 w-full sm:w-auto transition-colors"
+        >
+          + Nueva tarea
+        </button>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-4 space-y-4 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <input
             type="text"
             placeholder="Buscar tareas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             autoComplete="off"
-            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] sm:px-3 sm:py-2"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           />
-        </div>
-        <button
-          onClick={() => openModal('task', { editingTask: null })}
-          className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-4 py-2 rounded-lg hover:opacity-90 w-full transition-colors sm:w-auto"
-        >
-          + Nueva tarea
-        </button>
-      </div>
 
-      <div className="bg-white rounded-lg shadow-md p-2 space-y-2 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none sm:p-3 sm:space-y-3">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <select
             value={filterSubject}
             onChange={(e) => setFilterSubject(e.target.value)}
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           >
             <option value="">Todas las materias</option>
             {subjects?.map(subject => (
@@ -170,7 +159,7 @@ export default function Tasks() {
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           >
             <option value="">Todas las prioridades</option>
             <option value="baja">Baja</option>
@@ -181,16 +170,18 @@ export default function Tasks() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           >
             <option value="all">Todas</option>
             <option value="pending">Pendientes</option>
             <option value="completed">Completadas</option>
           </select>
+        </div>
 
+        <div className="flex justify-end">
           <button
             onClick={handleDeleteCompleted}
-            className="text-red-600 hover:text-red-800 text-sm px-2 py-1.5 border border-red-200 rounded-lg hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:border-red-900/30 dark:hover:bg-red-900/20"
+            className="text-red-600 hover:text-red-800 text-sm dark:text-red-400 dark:hover:text-red-300"
           >
             Borrar completadas
           </button>
@@ -198,23 +189,14 @@ export default function Tasks() {
       </div>
 
       <div className="min-w-0 pb-16">
-        <AnimatePresence mode="popLayout">
-          {sortedTasks.map(task => (
-            <div
-              key={task.id}
-              id={`task-${task.id}`}
-              className={highlightTaskId === task.id ? 'rounded-xl ring-2 ring-[var(--color-primary)] ring-offset-2 ring-offset-[var(--dm-bg)] transition' : ''}
-            >
-              <TaskCard
-                task={task}
-                subject={subjects?.find(s => s.id === task.subject_id)}
-                onToggleDone={handleToggleDone}
-                onEdit={(t) => openModal('task', { editingTask: t })}
-                onDelete={handleDeleteTask}
-              />
-            </div>
-          ))}
-        </AnimatePresence>
+        <TaskList
+          tasks={filteredTasks}
+          subjects={subjects}
+          highlightTaskId={highlightTaskId}
+          onToggleDone={handleToggleDone}
+          onEdit={(task) => openModal('task', { editingTask: task })}
+          onDelete={handleDeleteTask}
+        />
       </div>
     </div>
   )

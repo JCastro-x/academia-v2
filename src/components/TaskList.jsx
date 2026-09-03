@@ -1,6 +1,6 @@
 import TaskCard from './TaskCard.jsx'
 
-export default function TaskList({ tasks, subjects, onToggleDone, onEdit, onDelete }) {
+export default function TaskList({ tasks, subjects, highlightTaskId, onToggleDone, onEdit, onDelete }) {
   if (!tasks || tasks.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
@@ -14,14 +14,19 @@ export default function TaskList({ tasks, subjects, onToggleDone, onEdit, onDele
   return (
     <div className="space-y-4">
       {tasks.map(task => (
-        <TaskCard
+        <div
           key={task.id}
-          task={task}
-          subject={getSubject(task.subject_id)}
-          onToggleDone={onToggleDone}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
+          id={`task-${task.id}`}
+          className={highlightTaskId === task.id ? 'rounded-xl ring-2 ring-[var(--color-primary)] ring-offset-2 ring-offset-[var(--dm-bg)] transition' : ''}
+        >
+          <TaskCard
+            task={task}
+            subject={getSubject(task.subject_id)}
+            onToggleDone={onToggleDone}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        </div>
       ))}
     </div>
   )
