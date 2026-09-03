@@ -15,10 +15,10 @@ export default function SemesterProgressBar({ currentWeek, totalWeeks, pct }) {
     for (let i = 1; i <= totalWeeks; i++) {
       const quarter = Math.ceil(i / (totalWeeks / 4))
       const baseColor = {
-        1: '#86efac', // verde pastel
-        2: '#fde68a', // amarillo pastel
-        3: '#fdba74', // naranja pastel
-        4: '#fca5a5'  // rojo pastel
+        1: '#22c55e',
+        2: '#eab308',
+        3: '#f97316',
+        4: '#ef4444'
       }[quarter]
 
       const isPast = i < currentWeek
@@ -47,7 +47,7 @@ export default function SemesterProgressBar({ currentWeek, totalWeeks, pct }) {
             className="flex-1 h-3 rounded-sm transition-all duration-200"
             style={{
               backgroundColor: segment.color,
-              opacity: segment.isFuture ? 0.35 : 1,
+              opacity: segment.isFuture ? 0.65 : 1,
               ...(segment.isCurrent && {
                 boxShadow: `0 0 0 2px white, 0 0 0 3px ${segment.color}`,
                 transform: 'scaleY(1.2)'
