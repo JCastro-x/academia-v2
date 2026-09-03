@@ -109,7 +109,7 @@ export default function Tasks() {
     })
   }
 
-  const filteredTasks = tasks?.filter(task => {
+  const filteredTasks = [...(tasks?.filter(task => {
     const isPendingDelete = pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === task.id)
     if (isPendingDelete) return false
     if (filterSubject && task.subject_id !== filterSubject) return false
@@ -118,7 +118,7 @@ export default function Tasks() {
     if (filterStatus === 'completed' && !task.done) return false
     if (searchTerm && !task.titulo.toLowerCase().includes(searchTerm.toLowerCase())) return false
     return true
-  }) || []
+  }) || [])].sort((firstTask, secondTask) => Number(firstTask.done) - Number(secondTask.done))
 
   // Sort: completed tasks go to the end (legacy behavior)
   const sortedTasks = [...filteredTasks].sort((a, b) => {
