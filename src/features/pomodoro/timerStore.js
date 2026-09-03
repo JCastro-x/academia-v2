@@ -19,6 +19,7 @@ export const useTimerStore = create(
         isPaused: false,
         currentPhase: 'trabajo', // 'trabajo' | 'descanso_corto' | 'descanso_largo'
         startedAt: null, // timestamp
+        endsAt: null, // timestamp absoluto de finalización
         remainingSeconds: 25 * 60, // segundos
         totalDuration: 25 * 60, // duración total en segundos (capturada al iniciar)
         completedSessions: 0, // sesiones de trabajo completadas hoy
@@ -47,6 +48,7 @@ export const useTimerStore = create(
             isRunning: true,
             isPaused: false,
             startedAt: Date.now(),
+            endsAt: Date.now() + duration * 1000,
             currentPhase: 'trabajo',
             remainingSeconds: duration,
             totalDuration: duration,
@@ -56,22 +58,28 @@ export const useTimerStore = create(
         };
       }),
       
-      pausePomodoro: () => set((state) => ({
-        pomodoroState: {
-          ...state.pomodoroState,
-          isRunning: false,
-          isPaused: true,
-        },
-      })),
+      pausePomodoro: () => set((state) => {
+        const remainingSeconds = state.pomodoroState.endsAt
+          ? Math.max(0, Math.ceil((state.pomodoroState.endsAt - Date.now()) / 1000))
+          : state.pomodoroState.remainingSeconds;
+        return {
+          pomodoroState: {
+            ...state.pomodoroState,
+            isRunning: false,
+            isPaused: true,
+            endsAt: null,
+            remainingSeconds,
+          },
+        };
+      }),
       
       resumePomodoro: () => set((state) => {
-        const elapsed = Math.floor((Date.now() - state.pomodoroState.startedAt) / 1000);
         return {
           pomodoroState: {
             ...state.pomodoroState,
             isRunning: true,
             isPaused: false,
-            startedAt: Date.now() - (elapsed * 1000),
+            endsAt: Date.now() + state.pomodoroState.remainingSeconds * 1000,
           },
         };
       }),
@@ -84,6 +92,7 @@ export const useTimerStore = create(
             isRunning: false,
             isPaused: false,
             startedAt: null,
+            endsAt: null,
             sessionId: null,
             remainingSeconds: duration,
             totalDuration: duration,
@@ -130,6 +139,7 @@ export const useTimerStore = create(
             isRunning: false,
             isPaused: false,
             startedAt: null,
+            endsAt: null,
             sessionId: null,
             currentPhase: nextPhase,
             remainingSeconds: nextDuration,
@@ -197,9 +207,7 @@ export const useTimerStore = create(
       name: 'timer-storage',
       partialize: (state) => ({
         pomodoroConfig: state.pomodoroConfig,
-        pomodoroState: {
-          completedSessions: state.pomodoroState.completedSessions,
-        },
+        pomodoroState: state.pomodoroState,
       }),
       merge: (persistedState, currentState) => ({
         ...currentState,

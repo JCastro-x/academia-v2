@@ -52,36 +52,51 @@ export default function PomodoroTimer() {
   const { data: sessions } = usePomodoroSessionsByDate(weekAgo.toISOString(), today.toISOString());
   const stats = sessions ? calculatePomodoroStats(sessions) : { streakDays: 0, todaySessions: 0, weekMinutes: 0, todayMinutes: 0 };
 
-  // Timer logic usando timestamp-based approach (no setInterval tick a tick)
-  useEffect(() => {
-    if (pomodoroState.isRunning && pomodoroState.startedAt) {
-      intervalRef.current = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - pomodoroState.startedAt) / 1000);
-        const totalDuration = pomodoroState.totalDuration;
-        const remaining = totalDuration - elapsed;
+  const finishPomodoro = () => {
+    const currentState = useTimerStore.getState();
+    const current = currentState.pomodoroState;
+    if (!current.isRunning || !current.endsAt || Date.now() < current.endsAt) return false;
 
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    lastCountdownSecondRef.current = null;
+    initAudio();
+    playSound('pomodoro-complete');
+    if (current.currentPhase === 'trabajo') {
+      const durationMin = Math.round(currentState.pomodoroConfig.workDuration);
+      createSession.mutate({
+        id: current.sessionId,
+        started_at: new Date(current.startedAt).toISOString(),
+        ended_at: new Date().toISOString(),
+        duration_min: durationMin,
+        tipo: 'trabajo',
+        task_id: current.linkedTaskId,
+        subject_id: current.linkedSubjectId,
+      });
+    }
+    completePomodoroSession();
+    return true;
+  };
+
+  // The interval only refreshes the display. The absolute deadline controls completion.
+  useEffect(() => {
+    if (pomodoroState.isRunning && pomodoroState.endsAt) {
+      const updateTimer = () => {
+        const current = useTimerStore.getState().pomodoroState;
+        const remaining = Math.max(0, Math.ceil((current.endsAt - Date.now()) / 1000));
         if (remaining <= 0) {
-          clearInterval(intervalRef.current);
-          lastCountdownSecondRef.current = null;
-          initAudio();
-          playSound('pomodoro-complete');
-          if (pomodoroState.currentPhase === 'trabajo') {
-            const durationMin = Math.round(pomodoroConfig.workDuration);
-            createSession.mutate({
-              id: pomodoroState.sessionId,
-              started_at: new Date(pomodoroState.startedAt).toISOString(),
-              ended_at: new Date().toISOString(),
-              duration_min: durationMin,
-              tipo: 'trabajo',
-              task_id: pomodoroState.linkedTaskId,
-              subject_id: pomodoroState.linkedSubjectId,
-            });
-          }
-          completePomodoroSession();
-        } else {
-          triggerCountdownSound(remaining);
-          updatePomodoroRemaining(remaining);
+          finishPomodoro();
+          return;
         }
+        triggerCountdownSound(remaining);
+        updatePomodoroRemaining(remaining);
+      };
+
+      updateTimer();
+      intervalRef.current = setInterval(() => {
+        updateTimer();
       }, 1000);
     } else {
       if (intervalRef.current) {
@@ -94,23 +109,22 @@ export default function PomodoroTimer() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [pomodoroState.isRunning, pomodoroState.startedAt, pomodoroState.currentPhase, pomodoroState.totalDuration, completePomodoroSession, updatePomodoroRemaining]);
+  }, [pomodoroState.isRunning, pomodoroState.endsAt, completePomodoroSession, updatePomodoroRemaining]);
 
   // Recalcular tiempo restante cuando la pestaña vuelve a estar visible (visibilitychange)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && pomodoroState.isRunning && pomodoroState.startedAt) {
-        const elapsed = Math.floor((Date.now() - pomodoroState.startedAt) / 1000);
-        const totalDuration = pomodoroState.totalDuration;
-        const remaining = totalDuration - elapsed;
-        triggerCountdownSound(Math.max(0, remaining));
-        updatePomodoroRemaining(Math.max(0, remaining));
+      if (!document.hidden && pomodoroState.isRunning && pomodoroState.endsAt) {
+        if (finishPomodoro()) return;
+        const remaining = Math.max(0, Math.ceil((pomodoroState.endsAt - Date.now()) / 1000));
+        triggerCountdownSound(remaining);
+        updatePomodoroRemaining(remaining);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [pomodoroState.isRunning, pomodoroState.startedAt, pomodoroState.totalDuration, updatePomodoroRemaining]);
+  }, [pomodoroState.isRunning, pomodoroState.endsAt, updatePomodoroRemaining]);
 
   const getTotalDuration = () => {
     switch (pomodoroState.currentPhase) {
@@ -169,7 +183,7 @@ export default function PomodoroTimer() {
     startAudioKeepAlive();
     startPomodoro();
     const { pomodoroState: nextState } = useTimerStore.getState();
-    const scheduledAt = new Date(Date.now() + nextState.remainingSeconds * 1000).toISOString();
+    const scheduledAt = new Date(nextState.endsAt).toISOString();
     try {
       await schedulePomodoroNotification(nextState.sessionId, nextState.currentPhase, scheduledAt);
     } catch (error) {
@@ -182,7 +196,7 @@ export default function PomodoroTimer() {
     startAudioKeepAlive();
     resumePomodoro();
     const { pomodoroState: nextState } = useTimerStore.getState();
-    const scheduledAt = new Date(Date.now() + nextState.remainingSeconds * 1000).toISOString();
+    const scheduledAt = new Date(nextState.endsAt).toISOString();
     try {
       await schedulePomodoroNotification(nextState.sessionId, nextState.currentPhase, scheduledAt);
     } catch (error) {
