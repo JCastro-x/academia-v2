@@ -123,9 +123,19 @@ export default function Tasks() {
   }
 
   return (
-    <div className="space-y-6 pb-16">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Tareas</h1>
+    <div className="space-y-4 sm:space-y-6 pb-16">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Tareas</h1>
+          <input
+            type="text"
+            placeholder="Buscar tareas..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            autoComplete="off"
+            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] sm:hidden"
+          />
+        </div>
         <button
           onClick={() => openModal('task', { editingTask: null })}
           className="bg-[var(--color-primary)] text-white dark:text-black px-4 py-2 rounded-lg hover:opacity-90 w-full sm:w-auto transition-colors"
@@ -134,21 +144,21 @@ export default function Tasks() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-4 space-y-4 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-white rounded-lg shadow-md p-2 sm:p-4 space-y-2 sm:space-y-4 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
           <input
             type="text"
             placeholder="Buscar tareas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             autoComplete="off"
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
+            className="hidden sm:block px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)]"
           />
 
           <select
             value={filterSubject}
             onChange={(e) => setFilterSubject(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="w-full px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           >
             <option value="">Todas las materias</option>
             {subjects?.map(subject => (
@@ -159,7 +169,7 @@ export default function Tasks() {
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="w-full px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           >
             <option value="">Todas las prioridades</option>
             <option value="baja">Baja</option>
@@ -170,15 +180,22 @@ export default function Tasks() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
+            className="w-full px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)]"
           >
             <option value="all">Todas</option>
             <option value="pending">Pendientes</option>
             <option value="completed">Completadas</option>
           </select>
+
+          <button
+            onClick={handleDeleteCompleted}
+            className="w-full px-2 py-1 text-xs border border-red-200 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 sm:hidden"
+          >
+            Borrar completadas
+          </button>
         </div>
 
-        <div className="flex justify-end">
+        <div className="hidden justify-end sm:flex">
           <button
             onClick={handleDeleteCompleted}
             className="text-red-600 hover:text-red-800 text-sm dark:text-red-400 dark:hover:text-red-300"
