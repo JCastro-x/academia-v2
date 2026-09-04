@@ -22,7 +22,7 @@ describe('TaskCard', () => {
   })
 
   describe('tipo="cantidad" con meta definida', () => {
-    it('muestra avance y unidades faltantes', () => {
+    it('muestra avance, detalles de ritmo y controles', () => {
       const task = {
         id: 'task-1',
         tipo: 'cantidad',
@@ -50,13 +50,13 @@ describe('TaskCard', () => {
       )
 
       expect(screen.getByText(/0\/10 unidades/i)).toBeInTheDocument()
-      expect(screen.getByText(/Faltan:/i)).toHaveTextContent('10')
-      expect(screen.queryByText(/Meta hoy:/i)).not.toBeInTheDocument()
-      expect(screen.queryByText(/Recomendado:/i)).not.toBeInTheDocument()
-      expect(screen.queryByText(/Ritmo:/i)).not.toBeInTheDocument()
+      expect(screen.getByText(/Meta hoy:/i)).toBeInTheDocument()
+      expect(screen.getByText(/Recomendado:/i)).toBeInTheDocument()
+      expect(screen.getByText(/Falta total:/i)).toBeInTheDocument()
+      expect(screen.getByText('+')).toBeInTheDocument()
     })
 
-    it('muestra el avance calculado sin detalles internos (log[today]=2)', () => {
+    it('muestra el avance y detalles calculados (log[today]=2)', () => {
       const today = todayStr()
       const task = {
         id: 'task-1',
@@ -85,10 +85,9 @@ describe('TaskCard', () => {
       )
 
       expect(screen.getByText(/2\/10 unidades/i)).toBeInTheDocument()
-      expect(screen.getByText(/Faltan:/i)).toHaveTextContent('8')
-      expect(screen.queryByText(/Meta hoy:/i)).not.toBeInTheDocument()
-      expect(screen.queryByText(/Recomendado:/i)).not.toBeInTheDocument()
-      expect(screen.queryByText(/Ritmo:/i)).not.toBeInTheDocument()
+      expect(screen.getByText(/Meta hoy:/i)).toBeInTheDocument()
+      expect(screen.getByText(/Recomendado:/i)).toBeInTheDocument()
+      expect(screen.getByText(/Falta total:/i)).toHaveTextContent('8')
     })
   })
 

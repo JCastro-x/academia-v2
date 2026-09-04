@@ -267,10 +267,7 @@ export default function PomodoroTimer() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="block w-fit max-w-full mx-auto text-6xl sm:text-7xl lg:text-8xl font-bold rounded-2xl py-7 px-8 sm:py-8 sm:px-12 lg:py-10 lg:px-16"
-          style={{
-            backgroundColor: pomodoroState.currentPhase === 'trabajo' ? '#22c55e' : '#dc2626',
-            color: pomodoroState.currentPhase === 'trabajo' ? '#000000' : '#ffffff',
-          }}
+          style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-primary-fg)' }}
         >
           {formatTime(pomodoroState.remainingSeconds)}
         </motion.div>
