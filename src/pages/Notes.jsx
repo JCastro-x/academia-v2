@@ -159,7 +159,7 @@ export default function Notes() {
               </button>
               <button
                 onClick={() => setIsCreatingNote(true)}
-                className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm flex-shrink-0"
+                className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-3 py-2 rounded-lg hover:opacity-90 text-sm flex-shrink-0"
               >
                 + Nota
               </button>

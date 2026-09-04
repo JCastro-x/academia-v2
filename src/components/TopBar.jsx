@@ -308,8 +308,8 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
           <div className="hidden items-center gap-1 md:flex">
             <button
               onClick={onOpenQuickAdd}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-black transition-colors"
-              style={{ backgroundColor: 'var(--color-primary)', color: '#111827' }}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-[var(--color-primary-fg)] transition-colors"
+              style={{ backgroundColor: 'var(--color-primary)' }}
             >
               Agregar
             </button>

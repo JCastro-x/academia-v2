@@ -3,17 +3,18 @@ import ModalWrapper from './ModalWrapper.jsx'
 
 // Helper: get day of week (1=lunes, 7=domingo) from date string
 function getDayOfWeek(dateStr) {
-  const date = new Date(dateStr)
-  const day = date.getDay()
-  return day === 0 ? 7 : day
+  const [year, month, dayOfMonth] = dateStr.split('-').map(Number)
+  const date = new Date(year, month - 1, dayOfMonth)
+  const dayOfWeek = date.getDay()
+  return dayOfWeek === 0 ? 7 : dayOfWeek
 }
 
 // Helper: format date as "DD MMM"
 function formatShortDate(dateStr) {
-  const date = new Date(dateStr)
-  const day = date.getDate()
-  const month = date.toLocaleDateString('es-ES', { month: 'short' })
-  return `${day} ${month}`
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  const monthLabel = date.toLocaleDateString('es-ES', { month: 'short' })
+  return `${day} ${monthLabel}`
 }
 
 export default function HabitHistoryModal({ habit, onClose }) {
@@ -44,7 +45,7 @@ export default function HabitHistoryModal({ habit, onClose }) {
     // Add actual days
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day)
-      const dateStr = date.toISOString().split('T')[0]
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       const dayOfWeek = getDayOfWeek(dateStr)
       
       days.push({
@@ -137,15 +138,20 @@ export default function HabitHistoryModal({ habit, onClose }) {
             return (
               <div
                 key={date}
-                className={`
-                  py-2 rounded-lg text-sm font-medium
-                  ${!isScheduled ? 'text-gray-300 dark:text-gray-700' : 'dark:text-[var(--dm-text)]'}
-                  ${isCompleted && isScheduled ? 'bg-green-500 text-white' : ''}
-                  ${!isCompleted && isScheduled ? 'bg-gray-100 dark:bg-[var(--dm-surface)]' : ''}
-                `}
+                className="flex items-center justify-center py-1"
                 title={formatShortDate(date)}
               >
-                {dayNum}
+                <span
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                    isCompleted && isScheduled
+                      ? 'bg-green-500 text-white'
+                      : !isCompleted && isScheduled
+                        ? 'bg-red-500 text-white'
+                        : 'text-gray-300 dark:text-gray-700'
+                  }`}
+                >
+                  {dayNum}
+                </span>
               </div>
             )
           })}
@@ -154,15 +160,15 @@ export default function HabitHistoryModal({ habit, onClose }) {
         {/* Legend */}
         <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-[var(--dm-text-muted)]">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500" />
+            <div className="w-3 h-3 rounded-full bg-green-500" />
             <span>Completado</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-gray-100 dark:bg-[var(--dm-surface)] border border-gray-300 dark:border-[var(--dm-border)]" />
-            <span>Programado</span>
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <span>No completado</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-gray-100 dark:bg-gray-800" />
+            <div className="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-700" />
             <span>No programado</span>
           </div>
         </div>

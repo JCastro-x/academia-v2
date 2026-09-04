@@ -18,6 +18,31 @@ export default function Exam() {
   const [remainingSeconds, setRemainingSeconds] = useState(durationMinutes * 60);
 
   const intervalRef = useRef(null);
+  const lastCountdownSecondRef = useRef(null);
+
+  const triggerCountdownSound = (remaining) => {
+    if (remaining > 10 || remaining <= 0) {
+      if (remaining > 10) lastCountdownSecondRef.current = null;
+      return;
+    }
+
+    if (remaining !== lastCountdownSecondRef.current) {
+      lastCountdownSecondRef.current = remaining;
+      playSound('countdown');
+    }
+  };
+
+  const finishExam = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setIsRunning(false);
+    setIsPaused(false);
+    setRemainingSeconds(0);
+    lastCountdownSecondRef.current = null;
+    playSound('pomodoro-complete');
+  };
 
   // Timer logic usando timestamp-based approach (igual que Pomodoro)
   useEffect(() => {
@@ -27,13 +52,9 @@ export default function Exam() {
         const remaining = (durationMinutes * 60) - elapsed;
 
         if (remaining <= 0) {
-          // Timer completado
-          clearInterval(intervalRef.current);
-          setIsRunning(false);
-          setIsPaused(false);
-          setRemainingSeconds(0);
-          playSound('success');
+          finishExam();
         } else {
+          triggerCountdownSound(remaining);
           setRemainingSeconds(remaining);
         }
       }, 1000);
@@ -56,7 +77,11 @@ export default function Exam() {
       if (!document.hidden && isRunning && startedAt) {
         const elapsed = Math.floor((Date.now() - startedAt) / 1000);
         const remaining = (durationMinutes * 60) - elapsed;
-        setRemainingSeconds(Math.max(0, remaining));
+        if (remaining <= 0) finishExam();
+        else {
+          triggerCountdownSound(remaining);
+          setRemainingSeconds(remaining);
+        }
       }
     };
 
@@ -71,6 +96,7 @@ export default function Exam() {
   };
 
   const handleStart = () => {
+    lastCountdownSecondRef.current = null;
     setStartedAt(Date.now());
     setIsRunning(true);
     setIsPaused(false);
@@ -84,12 +110,14 @@ export default function Exam() {
   const handleResume = () => {
     // Recalcular startedAt para continuar desde donde quedó
     const elapsed = (durationMinutes * 60) - remainingSeconds;
+    lastCountdownSecondRef.current = null;
     setStartedAt(Date.now() - (elapsed * 1000));
     setIsRunning(true);
     setIsPaused(false);
   };
 
   const handleReset = () => {
+    lastCountdownSecondRef.current = null;
     setIsRunning(false);
     setIsPaused(false);
     setStartedAt(null);

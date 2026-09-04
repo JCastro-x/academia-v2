@@ -19,7 +19,7 @@ export default function Clock() {
           onClick={() => setActiveTab('pomodoro')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'pomodoro'
-              ? 'bg-blue-600 text-white'
+              ? 'bg-[var(--color-primary)] text-[var(--color-primary-fg)]'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]'
           }`}
         >
@@ -29,7 +29,7 @@ export default function Clock() {
           onClick={() => setActiveTab('chronometer')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'chronometer'
-              ? 'bg-blue-600 text-white'
+              ? 'bg-[var(--color-primary)] text-[var(--color-primary-fg)]'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]'
           }`}
         >
@@ -38,7 +38,7 @@ export default function Clock() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, x: 20 }}

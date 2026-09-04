@@ -132,14 +132,14 @@ export default function Habits() {
         <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Hábitos</h1>
         <button
           onClick={() => setIsCreating(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-4 py-2 rounded-lg hover:opacity-90"
         >
           + Hábito
         </button>
       </div>
 
       {/* Habits List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
         {filteredHabits.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
             <p>No hay hábitos aún. Crea el primero para empezar.</p>

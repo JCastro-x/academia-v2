@@ -52,7 +52,7 @@ export default function Subjects() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--dm-text)]">Materias</h1>
         <button
           onClick={() => openModal('subject', { editingSubject: null })}
-          className="bg-[var(--color-primary)] text-black px-4 py-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] w-full sm:w-auto"
+          className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-4 py-2 rounded-lg hover:opacity-90 w-full sm:w-auto"
           style={{ color: '#000000' }}
         >
           + Nueva materia

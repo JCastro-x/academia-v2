@@ -294,7 +294,7 @@ export default function Grades() {
               onClick={() => setViewMode('grades')}
               className={`px-4 py-2 rounded-lg ${
                 viewMode === 'grades' 
-                  ? 'bg-blue-600 text-white' 
+                  ? 'bg-[var(--color-primary)] text-[var(--color-primary-fg)]'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]'
               }`}
             >
@@ -304,7 +304,7 @@ export default function Grades() {
               onClick={() => setViewMode('topics')}
               className={`px-4 py-2 rounded-lg ${
                 viewMode === 'topics' 
-                  ? 'bg-blue-600 text-white' 
+                  ? 'bg-[var(--color-primary)] text-[var(--color-primary-fg)]'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]'
               }`}
             >

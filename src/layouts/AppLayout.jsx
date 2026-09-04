@@ -13,6 +13,7 @@ import GlobalModalHost from '../components/GlobalModalHost.jsx'
 import PwaSuggestBanners from '../components/PwaSuggestBanners.jsx'
 import ServiceWorkerUpdateBanner from '../components/ServiceWorkerUpdateBanner.jsx'
 import ToastContainer from '../components/ToastContainer.jsx'
+import { getContrastTextColor } from '../lib/contrast.js'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
@@ -119,6 +120,7 @@ export default function AppLayout() {
   useLayoutEffect(() => {
     document.documentElement.classList.toggle('dark', modoOscuro)
     document.documentElement.style.setProperty('--color-primary', temaColor)
+    document.documentElement.style.setProperty('--color-primary-fg', getContrastTextColor(temaColor))
     document.documentElement.style.setProperty('--font-family', FONT_MAP[tipografia] || 'Inter, system-ui, sans-serif')
     setMuted(sonidosInteraccion === 'off')
   }, [modoOscuro, tipografia, temaColor, sonidosInteraccion, setMuted])

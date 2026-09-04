@@ -22,7 +22,7 @@ describe('TaskCard', () => {
   })
 
   describe('tipo="cantidad" con meta definida', () => {
-    it('muestra Meta hoy, Recomendado y Falta total', () => {
+    it('muestra avance y unidades faltantes', () => {
       const task = {
         id: 'task-1',
         tipo: 'cantidad',
@@ -49,13 +49,14 @@ describe('TaskCard', () => {
         />
       )
 
-      expect(screen.getByText(/Meta hoy:/i)).toBeInTheDocument()
-      expect(screen.getByText(/Recomendado:/i)).toBeInTheDocument()
-      expect(screen.getByText(/Falta total:/i)).toBeInTheDocument()
-      expect(screen.queryByText(/Necesitás:/i)).not.toBeInTheDocument()
+      expect(screen.getByText(/0\/10 unidades/i)).toBeInTheDocument()
+      expect(screen.getByText(/Faltan:/i)).toHaveTextContent('10')
+      expect(screen.queryByText(/Meta hoy:/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Recomendado:/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Ritmo:/i)).not.toBeInTheDocument()
     })
 
-    it('simula click en "+" y verifica valores exactos sin doble conteo (total_units=10, workDaysRemaining=4, log[today]=2)', () => {
+    it('muestra el avance calculado sin detalles internos (log[today]=2)', () => {
       const today = todayStr()
       const task = {
         id: 'task-1',
@@ -73,7 +74,7 @@ describe('TaskCard', () => {
         user_id: 'user-1',
       }
 
-      const { rerender } = render(
+      render(
         <TaskCard
           task={task}
           subject={mockSubject}
@@ -83,21 +84,11 @@ describe('TaskCard', () => {
         />
       )
 
-      // Verificar valores iniciales
-      expect(screen.getByText(/Meta hoy:/i)).toBeInTheDocument()
-      expect(screen.getByText(/Recomendado:/i)).toBeInTheDocument()
-      expect(screen.getByText(/Falta total:/i)).toBeInTheDocument()
-      expect(screen.queryByText(/Necesitás:/i)).not.toBeInTheDocument()
-
-      // El test verifica que getTaskStats (función real del dominio) calcula correctamente
-      // y que TaskCard muestra esos valores sin doble conteo
-      // Con log[today]=2, remaining=8, workDaysRemaining=4:
-      // - necesitasHoy = ceil(8/4) = 2
-      // - recomendado = ceil(2 * 1.15) = 3
-      // - Falta total = 8
-      
-      // Nota: Este test valida la INTEGRACIÓN entre el dominio (getTaskStats) y TaskCard
-      // Si hubiera doble conteo en TaskCard, los valores serían incorrectos
+      expect(screen.getByText(/2\/10 unidades/i)).toBeInTheDocument()
+      expect(screen.getByText(/Faltan:/i)).toHaveTextContent('8')
+      expect(screen.queryByText(/Meta hoy:/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Recomendado:/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Ritmo:/i)).not.toBeInTheDocument()
     })
   })
 

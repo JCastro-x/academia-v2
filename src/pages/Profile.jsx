@@ -257,7 +257,7 @@ export default function Profile() {
                   onClick={() => setTipografia(font.value)}
                   className={`px-4 py-2 rounded-lg border transition-colors ${
                     tipografia === font.value
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] bg-opacity-20 text-black dark:text-black'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] bg-opacity-20 text-[var(--color-primary-fg)]'
                       : 'border-gray-300 text-black dark:border-[var(--dm-border)] dark:text-white hover:border-gray-400 dark:hover:border-white'
                   }`}
                   style={{ fontFamily: font.value }}
@@ -301,7 +301,7 @@ export default function Profile() {
                   onClick={() => setHoraFormato(option)}
                   className={`px-4 py-2 rounded-lg border transition-colors ${
                     horaFormato === option
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] bg-opacity-20 text-black dark:text-black'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] bg-opacity-20 text-[var(--color-primary-fg)]'
                       : 'border-gray-300 text-black dark:border-[var(--dm-border)] dark:text-white hover:border-gray-400 dark:hover:border-white'
                   }`}
                 >
@@ -372,7 +372,7 @@ export default function Profile() {
           <button
             onClick={handleEnablePushNotifications}
             disabled={pushPending || pushStatus === 'granted'}
-            className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-primary-fg)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {pushPending ? 'Activando...' : pushStatus === 'granted' ? 'Recordatorios activos' : 'Activar recordatorios'}
           </button>
@@ -399,7 +399,7 @@ export default function Profile() {
       <button
         onClick={handleSave}
         disabled={upsertProfile.isPending}
-        className="w-full bg-[var(--color-primary)] text-black py-3 px-6 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+        className="w-full bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-3 px-6 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
         style={{ color: '#000000' }}
       >
         {upsertProfile.isPending ? 'Guardando...' : 'Guardar cambios'}

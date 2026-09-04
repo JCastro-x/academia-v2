@@ -76,7 +76,7 @@ export default function SemesterForm({ initialData, onSubmit, onCancel, isPendin
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-[var(--dm-border)]"
+          className="flex-1 bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-[var(--dm-border)]"
         >
           {isPending ? 'Guardando...' : (isCreate ? 'Crear semestre' : 'Guardar')}
         </button>

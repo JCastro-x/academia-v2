@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 import { forwardRef } from 'react'
-import { getTaskStats, getDueRemainingLabel, todayStr } from '../domain/task-stats.js'
-import { useIncrementTaskLogUnit } from '../features/tasks/hooks.js'
+import { getTaskStats, getDueRemainingLabel } from '../domain/task-stats.js'
 
 const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, ref) => {
   const priorityColors = {
@@ -12,19 +11,6 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, 
 
   // Get task statistics
   const stats = getTaskStats(task)
-
-  // Increment log mutation
-  const incrementLog = useIncrementTaskLogUnit()
-
-  // Calculate current log value for today
-  const today = todayStr()
-  const log = task.log || {}
-  const currentValue = Number(log[today]) || 0
-  const totalDone = Object.keys(log).reduce((sum, k) => sum + (Number(log[k]) || 0), 0)
-  const totalUnits = Number(task.total_units) || 0
-
-  // Determine if +/- controls should be shown
-  const showLogControls = task.tipo === 'cantidad' && !task.done && totalUnits > 0
 
   // Status badge configuration (static classes for Tailwind detection)
   const statusBadgeConfig = {
@@ -134,45 +120,9 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, 
               (stats.type === 'checklist' && Array.isArray(task.subtasks) && task.subtasks.length > 0)) && (
               <span>{stats.progressLabel}</span>
             )}
-            {!task.done && stats.remaining > 0 && (
-              <span className="ml-2">• Ritmo: {stats.ritmoActual.toFixed(1)}/día</span>
-            )}
-            {showLogControls && (
-              <div className="mt-1">
-                <span>Meta hoy: <strong>{stats.metaHoyRestante}</strong> • Recomendado: <strong>{stats.recomendado}</strong></span>
-              </div>
-            )}
-            {showLogControls && (
-              <div className="mt-1">
-                <span>Falta total: <strong>{stats.remaining}</strong></span>
-              </div>
-            )}
-            {showLogControls && (
-              <div className="mt-2 flex items-center gap-2">
-                <button
-                  onClick={() => incrementLog.mutate({ taskId: task.id, dateStr: today, delta: -1 })}
-                  disabled={currentValue <= 0 || incrementLog.isPending}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium
-                    ${currentValue <= 0 || incrementLog.isPending
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text-muted)]'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--dm-surface))] dark:text-[var(--color-primary)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_30%,var(--dm-surface))]'
-                    }`}
-                >
-                  -
-                </button>
-                <span className="text-xs font-medium dark:text-[var(--dm-text)]">{currentValue}</span>
-                <button
-                  onClick={() => incrementLog.mutate({ taskId: task.id, dateStr: today, delta: 1 })}
-                  disabled={totalDone >= totalUnits || incrementLog.isPending}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium
-                    ${totalDone >= totalUnits || incrementLog.isPending
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text-muted)]'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--dm-surface))] dark:text-[var(--color-primary)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_30%,var(--dm-surface))]'
-                    }`}
-                >
-                  +
-                </button>
-              </div>
+            {((stats.type === 'cantidad' && Number(task.total_units) > 0) ||
+              (stats.type === 'checklist' && Array.isArray(task.subtasks) && task.subtasks.length > 0)) && (
+              <span className="ml-2">• Faltan: <strong>{stats.remaining}</strong></span>
             )}
           </div>
         </div>

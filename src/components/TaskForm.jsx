@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import Flatpickr from 'react-flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 import '../styles/forms.css'
-import { getTaskStats, countWorkDays, todayStr, parseDate } from '../domain/task-stats.js'
 
 // Convierte un string local "YYYY-MM-DDTHH:mm" al ISO UTC real usando el TZ del navegador
 const localToUtcIso = (localStr) => {
@@ -119,33 +118,6 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
       ...prev,
       subtasks: prev.subtasks.filter((_, i) => i !== index)
     }))
-  }
-
-  // Calculate preview stats for new tasks
-  const isNewTask = !initialData?.id
-  const previewStats = isNewTask && formData.tipo === 'cantidad' && formData.total_units && formData.due ? (() => {
-    const today = todayStr()
-    const due = parseDate(formData.due)
-    if (!due) return null
-    
-    const workDaysTotal = countWorkDays(today, formatDate(due), formData.work_days)
-    const metaDiariaEstimada = workDaysTotal > 0 ? Math.ceil(Number(formData.total_units) / workDaysTotal) : 0
-    
-    return {
-      metaDiariaEstimada,
-      workDaysTotal,
-      totalUnits: Number(formData.total_units)
-    }
-  })() : null
-
-  // Get full stats for existing tasks
-  const fullStats = !isNewTask && initialData ? getTaskStats(initialData) : null
-
-  function formatDate(d) {
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${y}-${m}-${day}`
   }
 
   return (
@@ -335,45 +307,12 @@ export default function TaskForm({ semesterId, subjects, initialData, onSubmit, 
         </div>
       )}
 
-      {/* Preview para nuevas tareas */}
-      {isNewTask && previewStats && (
-        <div className="bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-primary)_12%,var(--dm-surface))] rounded-lg p-4 border border-blue-200 dark:border-[var(--dm-border)]">
-          <h4 className="font-medium text-blue-900 dark:text-[var(--color-primary)] mb-2">📊 Preview de ritmo</h4>
-          <div className="text-sm text-blue-800 dark:text-[var(--dm-text)] space-y-1">
-            <p>Meta diaria estimada: <strong>{previewStats.metaDiariaEstimada}</strong> unidades/día</p>
-            <p>Días de trabajo: <strong>{previewStats.workDaysTotal}</strong> días</p>
-            <p>Total: <strong>{previewStats.totalUnits}</strong> unidades</p>
-          </div>
-        </div>
-      )}
-
-      {/* Estadísticas para tareas existentes */}
-      {!isNewTask && fullStats && (
-        <div className="bg-gray-50 dark:bg-[var(--dm-bg)] rounded-lg p-4 border border-gray-200 dark:border-[var(--dm-border)]">
-          <h4 className="font-medium text-gray-900 dark:text-[var(--dm-text)] mb-2">📊 Estadísticas de ritmo</h4>
-          <div className="text-sm text-gray-700 dark:text-[var(--dm-text-muted)] space-y-1">
-            {fullStats.type === 'cantidad' && (
-              <>
-                <p>Meta hoy: <strong>{fullStats.metaHoy}</strong> unidades</p>
-                <p>Necesitas hoy: <strong>{fullStats.necesitasHoy}</strong> unidades</p>
-                <p>Recomendado: <strong>{fullStats.recomendado}</strong> unidades</p>
-                <p>Exigencia: <strong>{fullStats.exigencia.toFixed(2)}x</strong></p>
-              </>
-            )}
-            <p>Ritmo actual: <strong>{fullStats.ritmoActual.toFixed(2)}</strong></p>
-            <p>Ritmo necesario: <strong>{fullStats.ritmoNecesario.toFixed(2)}</strong></p>
-            <p>Días de atraso: <strong>{fullStats.diasDeAtraso.toFixed(2)}</strong></p>
-            <p>Progreso: <strong>{fullStats.progressLabel}</strong></p>
-          </div>
-        </div>
-      )}
-
       {/* Buttons */}
       <div className="flex gap-3 pt-4">
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-[var(--dm-border)] transition-colors"
+          className="flex-1 bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-[var(--dm-border)] transition-colors"
         >
           {isPending ? 'Guardando...' : (initialData ? 'Guardar' : 'Crear')}
         </button>

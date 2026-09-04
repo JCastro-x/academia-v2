@@ -295,7 +295,7 @@ export default function NoteEditor({ noteId, onClose }) {
             <button
               onClick={handleSave}
               disabled={updateNote.isPending}
-              className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+              className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-3 py-1 rounded hover:opacity-90 disabled:opacity-50 text-sm"
             >
               {updateNote.isPending ? 'Guardando...' : 'Guardar'}
             </button>
