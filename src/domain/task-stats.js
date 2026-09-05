@@ -23,6 +23,20 @@ export function clamp(n, min, max) {
 }
 
 /**
+ * Parse a date string in YYYY-MM-DD format as a LOCAL date.
+ * Avoids UTC interpretation that causes timezone-related off-by-one errors.
+ * JavaScript's new Date("YYYY-MM-DD") interprets as UTC midnight, which can
+ * shift the date by one day in negative UTC zones. This function instead
+ * constructs the date directly in local time.
+ * @param {string} dateStr - Date string in YYYY-MM-DD format
+ * @returns {Date} Date object in local time (midnight)
+ */
+function parseLocalDate(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+/**
  * Parse a date string or Date object to a Date.
  * @param {string|Date} str - Date string in YYYY-MM-DD format or Date object
  * @returns {Date|null} Parsed Date or null if invalid
@@ -34,7 +48,7 @@ export function parseDate(str) {
   }
   const value = String(str).trim()
   if (/^-?\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return new Date(value + 'T00:00:00')
+    return parseLocalDate(value)
   }
   const parsed = new Date(value)
   return isNaN(parsed.getTime()) ? null : parsed
@@ -484,7 +498,7 @@ export function getDueRemainingLabel(task, stats = {}) {
   if (!dueValue) return daysRemainingLabel(stats)
 
   const now = new Date()
-  const dueDate = new Date(dueValue)
+  const dueDate = parseLocalDate(dueValue)
   if (Number.isNaN(dueDate.getTime())) return daysRemainingLabel(stats)
 
   const currentTime = new Date(now)
@@ -512,7 +526,7 @@ export function getDueRemainingLabel(task, stats = {}) {
   if (dayDiff === 1) return 'Vence mañana'
 
   const daysRemaining = Math.max(0, dayDiff)
-  return `${daysRemaining} ${pluralDias(daysRemaining)} restantes`
+  return `Faltan ${daysRemaining} ${pluralDias(daysRemaining)}`
 }
 
 /**
