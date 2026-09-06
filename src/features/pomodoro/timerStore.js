@@ -40,7 +40,22 @@ export const useTimerStore = create(
       setPomodoroConfig: (config) => set({ pomodoroConfig: { ...get().pomodoroConfig, ...config } }),
       
       startPomodoro: (taskId = null, subjectId = null) => set((state) => {
-        const duration = state.pomodoroConfig.workDuration * 60;
+        // Respetar la fase actual en lugar de forzar 'trabajo'
+        const currentPhase = state.pomodoroState.currentPhase || 'trabajo';
+        let duration;
+        switch (currentPhase) {
+          case 'trabajo':
+            duration = state.pomodoroConfig.workDuration * 60;
+            break;
+          case 'descanso_corto':
+            duration = state.pomodoroConfig.shortBreakDuration * 60;
+            break;
+          case 'descanso_largo':
+            duration = state.pomodoroConfig.longBreakDuration * 60;
+            break;
+          default:
+            duration = state.pomodoroConfig.workDuration * 60;
+        }
         return {
           pomodoroState: {
             ...state.pomodoroState,
@@ -49,7 +64,7 @@ export const useTimerStore = create(
             isPaused: false,
             startedAt: Date.now(),
             endsAt: Date.now() + duration * 1000,
-            currentPhase: 'trabajo',
+            currentPhase: currentPhase,
             remainingSeconds: duration,
             totalDuration: duration,
             linkedTaskId: taskId,
@@ -146,6 +161,87 @@ export const useTimerStore = create(
             totalDuration: nextDuration,
             completedSessions,
             currentSessionCount: state.pomodoroState.currentPhase === 'trabajo' ? newSessionCount : state.pomodoroState.currentSessionCount,
+          },
+        };
+      }),
+      
+      skipToNextPhase: () => set((state) => {
+        const currentPhase = state.pomodoroState.currentPhase;
+        let nextPhase;
+        let nextDuration;
+        
+        if (currentPhase === 'trabajo') {
+          const newSessionCount = state.pomodoroState.currentSessionCount + 1;
+          if (newSessionCount >= state.pomodoroConfig.sessionsBeforeLongBreak) {
+            nextPhase = 'descanso_largo';
+            nextDuration = state.pomodoroConfig.longBreakDuration * 60;
+          } else {
+            nextPhase = 'descanso_corto';
+            nextDuration = state.pomodoroConfig.shortBreakDuration * 60;
+          }
+        } else {
+          // Después de descanso, vuelta a trabajo
+          nextPhase = 'trabajo';
+          nextDuration = state.pomodoroConfig.workDuration * 60;
+        }
+        
+        return {
+          pomodoroState: {
+            ...state.pomodoroState,
+            isRunning: false,
+            isPaused: false,
+            startedAt: null,
+            endsAt: null,
+            sessionId: null,
+            currentPhase: nextPhase,
+            remainingSeconds: nextDuration,
+            totalDuration: nextDuration,
+            currentSessionCount: currentPhase === 'trabajo' ? state.pomodoroState.currentSessionCount + 1 : state.pomodoroState.currentSessionCount,
+          },
+        };
+      }),
+      
+      skipToPreviousPhase: () => set((state) => {
+        const currentPhase = state.pomodoroState.currentPhase;
+        let prevPhase;
+        let prevDuration;
+        
+        if (currentPhase === 'trabajo') {
+          // Si estamos en trabajo, regresar al último descanso
+          prevPhase = state.pomodoroState.currentSessionCount > 0 
+            ? (state.pomodoroState.currentSessionCount >= state.pomodoroConfig.sessionsBeforeLongBreak ? 'descanso_largo' : 'descanso_corto')
+            : 'trabajo';
+        } else {
+          // Si estamos en descanso, regresar a trabajo
+          prevPhase = 'trabajo';
+        }
+        
+        switch (prevPhase) {
+          case 'trabajo':
+            prevDuration = state.pomodoroConfig.workDuration * 60;
+            break;
+          case 'descanso_corto':
+            prevDuration = state.pomodoroConfig.shortBreakDuration * 60;
+            break;
+          case 'descanso_largo':
+            prevDuration = state.pomodoroConfig.longBreakDuration * 60;
+            break;
+          default:
+            prevDuration = state.pomodoroConfig.workDuration * 60;
+        }
+        
+        return {
+          pomodoroState: {
+            ...state.pomodoroState,
+            isRunning: false,
+            isPaused: false,
+            startedAt: null,
+            endsAt: null,
+            sessionId: null,
+            currentPhase: prevPhase,
+            remainingSeconds: prevDuration,
+            totalDuration: prevDuration,
+            currentSessionCount: currentPhase === 'trabajo' ? Math.max(0, state.pomodoroState.currentSessionCount - 1) : state.pomodoroState.currentSessionCount,
           },
         };
       }),

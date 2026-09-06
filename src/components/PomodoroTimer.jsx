@@ -18,6 +18,8 @@ export default function PomodoroTimer() {
     updatePomodoroRemaining,
     completePomodoroSession,
     setPomodoroConfig,
+    skipToNextPhase,
+    skipToPreviousPhase,
   } = useTimerStore();
 
   const createSession = useCreatePomodoroSession();
@@ -245,6 +247,14 @@ export default function PomodoroTimer() {
     }
   };
 
+  const handleSkipNext = () => {
+    skipToNextPhase();
+  };
+
+  const handleSkipPrevious = () => {
+    skipToPreviousPhase();
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
       {/* Stats panel */}
@@ -280,6 +290,15 @@ export default function PomodoroTimer() {
       <div className="flex flex-wrap gap-3 justify-center">
         {!pomodoroState.isRunning && !pomodoroState.isPaused && (
           <button
+            onClick={handleSkipPrevious}
+            className="bg-gray-200 text-gray-700 px-3 py-3 rounded-lg hover:bg-gray-300 font-medium dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
+            title="Fase anterior"
+          >
+            ⏮️
+          </button>
+        )}
+        {!pomodoroState.isRunning && !pomodoroState.isPaused && (
+          <button
             onClick={handleStart}
             className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-4 sm:px-8 py-3 rounded-lg hover:opacity-90 font-medium"
           >
@@ -302,6 +321,13 @@ export default function PomodoroTimer() {
             Reanudar
           </button>
         )}
+        <button
+          onClick={handleSkipNext}
+          className="bg-gray-200 text-gray-700 px-3 py-3 rounded-lg hover:bg-gray-300 font-medium dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
+          title="Siguiente fase"
+        >
+          ⏭️
+        </button>
         <button
           onClick={handleReset}
           className="bg-gray-200 text-gray-700 px-4 sm:px-8 py-3 rounded-lg hover:bg-gray-300 font-medium dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
