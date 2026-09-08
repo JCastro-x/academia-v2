@@ -117,11 +117,6 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, 
             <span className={`text-gray-600 dark:text-[var(--dm-text-muted)] ${isOverdue ? 'text-red-600 font-medium dark:text-red-400' : ''}`}>
               {getDueRemainingLabel(task, stats)}
             </span>
-            {stats.type === 'cantidad' && stats.exigencia && (
-              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded dark:bg-purple-900/30 dark:text-purple-400">
-                {stats.exigencia.toFixed(1)}x
-              </span>
-            )}
           </div>
 
           <div className="mt-2 text-xs text-gray-500 dark:text-[var(--dm-text-muted)]">

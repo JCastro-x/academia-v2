@@ -97,6 +97,7 @@ export default function Schedule() {
     const dateStr = formatDate(date)
     return tasks.filter(task => {
       if (!task.due) return false
+      if (task.done) return false // Exclude completed tasks
       const taskDate = parseDate(task.due)
       return formatDate(taskDate) === dateStr
     })

@@ -62,6 +62,15 @@ export default function Calendar() {
     return day === today.getDate() && month === today.getMonth() && year === today.getFullYear()
   }
 
+  const isPastDay = (day) => {
+    const today = new Date()
+    const dateToCheck = new Date(year, month, day)
+    // Set both dates to midnight for comparison
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const checkMidnight = new Date(year, month, day)
+    return checkMidnight < todayMidnight
+  }
+
   const getEventsForDay = (day) => {
     if (!events) return []
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -239,6 +248,7 @@ export default function Calendar() {
             const day = index + 1
             const dayEvents = getEventsForDay(day)
             const dayTasks = getTasksForDay(day)
+            const pastDay = isPastDay(day)
             
             return (
               <motion.button
@@ -248,10 +258,12 @@ export default function Calendar() {
                 className={`h-24 min-w-0 p-2 rounded-lg border text-left relative overflow-hidden transition-colors ${
                   isToday(day) 
                     ? 'border-blue-500 bg-blue-50 dark:border-[var(--color-primary)] dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--dm-surface))]' 
+                    : pastDay
+                    ? 'border-gray-200 bg-gray-100 opacity-50 dark:border-[var(--dm-border)] dark:bg-[var(--dm-bg)] dark:opacity-40'
                     : 'border-gray-200 hover:bg-gray-50 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] dark:hover:bg-[var(--dm-border)]'
                 }`}
               >
-                <span className={`font-semibold ${isToday(day) ? 'text-blue-600 dark:text-[var(--color-primary)]' : 'dark:text-[var(--dm-text)]'}`}>
+                <span className={`font-semibold ${isToday(day) ? 'text-blue-600 dark:text-[var(--color-primary)]' : pastDay ? 'text-gray-400 dark:text-[var(--dm-text-muted)]' : 'dark:text-[var(--dm-text)]'}`}>
                   {day}
                 </span>
                 

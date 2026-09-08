@@ -10,9 +10,24 @@ function clip(text, max = 45) {
 
 export function buildDailySummaryContent(tasks, period, nowIso) {
   const pending = Array.isArray(tasks) ? tasks.filter((task) => !task.done) : []
-  const count = pending.length
   const now = new Date(nowIso)
   const isMorning = period === 'morning'
+
+  // Filter tasks due today or within the next 7 days
+  const startOfToday = new Date(now)
+  startOfToday.setHours(0, 0, 0, 0)
+
+  const endOfNext7Days = new Date(startOfToday)
+  endOfNext7Days.setDate(endOfNext7Days.getDate() + 7)
+  endOfNext7Days.setHours(23, 59, 59, 999)
+
+  const upcomingTasks = pending.filter((task) => {
+    if (!task.due) return false
+    const dueDate = new Date(`${task.due}T23:59:59`)
+    return dueDate >= startOfToday && dueDate <= endOfNext7Days
+  })
+
+  const count = upcomingTasks.length
 
   if (count === 0) {
     return {
@@ -27,13 +42,13 @@ export function buildDailySummaryContent(tasks, period, nowIso) {
 
   const plural = count === 1 ? 'tarea' : 'tareas'
   const title = isMorning
-    ? `Tienes ${count} ${plural} para hoy`
-    : `Quedan ${count} ${plural} de hoy`
+    ? `Tienes ${count} ${plural} para hoy y los próximos 7 días`
+    : `Quedan ${count} ${plural} de hoy y los próximos 7 días`
 
   return {
     title,
     body: isMorning
-      ? `Vencen hoy: ${count} ${plural} ✅`
+      ? `Vencen en los próximos 7 días: ${count} ${plural} ✅`
       : `Día de cierre: ${count} ${plural} sin terminar 📝`,
     url: '/tasks',
     count,

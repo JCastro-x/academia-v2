@@ -26,6 +26,12 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 const DEFAULT_TIMEZONE = 'America/Guatemala'
 const SUMMARY_WINDOW_MINUTES = 10 // cron corre cada 10 min; ventana de disparo del resumen
 
+// Type for summary tasks (basic fields)
+type SummaryTask = { id: string; titulo: string; due: string | null; done: boolean }
+
+// Type for reminder tasks (full fields)
+type ReminderTask = { id: string; titulo: string; due: string | null; due_time: string | null; reminder_at: string | null; done: boolean; last_push_notified_at: string | null }
+
 // true si la hora local del usuario está en la ventana [hour:00, hour:15).
 function isInLocalWindow(date: Date, timeZone: string, hour: number) {
   const p = getZonedParts(date, timeZone)
@@ -50,7 +56,7 @@ function clip(text: string, max = 45) {
 }
 
 function buildReminderNotification(
-  task: { id: string; titulo: string },
+  task: ReminderTask,
   type: 'day_before' | 'three_hours_before' | 'custom_reminder',
 ) {
   const t = clip(task.titulo)
@@ -143,12 +149,12 @@ function buildEventReminderNotification(
   }
 }
 
-function buildMorningSummary(tasks: Array<{ id: string; titulo: string; due: string | null }>) {
+function buildMorningSummary(tasks: Array<SummaryTask>) {
   const count = tasks.length
 
   if (count === 0) {
     return {
-      title: '¡Felicidades, no tienes tareas pendientes para hoy! 🎉',
+      title: '¡Felicidades, no tienes tareas pendientes para hoy y los próximos 7 días! 🎉',
       body: 'Día libre sin tareas pendientes ✅',
       url: '/tasks',
       count: 0,
@@ -157,20 +163,20 @@ function buildMorningSummary(tasks: Array<{ id: string; titulo: string; due: str
 
   const plural = count === 1 ? 'tarea' : 'tareas'
   return {
-    title: `Tienes ${count} ${plural} para hoy`,
-    body: `Vencen hoy: ${count} ${plural} ✅`,
+    title: `Tienes ${count} ${plural} para hoy y los próximos 7 días`,
+    body: `Vencen en los próximos 7 días: ${count} ${plural} ✅`,
     url: '/tasks',
     count,
   }
 }
 
-function buildEveningSummary(tasks: Array<{ id: string; titulo: string; due: string | null }>) {
+function buildEveningSummary(tasks: Array<SummaryTask>) {
   const count = tasks.length
 
   if (count === 0) {
     return {
       title: 'Felicidades, día libre 🎉',
-      body: 'No tienes tareas pendientes para hoy 🎉',
+      body: 'No tienes tareas pendientes para hoy y los próximos 7 días 🎉',
       url: '/tasks',
       count: 0,
     }
@@ -178,7 +184,7 @@ function buildEveningSummary(tasks: Array<{ id: string; titulo: string; due: str
 
   const plural = count === 1 ? 'tarea' : 'tareas'
   return {
-    title: `Quedan ${count} ${plural} de hoy`,
+    title: `Quedan ${count} ${plural} de hoy y los próximos 7 días`,
     body: `Día de cierre: ${count} ${plural} sin terminar 📝`,
     url: '/tasks',
     count,
@@ -325,7 +331,7 @@ async function markEveningSummarySent(userId: string, now: Date) {
 const REMINDER_DEDUP_WINDOW_MS = 1000 * 60 * 60 * 24 // 24h between pushes for the same task
 
 function isReminderDue(
-  task: { due: string | null; due_time: string | null; reminder_at: string | null; last_push_notified_at: string | null },
+  task: ReminderTask,
   now: Date,
   timeZone: string,
 ) {
@@ -368,7 +374,7 @@ function isReminderDue(
 }
 
 function resolveReminderType(
-  task: { due: string | null; due_time: string | null; reminder_at: string | null },
+  task: ReminderTask,
   now: Date,
   timeZone: string,
 ): 'day_before' | 'three_hours_before' | 'custom_reminder' | null {
@@ -424,12 +430,12 @@ async function runReminderNotifications(now: Date) {
     (profiles ?? []).map((p: { user_id: string; timezone: string | null }) => [p.user_id, getProfileTimezone(p.timezone)]),
   )
 
-  const tasksByUser = new Map<string, Array<any>>()
+  const reminderTasksByUser = new Map<string, Array<ReminderTask>>()
   for (const task of tasks ?? []) {
     if (!task.user_id) continue
-    const bucket = tasksByUser.get(task.user_id) ?? []
+    const bucket = reminderTasksByUser.get(task.user_id) ?? []
     bucket.push(task)
-    tasksByUser.set(task.user_id, bucket)
+    reminderTasksByUser.set(task.user_id, bucket)
   }
 
   const eventsByUser = new Map<string, Array<any>>()
@@ -445,7 +451,7 @@ async function runReminderNotifications(now: Date) {
   for (const profile of profiles ?? []) {
     const userId = profile.user_id
     const timeZone = timezoneByUser.get(userId) ?? DEFAULT_TIMEZONE
-    const userTasks = tasksByUser.get(userId) ?? []
+    const userTasks = reminderTasksByUser.get(userId) ?? []
     const userEvents = eventsByUser.get(userId) ?? []
 
     for (const task of userTasks) {
@@ -510,7 +516,7 @@ async function runMorningSummary(now: Date) {
   }
 
   const users = profiles ?? []
-  const tasksByUser = new Map<string, Array<{ id: string; titulo: string; due: string | null }>>()
+  const tasksByUser = new Map<string, Array<SummaryTask>>()
 
   for (const task of tasks ?? []) {
     if (!task.user_id) continue
@@ -539,8 +545,21 @@ async function runMorningSummary(now: Date) {
       continue
     }
 
-    const pendingToday = (tasksByUser.get(profile.user_id) ?? []).filter((t) => t.due === todayKey)
-    const summary = buildMorningSummary(pendingToday)
+    // Filter tasks due today or within the next 7 days
+    const upcomingTasks = (tasksByUser.get(profile.user_id) ?? []).filter((t) => {
+      if (!t.due) return false
+      if (t.done) return false // Exclude completed tasks
+      const taskDate = t.due
+      const todayDate = todayKey
+      
+      // Parse dates and compare
+      const taskDateTime = new Date(taskDate).getTime()
+      const todayDateTime = new Date(todayDate).getTime()
+      const sevenDaysLater = new Date(todayDateTime + 7 * 24 * 60 * 60 * 1000).getTime()
+      
+      return taskDateTime >= todayDateTime && taskDateTime <= sevenDaysLater
+    })
+    const summary = buildMorningSummary(upcomingTasks)
 
     const sentCount = await sendToUserSubscriptions(profile.user_id, {
       title: summary.title,
@@ -577,7 +596,7 @@ async function runEveningSummary(now: Date) {
   }
 
   const users = profiles ?? []
-  const tasksByUser = new Map<string, Array<{ id: string; titulo: string; due: string | null }>>()
+  const tasksByUser = new Map<string, Array<SummaryTask>>()
 
   for (const task of tasks ?? []) {
     if (!task.user_id) continue
@@ -606,8 +625,21 @@ async function runEveningSummary(now: Date) {
       continue
     }
 
-    const pendingToday = (tasksByUser.get(profile.user_id) ?? []).filter((t) => t.due === todayKey)
-    const summary = buildEveningSummary(pendingToday)
+    // Filter tasks due today or within the next 7 days
+    const upcomingTasks = (tasksByUser.get(profile.user_id) ?? []).filter((t) => {
+      if (!t.due) return false
+      if (t.done) return false // Exclude completed tasks
+      const taskDate = t.due
+      const todayDate = todayKey
+      
+      // Parse dates and compare
+      const taskDateTime = new Date(taskDate).getTime()
+      const todayDateTime = new Date(todayDate).getTime()
+      const sevenDaysLater = new Date(todayDateTime + 7 * 24 * 60 * 60 * 1000).getTime()
+      
+      return taskDateTime >= todayDateTime && taskDateTime <= sevenDaysLater
+    })
+    const summary = buildEveningSummary(upcomingTasks)
     const sentCount = await sendToUserSubscriptions(profile.user_id, {
       title: summary.title,
       body: summary.body,
@@ -630,7 +662,7 @@ Deno.serve(async (request: Request) => {
     const now = new Date()
     const type = body.type ?? 'all'
 
-    const results: Record<string, unknown> = {
+    const results: { now: string; type: string; sent: number; reminders?: number; morningSummary?: number; eveningSummary?: number } = {
       now: now.toISOString(),
       type,
       sent: 0,
