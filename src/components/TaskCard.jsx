@@ -3,7 +3,7 @@ import { forwardRef } from 'react'
 import { getTaskStats, getDueRemainingLabel, todayStr } from '../domain/task-stats.js'
 import { useIncrementTaskLogUnit } from '../features/tasks/hooks.js'
 
-const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, ref) => {
+const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete, onTogglePin, onViewDetails }, ref) => {
   const priorityColors = {
     baja: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     media: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -124,12 +124,9 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, 
               (stats.type === 'checklist' && Array.isArray(task.subtasks) && task.subtasks.length > 0)) && (
               <span>{stats.progressLabel}</span>
             )}
-            {!task.done && stats.remaining > 0 && (
-              <span className="ml-2">• Ritmo: {stats.ritmoActual.toFixed(1)}/día</span>
-            )}
             {showLogControls && (
               <div className="mt-1">
-                <span>Meta hoy: <strong>{stats.metaHoyRestante}</strong> • Recomendado: <strong>{stats.recomendado}</strong></span>
+                <span>Meta hoy: <strong>{stats.metaHoyRestante === 0 ? '✅' : stats.metaHoyRestante}</strong> • Recomendado: <strong>{stats.recomendadoRestante === 0 ? '🔥' : stats.recomendadoRestante}</strong></span>
               </div>
             )}
             {showLogControls && (
@@ -161,17 +158,40 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete }, 
 
         <div className="flex gap-1">
           <button
+            onClick={() => onTogglePin && onTogglePin(task.id, !task.pinned)}
+            className={`p-1.5 rounded transition-colors ${task.pinned ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]'}`}
+            aria-label={task.pinned ? `Desfijar tarea ${task.titulo}` : `Fijar tarea ${task.titulo}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => onViewDetails && onViewDetails(task)}
+            className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded dark:text-[var(--dm-text-muted)] dark:hover:text-green-400 dark:hover:bg-[color-mix(in_srgb,green_12%,transparent)]"
+            aria-label={`Ver detalles de ${task.titulo}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+          <button
             onClick={() => onEdit(task)}
             className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]"
             aria-label={`Editar tarea ${task.titulo}`}
           >
-            ✏️
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
           </button>
           <button
             onClick={() => onDelete(task)}
             className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded dark:text-[var(--dm-text-muted)] dark:hover:text-red-300 dark:hover:bg-[color-mix(in_srgb,red_12%,transparent)]"
           >
-            🗑️
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
           </button>
         </div>
       </div>

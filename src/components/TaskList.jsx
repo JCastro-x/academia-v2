@@ -1,6 +1,6 @@
 import TaskCard from './TaskCard.jsx'
 
-export default function TaskList({ tasks, subjects, highlightTaskId, onToggleDone, onEdit, onDelete }) {
+export default function TaskList({ tasks, subjects, highlightTaskId, onToggleDone, onTogglePin, onViewDetails, onEdit, onDelete }) {
   if (!tasks || tasks.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
@@ -23,6 +23,8 @@ export default function TaskList({ tasks, subjects, highlightTaskId, onToggleDon
             task={task}
             subject={getSubject(task.subject_id)}
             onToggleDone={onToggleDone}
+            onTogglePin={onTogglePin}
+            onViewDetails={onViewDetails}
             onEdit={onEdit}
             onDelete={onDelete}
           />

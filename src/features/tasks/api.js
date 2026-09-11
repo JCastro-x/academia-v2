@@ -12,7 +12,7 @@ export const tasksQueryKeys = {
 export async function getTasks(semesterId) {
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at, pinned')
     .eq('semester_id', semesterId)
     .order('due', { ascending: true, nullsFirst: false })
 
@@ -23,7 +23,7 @@ export async function getTasks(semesterId) {
 export async function getPendingTasks(semesterId) {
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at, pinned')
     .eq('semester_id', semesterId)
     .eq('done', false)
     .order('due', { ascending: true, nullsFirst: false })
@@ -35,7 +35,7 @@ export async function getPendingTasks(semesterId) {
 export async function getTasksBySubject(subjectId) {
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at, pinned')
     .eq('subject_id', subjectId)
     .order('due', { ascending: true, nullsFirst: false })
 
@@ -46,7 +46,7 @@ export async function getTasksBySubject(subjectId) {
 export async function getTaskById(id) {
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at, pinned')
     .eq('id', id)
     .limit(1)
     .maybeSingle()
@@ -72,8 +72,9 @@ export async function createTask(task) {
       total_units: task.total_units,
       work_days: task.work_days,
       log: task.log || [],
+      pinned: false,
     })
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at, pinned')
     .single()
 
   if (error) throw error
@@ -95,9 +96,10 @@ export async function updateTask(id, updates) {
       total_units: updates.total_units,
       work_days: updates.work_days,
       log: updates.log,
+      pinned: updates.pinned,
     })
     .eq('id', id)
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at, pinned')
     .single()
 
   if (error) throw error
@@ -109,7 +111,19 @@ export async function toggleTaskDone(id, done) {
     .from('tasks')
     .update({ done })
     .eq('id', id)
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at, pinned')
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function toggleTaskPin(id, pinned) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .update({ pinned })
+    .eq('id', id)
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at, pinned')
     .single()
 
   if (error) throw error
@@ -186,7 +200,7 @@ export async function incrementTaskLogUnit(taskId, dateStr, delta) {
     .from('tasks')
     .update({ log: updatedLog })
     .eq('id', taskId)
-    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at')
+    .select('id, subject_id, semester_id, titulo, prioridad, due, done, subtasks, attachments, reminder_at, tipo, total_units, work_days, log, updated_at, pinned')
     .single()
 
   if (updateError) throw updateError

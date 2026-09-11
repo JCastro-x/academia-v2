@@ -211,10 +211,10 @@ export function statusFromProgress(stats) {
 
   const cargaDiaria = stats.necesitasHoy || 0
 
-  if (cargaDiaria <= 4) return 'ongreen'      // Excelente (carga muy ligera)
-  if (cargaDiaria <= 6) return 'onyellow'     // Bien (carga manejable)
-  if (cargaDiaria <= 8) return 'onattention'  // Atención (carga pesada)
-  return 'critical'                           // Crítico (carga insostenible, > 8)
+  if (cargaDiaria < 4) return 'ongreen'      // Excelente (carga muy ligera)
+  if (cargaDiaria < 6) return 'onyellow'     // Bien (carga manejable)
+  if (cargaDiaria < 8) return 'onattention'  // Atención (carga pesada)
+  return 'critical'                           // Crítico (carga insostenible, >= 8)
 }
 
 // ============================================================
@@ -262,6 +262,7 @@ export function computeCantidadStats(task) {
       metaHoy: 0,
       necesitasHoy: 0,
       recomendado: 0,
+      recomendadoRestante: 0,
       ritmoActual: 0,
       ritmoNecesario: 0,
       ritmoOriginal: 0,
@@ -291,8 +292,10 @@ export function computeCantidadStats(task) {
 
   // Base diaria calculada con "foto" de lo que faltaba al despertar (evita saltos por Math.ceil)
   const baseDiaria = Math.ceil(remainingBeforeToday / Math.max(1, workDaysRemaining))
-  const necesitasHoy = baseDiaria
+  // necesitasHoy dinámico según lo que queda ahora para que la etiqueta se actualice
+  const necesitasHoy = Math.ceil(remaining / Math.max(1, workDaysRemaining))
   const recomendado = Math.ceil(baseDiaria * 1.15)
+  const recomendadoRestante = Math.max(0, recomendado - doneToday)
   const exigencia = metaDiariaOriginal > 0 ? baseDiaria / metaDiariaOriginal : 1
 
   // metaHoyRestante: lo que aún falta hacer hoy (base estática menos lo ya hecho)
@@ -359,6 +362,7 @@ export function computeCantidadStats(task) {
     necesitasHoy,
     metaHoyRestante,
     recomendado,
+    recomendadoRestante,
     ritmoActual,
     ritmoNecesario,
     ritmoOriginal,

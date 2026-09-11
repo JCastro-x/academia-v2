@@ -3,11 +3,12 @@ import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useSubjects, useCreateSubject } from '../features/subjects/hooks.js'
-import { usePendingTasks, useCreateTask, useToggleTaskDone, useDeleteTask } from '../features/tasks/hooks.js'
+import { usePendingTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useToggleTaskPin, useDeleteTask } from '../features/tasks/hooks.js'
 import { useEvents } from '../features/events/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import TaskCard from '../components/TaskCard.jsx'
+import TaskDetailsModal from '../components/TaskDetailsModal.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
 import SemesterForm from '../components/SemesterForm.jsx'
 import QuickAdd from '../components/QuickAdd.jsx'
@@ -19,12 +20,16 @@ export default function Overview() {
   const { data: pendingTasks, isLoading: tasksLoading } = usePendingTasks(semesterId)
   const { data: events } = useEvents(semesterId)
   const createTask = useCreateTask()
+  const updateTask = useUpdateTask()
   const toggleTaskDone = useToggleTaskDone()
+  const toggleTaskPin = useToggleTaskPin()
   const deleteTask = useDeleteTask()
   const createSubject = useCreateSubject()
   const updateSemester = useUpdateSemester()
   const { openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
   const [showEvents, setShowEvents] = useState(false)
+  const [showPinnedOnly, setShowPinnedOnly] = useState(false)
+  const [selectedTaskForDetails, setSelectedTaskForDetails] = useState(null)
   const isLoading = semesterLoading || subjectsLoading || tasksLoading
 
   const handleCreateTask = async (taskData) => {
@@ -54,6 +59,42 @@ export default function Overview() {
       closeModal()
     } catch (error) {
       console.error('Error updating semester:', error)
+    }
+  }
+
+  const handleTogglePin = async (id, pinned) => {
+    try {
+      await toggleTaskPin.mutateAsync({ id, pinned })
+      playSound('save')
+    } catch (error) {
+      console.error('Error toggling task pin:', error)
+    }
+  }
+
+  const handleViewDetails = (task) => {
+    setSelectedTaskForDetails(task)
+  }
+
+  const handleCloseDetails = () => {
+    setSelectedTaskForDetails(null)
+  }
+
+  const handleUpdateSubtasks = async (taskId, updates) => {
+    try {
+      await updateTask.mutateAsync({ id: taskId, updates })
+      playSound('save')
+    } catch (error) {
+      console.error('Error updating subtasks:', error)
+    }
+  }
+
+  const handleToggleDoneFromDetails = async (id, done) => {
+    try {
+      await toggleTaskDone.mutateAsync({ id, done })
+      playSound(done ? 'task-done' : 'task-undone')
+      setSelectedTaskForDetails(null)
+    } catch (error) {
+      console.error('Error toggling task done:', error)
     }
   }
 
@@ -148,15 +189,27 @@ export default function Overview() {
       <div className="bg-white rounded-lg shadow-md p-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-[var(--dm-text)]">Tareas pendientes</h2>
-          <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
-            <input
-              type="checkbox"
-              checked={showEvents}
-              onChange={(e) => setShowEvents(e.target.checked)}
-              className="rounded border-gray-300 dark:border-[var(--dm-border)]"
-            />
-            Mostrar eventos
-          </label>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              onClick={() => setShowPinnedOnly(!showPinnedOnly)}
+              className={`p-2 rounded-lg transition-colors ${showPinnedOnly ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-500 hover:bg-gray-100 dark:text-[var(--dm-text-muted)] dark:hover:bg-[var(--dm-bg)]'}`}
+              title={showPinnedOnly ? 'Mostrar todas las tareas' : 'Mostrar solo tareas fijadas'}
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </button>
+            <label className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
+              <input
+                type="checkbox"
+                checked={showEvents}
+                onChange={(e) => setShowEvents(e.target.checked)}
+                className="rounded border-gray-300 dark:border-[var(--dm-border)]"
+              />
+              <span className="hidden sm:inline">Mostrar eventos</span>
+              <span className="sm:hidden">Eventos</span>
+            </label>
+          </div>
         </div>
         <div className="min-w-0 pb-16">
           <AnimatePresence mode="popLayout">
@@ -205,12 +258,14 @@ export default function Overview() {
               </div>
             )}
             
-            {pendingTasks?.filter(t => !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id)).map(task => (
+            {pendingTasks?.filter(t => !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id) && (!showPinnedOnly || t.pinned)).map(task => (
               <TaskCard
                 key={task.id}
                 task={task}
                 subject={subjects?.find(s => s.id === task.subject_id)}
                 onToggleDone={handleToggleDone}
+                onTogglePin={handleTogglePin}
+                onViewDetails={handleViewDetails}
                 onEdit={(t) => openModal('task', { editingTask: t })}
                 onDelete={handleDeleteTask}
               />
@@ -220,6 +275,17 @@ export default function Overview() {
       </div>
 
       <QuickAdd semesterId={semesterId} subjects={subjects} />
+
+      {selectedTaskForDetails && (
+        <TaskDetailsModal
+          task={selectedTaskForDetails}
+          subject={subjects?.find(s => s.id === selectedTaskForDetails.subject_id)}
+          onClose={handleCloseDetails}
+          onToggleSubtask={handleUpdateSubtasks}
+          onUpdateTask={handleUpdateSubtasks}
+          onToggleDone={handleToggleDoneFromDetails}
+        />
+      )}
     </div>
   )
 }

@@ -7,6 +7,7 @@ import {
   createTask,
   updateTask,
   toggleTaskDone,
+  toggleTaskPin,
   deleteTask,
   deleteCompletedTasks,
   countTasksBySubject,
@@ -151,6 +152,39 @@ export function useToggleTaskDone() {
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.byId(data.id) })
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.bySemester(data.semester_id) })
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.pending(data.semester_id) })
+    },
+  })
+}
+
+export function useToggleTaskPin() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, pinned }) => {
+      if (isGuestMode()) {
+        const tasks = getGuestTasks()
+        const updatedTasks = tasks.map(t =>
+          t.id === id ? { ...t, pinned, updated_at: new Date().toISOString() } : t
+        )
+        saveGuestTasks(updatedTasks)
+        return updatedTasks.find(t => t.id === id)
+      }
+      try {
+        return await toggleTaskPin(id, pinned)
+      } catch (error) {
+        console.error('Error in toggleTaskPin:', error)
+        throw error
+      }
+    },
+    onSuccess: (data) => {
+      if (data && data.id) {
+        queryClient.invalidateQueries({ queryKey: tasksQueryKeys.byId(data.id) })
+        queryClient.invalidateQueries({ queryKey: tasksQueryKeys.bySemester(data.semester_id) })
+        queryClient.invalidateQueries({ queryKey: tasksQueryKeys.pending(data.semester_id) })
+      }
+    },
+    onError: (error) => {
+      console.error('Error toggling task pin:', error)
     },
   })
 }

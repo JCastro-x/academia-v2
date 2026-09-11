@@ -1,11 +1,12 @@
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { useTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useDeleteTask, useDeleteCompletedTasks } from '../features/tasks/hooks.js'
+import { useTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useToggleTaskPin, useDeleteTask, useDeleteCompletedTasks } from '../features/tasks/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import TaskList from '../components/TaskList.jsx'
 import TaskForm from '../components/TaskForm.jsx'
+import TaskDetailsModal from '../components/TaskDetailsModal.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 
 export default function Tasks() {
@@ -15,14 +16,17 @@ export default function Tasks() {
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
   const toggleTaskDone = useToggleTaskDone()
+  const toggleTaskPin = useToggleTaskPin()
   const deleteTask = useDeleteTask()
   const deleteCompletedTasks = useDeleteCompletedTasks()
   const { openModal, closeModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
   const [filterSubject, setFilterSubject] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterPinned, setFilterPinned] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [searchParams] = useSearchParams()
+  const [selectedTaskForDetails, setSelectedTaskForDetails] = useState(null)
   const highlightTaskId = searchParams.get('task')
 
   useEffect(() => {
@@ -58,6 +62,42 @@ export default function Tasks() {
       playSound(done ? 'task-done' : 'task-undone')
     } catch (error) {
       console.error('Error toggling task:', error)
+    }
+  }
+
+  const handleTogglePin = async (id, pinned) => {
+    try {
+      await toggleTaskPin.mutateAsync({ id, pinned })
+      playSound('save')
+    } catch (error) {
+      console.error('Error toggling task pin:', error)
+    }
+  }
+
+  const handleViewDetails = (task) => {
+    setSelectedTaskForDetails(task)
+  }
+
+  const handleCloseDetails = () => {
+    setSelectedTaskForDetails(null)
+  }
+
+  const handleUpdateSubtasks = async (taskId, updates) => {
+    try {
+      await updateTask.mutateAsync({ id: taskId, updates })
+      playSound('save')
+    } catch (error) {
+      console.error('Error updating subtasks:', error)
+    }
+  }
+
+  const handleToggleDoneFromDetails = async (id, done) => {
+    try {
+      await toggleTaskDone.mutateAsync({ id, done })
+      playSound(done ? 'task-done' : 'task-undone')
+      setSelectedTaskForDetails(null)
+    } catch (error) {
+      console.error('Error toggling task done:', error)
     }
   }
 
@@ -114,6 +154,7 @@ export default function Tasks() {
     if (filterPriority && task.prioridad !== filterPriority) return false
     if (filterStatus === 'pending' && task.done) return false
     if (filterStatus === 'completed' && !task.done) return false
+    if (filterPinned && !task.pinned) return false
     if (searchTerm && !task.titulo.toLowerCase().includes(searchTerm.toLowerCase())) return false
     return true
   }) || [])].sort((firstTask, secondTask) => Number(firstTask.done) - Number(secondTask.done))
@@ -145,7 +186,7 @@ export default function Tasks() {
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-2 sm:p-4 space-y-2 sm:space-y-4 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
-        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 lg:grid-cols-5 sm:gap-4">
           <input
             type="text"
             placeholder="Buscar tareas..."
@@ -188,6 +229,17 @@ export default function Tasks() {
           </select>
 
           <button
+            onClick={() => setFilterPinned(!filterPinned)}
+            className={`w-full px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm lg:text-base border rounded-lg transition-colors flex items-center justify-center gap-1 sm:gap-2 ${filterPinned ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-bg)]'}`}
+          >
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+            <span className="hidden sm:inline">{filterPinned ? 'Solo fijadas' : 'Ver fijadas'}</span>
+            <span className="sm:hidden">{filterPinned ? '📌' : '📍'}</span>
+          </button>
+
+          <button
             onClick={handleDeleteCompleted}
             className="w-full px-2 py-1 text-xs border border-red-200 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 sm:hidden"
           >
@@ -211,10 +263,23 @@ export default function Tasks() {
           subjects={subjects}
           highlightTaskId={highlightTaskId}
           onToggleDone={handleToggleDone}
+          onTogglePin={handleTogglePin}
+          onViewDetails={handleViewDetails}
           onEdit={(task) => openModal('task', { editingTask: task })}
           onDelete={handleDeleteTask}
         />
       </div>
+
+      {selectedTaskForDetails && (
+        <TaskDetailsModal
+          task={selectedTaskForDetails}
+          subject={subjects?.find(s => s.id === selectedTaskForDetails.subject_id)}
+          onClose={handleCloseDetails}
+          onToggleSubtask={handleUpdateSubtasks}
+          onUpdateTask={handleUpdateSubtasks}
+          onToggleDone={handleToggleDoneFromDetails}
+        />
+      )}
     </div>
   )
 }
