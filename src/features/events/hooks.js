@@ -4,6 +4,7 @@ import {
   getEventsByMonth,
   getEventsBySubject,
   getEventById,
+  getFutureEvents,
   createEvent,
   updateEvent,
   deleteEvent,
@@ -14,6 +15,14 @@ export function useEvents(semesterId) {
   return useQuery({
     queryKey: eventsQueryKeys.bySemester(semesterId),
     queryFn: () => getEvents(semesterId),
+    enabled: !!semesterId,
+  })
+}
+
+export function useFutureEvents(semesterId) {
+  return useQuery({
+    queryKey: eventsQueryKeys.future(semesterId),
+    queryFn: () => getFutureEvents(semesterId),
     enabled: !!semesterId,
   })
 }

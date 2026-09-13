@@ -6,6 +6,7 @@ export const eventsQueryKeys = {
   byMonth: (semesterId, year, month) => ['events', 'semester', semesterId, 'month', year, month],
   bySubject: (subjectId) => ['events', 'subject', subjectId],
   byId: (id) => ['events', id],
+  future: (semesterId) => ['events', 'future', semesterId],
 }
 
 export async function getEvents(semesterId) {
@@ -13,6 +14,19 @@ export async function getEvents(semesterId) {
     .from('events')
     .select('id, subject_id, semester_id, user_id, nombre, tipo, start_at, end_at, descripcion')
     .eq('semester_id', semesterId)
+    .order('start_at', { ascending: true })
+
+  if (error) throw error
+  return data
+}
+
+export async function getFutureEvents(semesterId) {
+  const now = new Date().toISOString()
+  const { data, error } = await supabase
+    .from('events')
+    .select('id, subject_id, semester_id, user_id, nombre, tipo, start_at, end_at, descripcion')
+    .eq('semester_id', semesterId)
+    .gte('start_at', now)
     .order('start_at', { ascending: true })
 
   if (error) throw error

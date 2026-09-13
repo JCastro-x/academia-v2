@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom'
 import { useState, useMemo } from 'react'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useTasks } from '../features/tasks/hooks.js'
-import { useEvents } from '../features/events/hooks.js'
+import { useFutureEvents } from '../features/events/hooks.js'
 import { useSemester } from '../features/semesters/hooks.js'
 import { getSemesterStats, getWeekStartDateForWeek } from '../domain/semester-weeks.js'
 import { parseDate, formatDate, diffDays } from '../domain/task-stats.js'
@@ -15,7 +15,7 @@ export default function Schedule() {
   const { semesterId } = useParams()
   const { data: subjects, isLoading } = useSubjects(semesterId)
   const { data: tasks } = useTasks(semesterId)
-  const { data: events } = useEvents(semesterId)
+  const { data: events } = useFutureEvents(semesterId)
   const { data: semester } = useSemester(semesterId)
 
   // Week navigation state (Monday of selected week)

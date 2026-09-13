@@ -295,7 +295,8 @@ export function computeCantidadStats(task) {
   // necesitasHoy dinámico según lo que queda ahora para que la etiqueta se actualice
   const necesitasHoy = Math.ceil(remaining / Math.max(1, workDaysRemaining))
   const recomendado = Math.ceil(baseDiaria * 1.15)
-  const recomendadoRestante = Math.max(0, recomendado - doneToday)
+  // recomendadoRestante no puede exceder lo que realmente falta (remaining)
+  const recomendadoRestante = Math.max(0, Math.min(recomendado - doneToday, remaining))
   const exigencia = metaDiariaOriginal > 0 ? baseDiaria / metaDiariaOriginal : 1
 
   // metaHoyRestante: lo que aún falta hacer hoy (base estática menos lo ya hecho)

@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion'
 import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useSubjects, useCreateSubject } from '../features/subjects/hooks.js'
 import { usePendingTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useToggleTaskPin, useDeleteTask } from '../features/tasks/hooks.js'
-import { useEvents } from '../features/events/hooks.js'
+import { useFutureEvents } from '../features/events/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import TaskCard from '../components/TaskCard.jsx'
@@ -18,7 +18,7 @@ export default function Overview() {
   const { data: semester, isLoading: semesterLoading, error } = useSemester(semesterId)
   const { data: subjects, isLoading: subjectsLoading } = useSubjects(semesterId)
   const { data: pendingTasks, isLoading: tasksLoading } = usePendingTasks(semesterId)
-  const { data: events } = useEvents(semesterId)
+  const { data: events } = useFutureEvents(semesterId)
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
   const toggleTaskDone = useToggleTaskDone()

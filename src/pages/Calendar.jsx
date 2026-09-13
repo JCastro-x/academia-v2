@@ -1,7 +1,7 @@
 import { useParams, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useEventsByMonth, useCreateEvent, useUpdateEvent, useDeleteEvent } from '../features/events/hooks.js'
+import { useEventsByMonth, useCreateEvent, useUpdateEvent, useDeleteEvent, useFutureEvents } from '../features/events/hooks.js'
 import { useTasks } from '../features/tasks/hooks.js'
 import { useSubjects } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
@@ -74,8 +74,11 @@ export default function Calendar() {
   const getEventsForDay = (day) => {
     if (!events) return []
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    const now = new Date()
     return events.filter(event => {
       const eventDate = new Date(event.start_at)
+      // Filter out past events
+      if (eventDate < now) return false
       return eventDate.getDate() === day && 
              eventDate.getMonth() === month && 
              eventDate.getFullYear() === year
@@ -95,10 +98,13 @@ export default function Calendar() {
 
   const getEventsAndTasksForMonth = () => {
     const items = []
+    const now = new Date()
     
     if (events) {
       events.forEach(event => {
         const eventDate = new Date(event.start_at)
+        // Filter out past events
+        if (eventDate < now) return
         if (eventDate.getMonth() === month && eventDate.getFullYear() === year) {
           items.push({ ...event, type: 'event' })
         }
