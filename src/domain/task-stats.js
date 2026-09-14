@@ -205,16 +205,22 @@ export function statusFromProgress(stats) {
   if (stats.isDone) return 'done'
   if (stats.notStarted) return 'notstarted'
   if (stats.isOverdue) return 'overdue'
-  if (stats.daysRemainingDisplay <= 2 && stats.remaining > 0) return 'critical'
 
-  if (stats.remaining > 0 && stats.ritmoActual === 0 && stats.daysRemainingDisplay > 2) return 'notstarted'
+  const metaHoyCumplida = stats.metaHoyRestante === 0
+  let diasEfectivos = stats.daysRemainingDisplay
 
-  const cargaDiaria = stats.necesitasHoy || 0
+  // Si ya cumplió lo de hoy, hoy ya no cuenta para repartir el peso de lo que falta
+  if (metaHoyCumplida && diasEfectivos > 1) {
+    diasEfectivos -= 1
+  }
 
-  if (cargaDiaria < 4) return 'ongreen'      // Excelente (carga muy ligera)
-  if (cargaDiaria < 6) return 'onyellow'     // Bien (carga manejable)
-  if (cargaDiaria < 8) return 'onattention'  // Atención (carga pesada)
-  return 'critical'                           // Crítico (carga insostenible, >= 8)
+  const diasParaCalculo = Math.max(1, diasEfectivos)
+  const cargaDiariaReal = stats.remaining / diasParaCalculo
+
+  if (cargaDiariaReal < 4) return 'ongreen'
+  if (cargaDiariaReal < 6) return 'onyellow'
+  if (cargaDiariaReal < 8) return 'onattention'
+  return 'critical'
 }
 
 // ============================================================
@@ -341,8 +347,10 @@ export function computeCantidadStats(task) {
     ritmoOriginal,
     diasDeAtraso,
     exigencia,
-    necesitasHoy
+    necesitasHoy,
+    metaHoyRestante
   }
+
   const status = statusFromProgress(statsForStatus)
   
   return {

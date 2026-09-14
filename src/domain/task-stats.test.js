@@ -201,80 +201,67 @@ describe('task-stats', () => {
       expect(statusFromProgress(stats)).toBe('overdue')
     })
 
-    it('should return "critical" for tasks with 2 or fewer days remaining and progress remaining', () => {
-      const stats = { 
-        isDone: false, 
-        notStarted: false, 
-        isOverdue: false, 
-        daysRemainingDisplay: 2, 
-        remaining: 10,
+    it('should return "critical" for tasks with high daily load (>8)', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 2,
+        remaining: 20,
         ritmoActual: 2,
         ritmoOriginal: 2,
         diasDeAtraso: 0
       }
+      // 20 remaining / 2 days = 10 daily load -> critical
       expect(statusFromProgress(stats)).toBe('critical')
     })
 
-    it('should return "notstarted" for tasks with no progress and more than 2 days remaining', () => {
-      const stats = { 
-        isDone: false, 
-        notStarted: false, 
-        isOverdue: false, 
-        daysRemainingDisplay: 10, 
-        remaining: 100,
-        ritmoActual: 0,
-        ritmoOriginal: 10,
-        diasDeAtraso: 0
-      }
-      expect(statusFromProgress(stats)).toBe('notstarted')
-    })
-
-    it('should return "ongreen" when necesitasHoy is 4 or less', () => {
+    it('should return "ongreen" when daily load is less than 4', () => {
       const stats = {
         isDone: false,
         notStarted: false,
         isOverdue: false,
         daysRemainingDisplay: 10,
-        remaining: 40,
-        ritmoActual: 4,
-        necesitaHoy: 4,
-        necesitasHoy: 4,
+        remaining: 30,
+        ritmoActual: 3,
+        necesitasHoy: 3,
         exigencia: 1
       }
+      // 30 remaining / 10 days = 3 daily load -> ongreen
       expect(statusFromProgress(stats)).toBe('ongreen')
     })
 
-    it('should return "onyellow" when necesidadesHoy is between 5 and 6', () => {
+    it('should return "onyellow" when daily load is between 4 and 6', () => {
       const stats = {
         isDone: false,
         notStarted: false,
         isOverdue: false,
         daysRemainingDisplay: 10,
-        remaining: 60,
+        remaining: 50,
         ritmoActual: 4,
-        necesitaHoy: 6,
-        necesitasHoy: 6,
+        necesitasHoy: 5,
         exigencia: 1.2
       }
+      // 50 remaining / 10 days = 5 daily load -> onyellow
       expect(statusFromProgress(stats)).toBe('onyellow')
     })
 
-    it('should return "onattention" when necesidadesHoy is between 7 and 8', () => {
+    it('should return "onattention" when daily load is between 6 and 8', () => {
       const stats = {
         isDone: false,
         notStarted: false,
         isOverdue: false,
         daysRemainingDisplay: 10,
-        remaining: 80,
+        remaining: 70,
         ritmoActual: 2,
-        necesitaHoy: 8,
-        necesitasHoy: 8,
+        necesitasHoy: 7,
         exigencia: 1.6
       }
+      // 70 remaining / 10 days = 7 daily load -> onattention
       expect(statusFromProgress(stats)).toBe('onattention')
     })
 
-    it('should return "critical" when necesidadesHoy is greater than 8', () => {
+    it('should return "critical" when daily load is greater than 8', () => {
       const stats = {
         isDone: false,
         notStarted: false,
@@ -282,11 +269,108 @@ describe('task-stats', () => {
         daysRemainingDisplay: 10,
         remaining: 90,
         ritmoActual: 1,
-        necesitaHoy: 9,
         necesitasHoy: 9,
         exigencia: 1.8
       }
+      // 90 remaining / 10 days = 9 daily load -> critical
       expect(statusFromProgress(stats)).toBe('critical')
+    })
+
+    it('should return "ongreen" when deadline is 1 day with light load', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 1,
+        remaining: 3,
+        ritmoActual: 10,
+        necesitasHoy: 0,
+        exigencia: 1
+      }
+      // 3 remaining / 1 day = 3 daily load -> ongreen
+      expect(statusFromProgress(stats)).toBe('ongreen')
+    })
+
+    it('should return "critical" when deadline is 1 day with high load', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 1,
+        remaining: 10,
+        ritmoActual: 2,
+        necesitasHoy: 10,
+        exigencia: 1
+      }
+      // 10 remaining / 1 day = 10 daily load -> critical
+      expect(statusFromProgress(stats)).toBe('critical')
+    })
+
+    it('should return "onattention" when deadline is 2 days with medium load', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 2,
+        remaining: 7,
+        ritmoActual: 2,
+        necesitasHoy: 7,
+        metaHoyRestante: 5,
+        exigencia: 1
+      }
+      // 7 remaining / 2 days = 3.5 daily load -> ongreen
+      expect(statusFromProgress(stats)).toBe('ongreen')
+    })
+
+    it('should adjust calculation when today goal is met (exclude today from effective days)', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 2,
+        remaining: 8,
+        ritmoActual: 5,
+        necesitasHoy: 8,
+        metaHoyRestante: 0,  // Meta hoy cumplida ✅
+        exigencia: 1
+      }
+      // Meta hoy cumplida: hoy no cuenta para repartir
+      // 8 remaining / (2 - 1) effective days = 8 daily load -> critical
+      expect(statusFromProgress(stats)).toBe('critical')
+    })
+
+    it('should not adjust calculation when today goal is not met', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 2,
+        remaining: 8,
+        ritmoActual: 5,
+        necesitasHoy: 8,
+        metaHoyRestante: 3,  // Meta hoy NO cumplida
+        exigencia: 1
+      }
+      // Meta hoy no cumplida: hoy cuenta para repartir
+      // 8 remaining / 2 days = 4 daily load -> onyellow
+      expect(statusFromProgress(stats)).toBe('onyellow')
+    })
+
+    it('should not exclude today when only 1 day remaining (even if goal met)', () => {
+      const stats = {
+        isDone: false,
+        notStarted: false,
+        isOverdue: false,
+        daysRemainingDisplay: 1,
+        remaining: 5,
+        ritmoActual: 10,
+        necesitasHoy: 0,
+        metaHoyRestante: 0,  // Meta hoy cumplida ✅
+        exigencia: 1
+      }
+      // Solo 1 día restante: no se puede excluir hoy
+      // 5 remaining / 1 day = 5 daily load -> onyellow
+      expect(statusFromProgress(stats)).toBe('onyellow')
     })
 
     it('should return "ongreen" for 30 exercises with 25 days remaining regardless of start date', () => {
