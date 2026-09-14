@@ -206,15 +206,7 @@ export function statusFromProgress(stats) {
   if (stats.notStarted) return 'notstarted'
   if (stats.isOverdue) return 'overdue'
 
-  const metaHoyCumplida = stats.metaHoyRestante === 0
-  let diasEfectivos = stats.daysRemainingDisplay
-
-  // Si ya cumplió lo de hoy, hoy ya no cuenta para repartir el peso de lo que falta
-  if (metaHoyCumplida && diasEfectivos > 1) {
-    diasEfectivos -= 1
-  }
-
-  const diasParaCalculo = Math.max(1, diasEfectivos)
+  const diasParaCalculo = Math.max(1, stats.daysRemainingDisplay)
   const cargaDiariaReal = stats.remaining / diasParaCalculo
 
   if (cargaDiariaReal < 4) return 'ongreen'
@@ -347,8 +339,7 @@ export function computeCantidadStats(task) {
     ritmoOriginal,
     diasDeAtraso,
     exigencia,
-    necesitasHoy,
-    metaHoyRestante
+    necesitasHoy
   }
 
   const status = statusFromProgress(statsForStatus)

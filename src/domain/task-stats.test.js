@@ -315,62 +315,10 @@ describe('task-stats', () => {
         remaining: 7,
         ritmoActual: 2,
         necesitasHoy: 7,
-        metaHoyRestante: 5,
         exigencia: 1
       }
       // 7 remaining / 2 days = 3.5 daily load -> ongreen
       expect(statusFromProgress(stats)).toBe('ongreen')
-    })
-
-    it('should adjust calculation when today goal is met (exclude today from effective days)', () => {
-      const stats = {
-        isDone: false,
-        notStarted: false,
-        isOverdue: false,
-        daysRemainingDisplay: 2,
-        remaining: 8,
-        ritmoActual: 5,
-        necesitasHoy: 8,
-        metaHoyRestante: 0,  // Meta hoy cumplida ✅
-        exigencia: 1
-      }
-      // Meta hoy cumplida: hoy no cuenta para repartir
-      // 8 remaining / (2 - 1) effective days = 8 daily load -> critical
-      expect(statusFromProgress(stats)).toBe('critical')
-    })
-
-    it('should not adjust calculation when today goal is not met', () => {
-      const stats = {
-        isDone: false,
-        notStarted: false,
-        isOverdue: false,
-        daysRemainingDisplay: 2,
-        remaining: 8,
-        ritmoActual: 5,
-        necesitasHoy: 8,
-        metaHoyRestante: 3,  // Meta hoy NO cumplida
-        exigencia: 1
-      }
-      // Meta hoy no cumplida: hoy cuenta para repartir
-      // 8 remaining / 2 days = 4 daily load -> onyellow
-      expect(statusFromProgress(stats)).toBe('onyellow')
-    })
-
-    it('should not exclude today when only 1 day remaining (even if goal met)', () => {
-      const stats = {
-        isDone: false,
-        notStarted: false,
-        isOverdue: false,
-        daysRemainingDisplay: 1,
-        remaining: 5,
-        ritmoActual: 10,
-        necesitasHoy: 0,
-        metaHoyRestante: 0,  // Meta hoy cumplida ✅
-        exigencia: 1
-      }
-      // Solo 1 día restante: no se puede excluir hoy
-      // 5 remaining / 1 day = 5 daily load -> onyellow
-      expect(statusFromProgress(stats)).toBe('onyellow')
     })
 
     it('should return "ongreen" for 30 exercises with 25 days remaining regardless of start date', () => {
