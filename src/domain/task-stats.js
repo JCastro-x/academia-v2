@@ -148,6 +148,93 @@ export function countWorkDays(startStr, endStr, workDays) {
   return Math.max(1, count)
 }
 
+/**
+ * Count work days between two dates, EXCLUDING the end date.
+ * Used for workDaysRemaining to exclude the due date from available work days.
+ * @param {string} startStr - Start date in YYYY-MM-DD format
+ * @param {string} endStr - End date in YYYY-MM-DD format (will be excluded from count)
+ * @param {number[]} workDays - Array of work days in Academia v2 convention (1=Monday...7=Sunday)
+ * @returns {number} Count of work days (minimum 1)
+ */
+export function countWorkDaysExcludingEnd(startStr, endStr, workDays) {
+  const start = parseDate(startStr)
+  const end = parseDate(endStr)
+  if (!start || !end || !workDays || workDays.length === 0) return 0
+  
+  let count = 0
+  const current = new Date(start)
+  
+  while (current < end) {
+    const academiaDay = jsDayToAcademiaDay(current.getDay())
+    if (workDays.includes(academiaDay)) {
+      count++
+    }
+    current.setDate(current.getDate() + 1)
+  }
+  
+  return Math.max(1, count)
+}
+
+// ============================================================
+// DAILY CACHE UTILITIES
+// ============================================================
+
+/**
+ * Generate a fingerprint of task base fields to detect changes.
+ * @param {Object} task - Task object
+ * @returns {string} Fingerprint string
+ */
+function getTaskFingerprint(task) {
+  const fields = [
+    task.total_units || 0,
+    task.due || '',
+    JSON.stringify(task.work_days || [1, 2, 3, 4, 5])
+  ]
+  return fields.join('|')
+}
+
+/**
+ * Get cached baseDiaria for a task for the current day.
+ * @param {string} taskId - Task ID
+ * @param {string} currentFingerprint - Current task fingerprint
+ * @returns {number|null} Cached baseDiaria for today, or null if not cached, from different day, or task changed
+ */
+function getCachedBaseDiaria(taskId, currentFingerprint) {
+  if (typeof window === 'undefined' || !taskId) return null
+  
+  try {
+    const cacheKey = `task-daily-cache-${taskId}`
+    const cached = localStorage.getItem(cacheKey)
+    if (!cached) return null
+    
+    const { baseDiaria, date, fingerprint } = JSON.parse(cached)
+    const today = todayStr()
+    
+    // Return cached value only if it's from today AND task hasn't changed
+    return date === today && fingerprint === currentFingerprint ? baseDiaria : null
+  } catch (error) {
+    return null
+  }
+}
+
+/**
+ * Cache baseDiaria for a task for the current day.
+ * @param {string} taskId - Task ID
+ * @param {number} baseDiaria - baseDiaria value to cache
+ * @param {string} fingerprint - Task fingerprint
+ */
+function setCachedBaseDiaria(taskId, baseDiaria, fingerprint) {
+  if (typeof window === 'undefined' || !taskId) return
+  
+  try {
+    const cacheKey = `task-daily-cache-${taskId}`
+    const today = todayStr()
+    localStorage.setItem(cacheKey, JSON.stringify({ baseDiaria, date: today, fingerprint }))
+  } catch (error) {
+    // Silently fail if localStorage is not available
+  }
+}
+
 // ============================================================
 // BASE TIME STATISTICS
 // ============================================================
@@ -206,13 +293,28 @@ export function statusFromProgress(stats) {
   if (stats.notStarted) return 'notstarted'
   if (stats.isOverdue) return 'overdue'
 
-  const diasParaCalculo = Math.max(1, stats.daysRemainingDisplay)
-  const cargaDiariaReal = stats.remaining / diasParaCalculo
+  let cargaDiariaReal;
 
-  if (cargaDiariaReal < 4) return 'ongreen'
-  if (cargaDiariaReal < 6) return 'onyellow'
-  if (cargaDiariaReal < 8) return 'onattention'
-  return 'critical'
+  if (stats.workDaysRemaining <= 1) {
+    // Si vence hoy (o ya venció), la carga es literalmente lo que falta,
+    // ya no hay días futuros para repartir.
+    cargaDiariaReal = stats.remaining;
+  } else {
+    // Si vence a futuro, calculamos el ritmo proyectado para los días que vienen.
+    // Lo que falta por hacer HOY para cumplir la meta base
+    const faltaHoy = Math.max(0, (stats.baseDiaria || 0) - (stats.doneToday || 0));
+
+    // Proyección futura descontando lo de hoy
+    const cargaFutura = Math.max(0, stats.remaining - faltaHoy);
+    const diasFuturos = Math.max(1, stats.workDaysRemaining - 1);
+
+    cargaDiariaReal = cargaFutura / diasFuturos;
+  }
+
+  if (cargaDiariaReal < 4) return 'ongreen';
+  if (cargaDiariaReal < 6) return 'onyellow';
+  if (cargaDiariaReal < 8) return 'onattention';
+  return 'critical';
 }
 
 // ============================================================
@@ -283,13 +385,20 @@ export function computeCantidadStats(task) {
 
   const workDays = task.work_days && task.work_days.length > 0 ? task.work_days : [1, 2, 3, 4, 5]
   const workDaysTotal = countWorkDays(startStr, endStr, workDays)
-  const workDaysRemaining = countWorkDays(tKey, endStr, workDays)
+  const workDaysRemaining = countWorkDaysExcludingEnd(tKey, endStr, workDays)
   const workDaysElapsed = countWorkDays(startStr, tKey, workDays)
 
   const metaDiariaOriginal = Math.ceil(totalUnits / Math.max(1, workDaysTotal))
 
-  // Base diaria calculada con "foto" de lo que faltaba al despertar (evita saltos por Math.ceil)
-  const baseDiaria = Math.ceil(remainingBeforeToday / Math.max(1, workDaysRemaining))
+  // Base diaria con caché diario: se fija UNA VEZ AL DÍA usando remaining y workDaysRemaining del inicio del día
+  // El caché se invalida si cambian campos base (total_units, due, work_days) el mismo día
+  const taskFingerprint = getTaskFingerprint(task)
+  let baseDiaria = getCachedBaseDiaria(task.id, taskFingerprint)
+  if (baseDiaria === null) {
+    // No hay caché válido para hoy o la tarea cambió, calcular nuevo valor usando remaining y workDaysRemaining actuales
+    baseDiaria = Math.ceil(remaining / Math.max(1, workDaysRemaining))
+    setCachedBaseDiaria(task.id, baseDiaria, taskFingerprint)
+  }
   // necesitasHoy dinámico según lo que queda ahora para que la etiqueta se actualice
   const necesitasHoy = Math.ceil(remaining / Math.max(1, workDaysRemaining))
   const recomendado = Math.ceil(baseDiaria * 1.15)
@@ -333,13 +442,16 @@ export function computeCantidadStats(task) {
     notStarted: bt.notStarted,
     isOverdue: bt.isOverdue,
     daysRemainingDisplay: Math.max(0, workDaysRemaining),
+    workDaysRemaining: Math.max(0, workDaysRemaining),
     remaining,
     ritmoActual,
     ritmoNecesario,
     ritmoOriginal,
     diasDeAtraso,
     exigencia,
-    necesitasHoy
+    necesitasHoy,
+    doneToday,
+    baseDiaria
   }
 
   const status = statusFromProgress(statsForStatus)
@@ -361,6 +473,7 @@ export function computeCantidadStats(task) {
     metaHoy,
     necesitasHoy,
     metaHoyRestante,
+    baseDiaria,
     recomendado,
     recomendadoRestante,
     ritmoActual,
@@ -401,7 +514,7 @@ export function computeChecklistStats(task) {
   
   const workDays = task.work_days && task.work_days.length > 0 ? task.work_days : [1, 2, 3, 4, 5]
   const workDaysTotal = countWorkDays(startStr, endStr, workDays)
-  const workDaysRemaining = countWorkDays(todayStr(), endStr, workDays)
+  const workDaysRemaining = countWorkDaysExcludingEnd(todayStr(), endStr, workDays)
   const workDaysElapsed = workDaysTotal - workDaysRemaining
 
   const necesitasHoy = isDone ? 0 : Math.ceil(remaining / Math.max(1, workDaysRemaining))
@@ -427,12 +540,15 @@ export function computeChecklistStats(task) {
     notStarted: bt.notStarted,
     isOverdue: bt.isOverdue,
     daysRemainingDisplay: Math.max(0, workDaysRemaining),
+    workDaysRemaining: Math.max(0, workDaysRemaining),
     remaining,
     ritmoActual,
     ritmoNecesario,
     ritmoOriginal,
     diasDeAtraso,
-    necesitasHoy
+    necesitasHoy,
+    doneToday: 0,
+    baseDiaria: 0
   }
   const status = statusFromProgress(statsForStatus)
   
@@ -450,6 +566,7 @@ export function computeChecklistStats(task) {
     doneSub,
     remaining,
     necesitasHoy,
+    baseDiaria: 0,
     ritmoActual,
     ritmoNecesario,
     ritmoOriginal,
