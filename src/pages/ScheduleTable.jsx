@@ -75,19 +75,20 @@ export default function ScheduleTable() {
 
     const weekStartStr = formatDate(week.start)
     const weekEndStr = formatDate(week.end)
+    const today = parseDate(todayStr())
 
     const weekTasks = tasks?.filter(task => {
-      if (!task.due || task.subject_id !== subjectId) return false
+      if (!task.due || task.subject_id !== subjectId || task.done) return false
       const taskDate = parseDate(task.due)
       const taskDateStr = formatDate(taskDate)
-      return taskDateStr >= weekStartStr && taskDateStr <= weekEndStr
+      return taskDateStr >= weekStartStr && taskDateStr <= weekEndStr && taskDate >= today
     }) || []
 
     const weekEvents = events?.filter(event => {
       if (!event.start_at || event.subject_id !== subjectId) return false
       const eventDate = parseDate(event.start_at)
       const eventDateStr = formatDate(eventDate)
-      return eventDateStr >= weekStartStr && eventDateStr <= weekEndStr
+      return eventDateStr >= weekStartStr && eventDateStr <= weekEndStr && eventDate >= today
     }) || []
 
     const notes = scheduleNotes?.filter(note => note.week_number === week.number && note.subject_id === subjectId) || []
@@ -147,7 +148,14 @@ export default function ScheduleTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-[var(--dm-border)]">
-              {weeks.map(week => (
+              {weeks.filter(week => {
+                // Check if week has any items across all subjects
+                const hasItems = subjects?.some(subject => {
+                  const items = getItemsForWeekAndSubject(week, subject.id)
+                  return items.length > 0
+                })
+                return hasItems
+              }).map(week => (
                 <tr
                   key={week.number}
                   className={`

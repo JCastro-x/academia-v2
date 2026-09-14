@@ -70,6 +70,12 @@ function markReloadedThisSession() {
 
 export function startServiceWorkerUpdateCoordinator() {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return () => {}
+  
+  // Deshabilitar service worker en desarrollo para evitar conflictos con Vite
+  if (import.meta.env.DEV) {
+    console.log('[SW] Service worker disabled in development mode')
+    return () => {}
+  }
 
   let registration = null
   let updatePending = false
