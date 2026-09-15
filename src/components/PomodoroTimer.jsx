@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useTimerStore } from '../features/pomodoro/timerStore';
-import { useCreatePomodoroSession, usePomodoroSessionsByDate } from '../features/pomodoro/hooks';
-import { calculatePomodoroStats } from '../features/pomodoro/api';
+import { useCreatePomodoroSession } from '../features/pomodoro/hooks';
 import { cancelPomodoroNotification, schedulePomodoroNotification } from '../features/pomodoro/api';
-import { initAudio, playSound, startAudioKeepAlive, stopAudioKeepAlive } from '../lib/sound';
+import { initAudio, playSound, startAudioKeepAlive, stopAudioKeepAlive, showNotification, requestNotificationPermission } from '../lib/sound';
 import { createAmbientSound, getAmbientSoundNames } from '../lib/ambientSounds';
 
 export default function PomodoroTimer() {
@@ -29,11 +28,15 @@ export default function PomodoroTimer() {
   const [activeAmbientSound, setActiveAmbientSound] = useState(null);
   const [ambientVolume, setAmbientVolume] = useState(0.35);
   const intervalRef = useRef(null);
-  const lastCountdownSecondRef = useRef(null);
   const ambientSoundRef = useRef(null);
+  const timerWorkerRef = useRef(null);
 
   useEffect(() => () => {
     ambientSoundRef.current?.stop();
+    if (timerWorkerRef.current) {
+      timerWorkerRef.current.terminate();
+      timerWorkerRef.current = null;
+    }
   }, []);
 
   const handleAmbientSound = (type) => {
@@ -62,27 +65,9 @@ export default function PomodoroTimer() {
     else stopAudioKeepAlive();
   }, [pomodoroState.isRunning]);
 
-  const triggerCountdownSound = (remainingSeconds) => {
-    if (remainingSeconds > 10 || remainingSeconds <= 0) {
-      if (remainingSeconds > 10) {
-        lastCountdownSecondRef.current = null;
-      }
-      return;
-    }
 
-    const thisSecond = Math.ceil(remainingSeconds);
-    if (thisSecond !== lastCountdownSecondRef.current) {
-      lastCountdownSecondRef.current = thisSecond;
-      playSound('countdown');
-    }
-  };
 
-  // Obtener sesiones de los últimos 7 días para stats
-  const today = new Date();
-  const weekAgo = new Date(today);
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  const { data: sessions } = usePomodoroSessionsByDate(weekAgo.toISOString(), today.toISOString());
-  const stats = sessions ? calculatePomodoroStats(sessions) : { todaySessions: 0, todayMinutes: 0 };
+
 
   const finishPomodoro = () => {
     const currentState = useTimerStore.getState();
@@ -93,9 +78,21 @@ export default function PomodoroTimer() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    lastCountdownSecondRef.current = null;
     initAudio();
-    playSound('pomodoro-complete');
+    
+    // Preparar fallback notification por si el audio falla
+    const phaseName = current.currentPhase === 'trabajo' ? 'Trabajo' : 
+                      current.currentPhase === 'descanso_corto' ? 'Descanso corto' : 'Descanso largo';
+    const nextPhase = current.currentPhase === 'trabajo' ? '¡Hora de descansar!' : '¡Hora de trabajar!';
+    
+    playSound('pomodoro-complete', {
+      title: 'Pomodoro completado',
+      options: {
+        body: `${phaseName} finalizado. ${nextPhase}`,
+        tag: 'pomodoro-complete',
+      }
+    });
+    
     if (current.currentPhase === 'trabajo') {
       const durationMin = Math.round(currentState.pomodoroConfig.workDuration);
       createSession.mutate({
@@ -112,33 +109,47 @@ export default function PomodoroTimer() {
     return true;
   };
 
-  // The interval only refreshes the display. The absolute deadline controls completion.
+  // Web Worker handles timer in background without throttling
   useEffect(() => {
-    if (pomodoroState.isRunning && pomodoroState.endsAt) {
-      const updateTimer = () => {
-        const current = useTimerStore.getState().pomodoroState;
-        const remaining = Math.max(0, Math.ceil((current.endsAt - Date.now()) / 1000));
-        if (remaining <= 0) {
-          finishPomodoro();
-          return;
+    // Initialize worker
+    if (!timerWorkerRef.current) {
+      timerWorkerRef.current = new Worker(new URL('../workers/timerWorker.js', import.meta.url));
+      
+      timerWorkerRef.current.onmessage = (e) => {
+        const { type, payload } = e.data;
+        
+        switch (type) {
+          case 'TIMER_UPDATE':
+            updatePomodoroRemaining(payload.remainingSeconds);
+            break;
+          case 'COUNTDOWN_SOUND':
+            playSound('countdown');
+            break;
+          case 'TIMER_COMPLETE':
+            finishPomodoro();
+            break;
+          default:
+            console.warn('[PomodoroTimer] Unknown worker message:', type);
         }
-        triggerCountdownSound(remaining);
-        updatePomodoroRemaining(remaining);
       };
-
-      updateTimer();
-      intervalRef.current = setInterval(() => {
-        updateTimer();
-      }, 1000);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
     }
 
+    // Start/stop timer based on state
+    if (pomodoroState.isRunning && pomodoroState.endsAt) {
+      timerWorkerRef.current.postMessage({
+        type: 'START_TIMER',
+        payload: { endsAt: pomodoroState.endsAt }
+      });
+    } else {
+      timerWorkerRef.current.postMessage({
+        type: 'STOP_TIMER'
+      });
+    }
+
+    // Cleanup
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (timerWorkerRef.current) {
+        timerWorkerRef.current.postMessage({ type: 'STOP_TIMER' });
       }
     };
   }, [pomodoroState.isRunning, pomodoroState.endsAt, completePomodoroSession, updatePomodoroRemaining]);
@@ -149,7 +160,6 @@ export default function PomodoroTimer() {
       if (!document.hidden && pomodoroState.isRunning && pomodoroState.endsAt) {
         if (finishPomodoro()) return;
         const remaining = Math.max(0, Math.ceil((pomodoroState.endsAt - Date.now()) / 1000));
-        triggerCountdownSound(remaining);
         updatePomodoroRemaining(remaining);
       }
     };
@@ -193,13 +203,14 @@ export default function PomodoroTimer() {
   const handleSaveConfig = () => {
     setPomodoroConfig(configValues);
     setShowConfig(false);
-    lastCountdownSecondRef.current = null;
     handleReset();
   };
 
   const handleStart = async () => {
     initAudio();
     startAudioKeepAlive();
+    // Solicitar permiso para notificaciones del navegador
+    await requestNotificationPermission();
     startPomodoro();
     const { pomodoroState: nextState } = useTimerStore.getState();
     const scheduledAt = new Date(nextState.endsAt).toISOString();
@@ -257,18 +268,6 @@ export default function PomodoroTimer() {
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:shadow-none">
-      {/* Stats panel */}
-      <div className="grid grid-cols-2 gap-4 text-center">
-        <div className="bg-gray-50 rounded-lg p-3 dark:bg-[var(--dm-bg)]">
-          <div className="text-2xl font-bold text-green-600">{stats.todaySessions}</div>
-          <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">Sesiones hoy</div>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3 dark:bg-[var(--dm-bg)]">
-          <div className="text-2xl font-bold text-purple-600">{stats.todayMinutes}</div>
-          <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">Minutos hoy</div>
-        </div>
-      </div>
-
       {/* Timer display */}
       <div className="text-center">
         <div className="text-sm text-gray-600 mb-2 dark:text-[var(--dm-text-muted)]">{getPhaseLabel()}</div>
