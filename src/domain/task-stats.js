@@ -311,9 +311,9 @@ export function statusFromProgress(stats) {
     cargaDiariaReal = cargaFutura / diasFuturos;
   }
 
-  if (cargaDiariaReal < 4) return 'ongreen';
-  if (cargaDiariaReal < 6) return 'onyellow';
-  if (cargaDiariaReal < 8) return 'onattention';
+  if (cargaDiariaReal <= 3) return 'ongreen';
+  if (cargaDiariaReal <= 5) return 'onyellow';
+  if (cargaDiariaReal <= 7) return 'onattention';
   return 'critical';
 }
 
