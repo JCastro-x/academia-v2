@@ -18,9 +18,9 @@ function useCurrentDateTime() {
 
 function formatDate(date) {
   return date.toLocaleDateString('es-ES', {
-    weekday: 'long',
+    weekday: 'short',
     day: 'numeric',
-    month: 'long',
+    month: 'short',
   })
 }
 
@@ -260,13 +260,13 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
           </div>
         </div>
 
-        <div className="mt-1 text-[10px] leading-none text-gray-500 dark:text-[var(--dm-text-muted)]">
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+        <div className="mt-1 text-xs leading-none text-gray-500 dark:text-[var(--dm-text-muted)]">
+          <span className="inline-flex items-center gap-1 whitespace-nowrap">
             <span>{formatDate(now)}</span>
             <span>·</span>
             <span>{formatTime(now, horaFormato)}</span>
             <span>·</span>
-            <span>{isOnline ? 'En línea' : 'Desconectado'}</span>
+            <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
           </span>
         </div>
       </div>
@@ -292,7 +292,7 @@ export default function TopBar({ onOpenClassModal, onOpenQuickAdd }) {
               <span className="block truncate text-base font-semibold leading-tight text-gray-900 dark:text-[var(--dm-text)] sm:text-lg">
                 {getGreeting(now)}, {profile?.nombre || 'Estudiante'}
               </span>
-              <div className="flex flex-col items-center gap-0.5 text-[10px] leading-snug text-gray-500 dark:text-[var(--dm-text-muted)] sm:flex-row sm:items-center sm:gap-1.5 sm:text-[11px]">
+              <div className="flex flex-col items-center gap-0.5 text-xs leading-snug text-gray-500 dark:text-[var(--dm-text-muted)] sm:flex-row sm:items-center sm:gap-1.5 sm:text-sm">
                 <span className="whitespace-nowrap">{formatDate(now)}</span>
                 <span className="whitespace-nowrap">· {formatTime(now, horaFormato)}</span>
                 <span className="flex items-center gap-1.5">
