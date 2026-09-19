@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { queryClient } from './lib/queryClient.js'
 import { getSession, onAuthStateChange, getStoredSessionUser, ensurePushSubscriptionForCurrentUser } from './lib/supabase.js'
-import { getSemesters } from './features/semesters/api.js'
+import { getSemesters, semestersQueryKeys } from './features/semesters/api.js'
 import AppLayout from './layouts/AppLayout.jsx'
 import Auth from './pages/Auth.jsx'
 import AuthCallback from './pages/AuthCallback.jsx'
@@ -36,60 +36,109 @@ import './styles/index.css'
 function SessionRedirect() {
   const [loading, setLoading] = React.useState(true)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   React.useEffect(() => {
     const checkSession = async () => {
       try {
         const cachedSessionUser = getStoredSessionUser()
-        const session = await getSession()
-        
-        if (session?.user) {
-          const semesters = await getSemesters()
-          if (semesters && semesters.length > 0) {
-            const activeSemester = semesters.find((s) => s.activo) || semesters[0]
-            navigate(`/s/${activeSemester.id}`, { replace: true })
-          } else {
-            navigate('/create-first-semester', { replace: true })
-          }
-        } else if (cachedSessionUser) {
-          // Offline fallback: usar sesión cacheada si getSession falla
-          const semesters = await getSemesters()
-          if (semesters && semesters.length > 0) {
-            const activeSemester = semesters.find((s) => s.activo) || semesters[0]
-            navigate(`/s/${activeSemester.id}`, { replace: true })
-          } else {
-            navigate('/create-first-semester', { replace: true })
-          }
-        } else {
-          navigate('/auth', { replace: true })
-        }
-      } catch (error) {
-        console.warn('Error checking session:', error)
-        // Intentar fallback con sesión cacheada
-        const cachedSessionUser = getStoredSessionUser()
+
+        // Confíar en sesión local primero - sin llamada de red
         if (cachedSessionUser) {
-          try {
-            const semesters = await getSemesters()
-            if (semesters && semesters.length > 0) {
-              const activeSemester = semesters.find((s) => s.activo) || semesters[0]
-              navigate(`/s/${activeSemester.id}`, { replace: true })
-            } else {
-              navigate('/create-first-semester', { replace: true })
+          // Intentar obtener semesters de cache de TanStack Query
+          const cachedSemesters = queryClient.getQueryData(semestersQueryKeys.all())
+
+          if (cachedSemesters && cachedSemesters.length > 0) {
+            const activeSemester = cachedSemesters.find((s) => s.activo) || cachedSemesters[0]
+            navigate(`/s/${activeSemester.id}`, { replace: true })
+            
+            // Revalidar en background si hay conexión
+            if (navigator.onLine) {
+              queryClient.prefetchQuery({
+                queryKey: semestersQueryKeys.all(),
+                queryFn: getSemesters,
+                staleTime: 5 * 60 * 1000,
+              })
             }
-          } catch (fallbackError) {
-            console.warn('Fallback also failed:', fallbackError)
+            return
+          }
+
+          // Si no hay cache de semesters, intentar llamar a la API con timeout corto
+          if (navigator.onLine) {
+            try {
+              const semesters = await Promise.race([
+                getSemesters(),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout')), 5000)
+                )
+              ])
+              
+              if (semesters && semesters.length > 0) {
+                const activeSemester = semesters.find((s) => s.activo) || semesters[0]
+                navigate(`/s/${activeSemester.id}`, { replace: true })
+                return
+              } else {
+                navigate('/create-first-semester', { replace: true })
+                return
+              }
+            } catch (apiError) {
+              console.warn('Failed to fetch semesters with timeout:', apiError)
+              // Sin cache de semesters y sin conexión, ir a create-first-semester
+              navigate('/create-first-semester', { replace: true })
+              return
+            }
+          } else {
+            // Sin conexión y sin cache de semesters
+            navigate('/create-first-semester', { replace: true })
+            return
+          }
+        }
+
+        // No hay sesión local - intentar validar con timeout corto
+        if (navigator.onLine) {
+          try {
+            const session = await Promise.race([
+              getSession(),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout')), 5000)
+              )
+            ])
+            
+            if (session?.user) {
+              const semesters = await Promise.race([
+                getSemesters(),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout')), 5000)
+                )
+              ])
+              
+              if (semesters && semesters.length > 0) {
+                const activeSemester = semesters.find((s) => s.activo) || semesters[0]
+                navigate(`/s/${activeSemester.id}`, { replace: true })
+              } else {
+                navigate('/create-first-semester', { replace: true })
+              }
+            } else {
+              navigate('/auth', { replace: true })
+            }
+          } catch (error) {
+            console.warn('Session validation timeout or failed:', error)
             navigate('/auth', { replace: true })
           }
         } else {
+          // Sin conexión y sin sesión local
           navigate('/auth', { replace: true })
         }
+      } catch (error) {
+        console.warn('Unexpected error in SessionRedirect:', error)
+        navigate('/auth', { replace: true })
       } finally {
         setLoading(false)
       }
     }
     
     checkSession()
-  }, [navigate])
+  }, [navigate, queryClient])
 
   if (loading) {
     return (
@@ -184,15 +233,68 @@ function ProtectedRoute({ children }) {
     const syncSession = async () => {
       const cachedSessionUser = getStoredSessionUser()
 
+      // Confíar en sesión local primero - sin llamada de red
+      if (cachedSessionUser) {
+        setUser(cachedSessionUser)
+        setLoading(false)
+        
+        // Revalidar en background si hay conexión
+        if (navigator.onLine) {
+          try {
+            const session = await Promise.race([
+              getSession(),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout')), 5000)
+              )
+            ])
+            
+            if (!isActive) return
+            logSessionDebug('getSession result (background)', {
+              hasSession: Boolean(session),
+              hasUser: Boolean(session?.user),
+              sessionStorageFallback: Boolean(cachedSessionUser),
+            })
+            
+            if (session?.user) {
+              setUser(session.user)
+              await syncPushSubscription(session.user)
+            } else {
+              // Session invalid but we have cached - keep using cached
+              await syncPushSubscription(cachedSessionUser)
+            }
+          } catch (error) {
+            logSessionDebug('Background session validation failed', {
+              errorName: error?.name ?? 'UnknownError',
+              hasCachedSessionUser: Boolean(cachedSessionUser),
+            })
+            console.warn('[DEBUG session] Background session validation failed, using cached:', error)
+            // Keep using cached session
+            await syncPushSubscription(cachedSessionUser)
+          }
+        } else {
+          // Sin conexión - usar cached directamente
+          await syncPushSubscription(cachedSessionUser)
+        }
+        return
+      }
+
+      // No hay sesión local - intentar validar con timeout corto
       try {
-        const session = await getSession()
+        const session = await Promise.race([
+          getSession(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 5000)
+          )
+        ])
+        
         if (!isActive) return
         logSessionDebug('getSession result', {
           hasSession: Boolean(session),
           hasUser: Boolean(session?.user),
           sessionStorageFallback: Boolean(cachedSessionUser),
         })
-        const nextUser = session?.user ?? cachedSessionUser ?? null
+        
+        const nextUser = session?.user ?? null
         setUser(nextUser)
         if (nextUser) {
           await syncPushSubscription(nextUser)
@@ -204,17 +306,7 @@ function ProtectedRoute({ children }) {
         })
         console.warn('[DEBUG session] No active Supabase session', error)
         if (!isActive) return
-
-        if (navigator.onLine && cachedSessionUser) {
-          setUser(cachedSessionUser)
-          await syncPushSubscription(cachedSessionUser)
-        } else {
-          const nextUser = cachedSessionUser ?? null
-          setUser(nextUser)
-          if (nextUser) {
-            await syncPushSubscription(nextUser)
-          }
-        }
+        setUser(null)
       } finally {
         if (isActive) setLoading(false)
       }
@@ -347,20 +439,44 @@ function PushNavigationHandler() {
 
 // Fallback de arranque "en frío" (app cerrada, SW despertado por openWindow):
 // el SW abre /tasks?task=X sin semestre; si hay un semestre guardado en
-// localStorage, redirige conservando el query param. Si no, va a /auth.
+// cache de TanStack Query o localStorage, redirige conservando el query param. Si no, va a /auth.
 function ColdStartRedirect() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   React.useEffect(() => {
-    const semesterId = getLastSemesterId()
-    const shouldRedirectToSemester = /^\/(tasks|calendar)\/?$/.test(window.location.pathname)
+    const cachedSessionUser = getStoredSessionUser()
+    
+    // Primero verificar si hay sesión local
+    if (!cachedSessionUser) {
+      navigate('/auth', { replace: true })
+      return
+    }
 
-    if (semesterId && shouldRedirectToSemester) {
+    const shouldRedirectToSemester = /^\/(tasks|calendar)\/?$/.test(window.location.pathname)
+    
+    if (!shouldRedirectToSemester) {
+      navigate('/auth', { replace: true })
+      return
+    }
+
+    // Intentar obtener semesters de cache de TanStack Query
+    const cachedSemesters = queryClient.getQueryData(semestersQueryKeys.all())
+    
+    if (cachedSemesters && cachedSemesters.length > 0) {
+      const activeSemester = cachedSemesters.find((s) => s.activo) || cachedSemesters[0]
+      navigate(`/s/${activeSemester.id}${window.location.pathname}${window.location.search}`, { replace: true })
+      return
+    }
+
+    // Fallback a localStorage
+    const semesterId = getLastSemesterId()
+    if (semesterId) {
       navigate(`/s/${semesterId}${window.location.pathname}${window.location.search}`, { replace: true })
     } else {
       navigate('/auth', { replace: true })
     }
-  }, [navigate])
+  }, [navigate, queryClient])
 
   return null
 }
