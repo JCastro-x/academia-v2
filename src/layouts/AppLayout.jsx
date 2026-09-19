@@ -12,6 +12,7 @@ import TopBar from '../components/TopBar.jsx'
 import GlobalModalHost from '../components/GlobalModalHost.jsx'
 import PwaSuggestBanners from '../components/PwaSuggestBanners.jsx'
 import ServiceWorkerUpdateBanner from '../components/ServiceWorkerUpdateBanner.jsx'
+import OfflineIndicator from '../components/OfflineIndicator.jsx'
 import ToastContainer from '../components/ToastContainer.jsx'
 import { getContrastTextColor } from '../lib/contrast.js'
 
@@ -140,10 +141,19 @@ export default function AppLayout() {
   ]
 
   const mobileNavItems = [
-    navItems[0],
-    navItems[1],
-    navItems[2],
-    navItems[10],
+    navItems[0], // Inicio
+    navItems[2], // Tareas
+    navItems[10], // Perfil
+  ]
+
+  const mobileNavItemsLeft = [
+    navItems[0], // Inicio
+    navItems[2], // Tareas
+  ]
+
+  const mobileNavItemsRight = [
+    navItems[10], // Perfil
+    { path: 'menu', label: 'Menú', icon: 'M4 6h16M4 12h16M4 18h16' }, // Menú hamburguesa
   ]
 
   const isActive = (path) => {
@@ -172,7 +182,7 @@ export default function AppLayout() {
         {/* Sidebar */}
         <aside
           className={`bg-white dark:bg-[var(--dm-surface)] border-r border-gray-200 dark:border-[var(--dm-border)] transition-all duration-300 fixed top-0 md:sticky md:top-0 z-50 h-full ${
-            isSidebarCollapsed ? '-translate-x-full md:w-16 md:translate-x-0' : 'w-64 translate-x-0'
+            isSidebarCollapsed ? '-translate-x-full md:w-16 md:translate-x-0' : 'w-80 translate-x-0 md:w-64'
           }`}
         >
           <nav className="px-4 pb-4 pt-2 md:p-4">
@@ -209,27 +219,80 @@ export default function AppLayout() {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
-          {mobileNavItems.map((item) => {
-            const active = isActive(item.path)
-            const to = item.path ? `/s/${effectiveSemesterId}/${item.path}` : `/s/${effectiveSemesterId}`
+        <div className="mx-auto flex max-w-md items-center justify-between gap-1">
+          {/* Left side: Inicio, Tareas */}
+          <div className="flex-1 grid grid-cols-2 gap-1">
+            {mobileNavItemsLeft.map((item) => {
+              const active = isActive(item.path)
+              const to = item.path ? `/s/${effectiveSemesterId}/${item.path}` : `/s/${effectiveSemesterId}`
 
-            return (
-              <Link
-                key={item.path || 'home'}
-                to={to}
-                className={`flex flex-col items-center justify-center rounded-xl px-2 py-2 text-[10px] font-medium transition-colors ${
-                  active ? 'text-[var(--color-primary)]' : 'text-[var(--dm-text-muted)] opacity-80'
-                }`}
-                style={active ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 14%, transparent)' } : undefined}
-              >
-                <svg className="mb-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                </svg>
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
+              return (
+                <Link
+                  key={item.path || 'home'}
+                  to={to}
+                  className={`flex flex-col items-center justify-center rounded-xl px-2 py-2 text-[10px] font-medium transition-colors ${
+                    active ? 'text-[var(--color-primary)]' : 'text-[var(--dm-text-muted)] opacity-80'
+                  }`}
+                  style={active ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 14%, transparent)' } : undefined}
+                >
+                  <svg className="mb-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                  </svg>
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+          
+          {/* Center: + button */}
+          <button
+            onClick={handleOpenQuickAdd}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-primary)] text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+            style={{ color: '#000000' }}
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+          
+          {/* Right side: Perfil, Menú */}
+          <div className="flex-1 grid grid-cols-2 gap-1">
+            {mobileNavItemsRight.map((item) => {
+              if (item.path === 'menu') {
+                return (
+                  <button
+                    key="menu"
+                    onClick={toggleSidebar}
+                    className="flex flex-col items-center justify-center rounded-xl px-2 py-2 text-[10px] font-medium transition-colors text-[var(--dm-text-muted)] opacity-80 hover:bg-[color-mix(in_srgb,var(--color-primary)_14%,transparent)] hover:text-[var(--color-primary)]"
+                  >
+                    <svg className="mb-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                    </svg>
+                    <span>{item.label}</span>
+                  </button>
+                )
+              }
+              
+              const active = isActive(item.path)
+              const to = item.path ? `/s/${effectiveSemesterId}/${item.path}` : `/s/${effectiveSemesterId}`
+
+              return (
+                <Link
+                  key={item.path || 'home'}
+                  to={to}
+                  className={`flex flex-col items-center justify-center rounded-xl px-2 py-2 text-[10px] font-medium transition-colors ${
+                    active ? 'text-[var(--color-primary)]' : 'text-[var(--dm-text-muted)] opacity-80'
+                  }`}
+                  style={active ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 14%, transparent)' } : undefined}
+                >
+                  <svg className="mb-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                  </svg>
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })}
+          </div>
         </div>
       </nav>
 
@@ -240,6 +303,7 @@ export default function AppLayout() {
       <GlobalModalHost />
       <PwaSuggestBanners />
       <ServiceWorkerUpdateBanner />
+      <OfflineIndicator />
       <ToastContainer />
     </div>
   )

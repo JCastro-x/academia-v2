@@ -40,6 +40,21 @@ export default function Grades() {
   const [addingItemToZone, setAddingItemToZone] = useState(null)
   const [editingTopic, setEditingTopic] = useState(null)
 
+  // Handle subject parameter from URL (e.g., ?subject=123)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const subjectParam = searchParams.get('subject')
+    
+    if (subjectParam && subjects && subjects.length > 0) {
+      const subjectExists = subjects.find(s => s.id === subjectParam)
+      if (subjectExists) {
+        setSelectedSubjectId(subjectParam)
+        // Clean the URL parameter after selecting
+        navigate(`/s/${semesterId}/grades`, { replace: true })
+      }
+    }
+  }, [location.search, subjects, semesterId, navigate])
+
   useEffect(() => {
     if (location.state?.quickAdd === 'topic') {
       openModal('topic')

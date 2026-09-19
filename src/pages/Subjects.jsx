@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useSubjects, useDeleteSubject } from '../features/subjects/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
@@ -6,9 +6,14 @@ import SubjectCard from '../components/SubjectCard.jsx'
 
 export default function Subjects() {
   const { semesterId } = useParams()
+  const navigate = useNavigate()
   const { data: subjects, isLoading } = useSubjects(semesterId)
   const deleteSubject = useDeleteSubject()
   const { openModal, openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
+
+  const handleViewGrades = (subject) => {
+    navigate(`/s/${semesterId}/grades?subject=${subject.id}`)
+  }
 
   const handleDeleteSubject = async (subject) => {
     try {
@@ -72,6 +77,7 @@ export default function Subjects() {
             subject={subject}
             onEdit={(subject) => openModal('subject', { editingSubject: subject })}
             onDelete={handleDeleteSubject}
+            onViewGrades={handleViewGrades}
           />
         ))}
       </div>

@@ -11,7 +11,6 @@ import TaskCard from '../components/TaskCard.jsx'
 import TaskDetailsModal from '../components/TaskDetailsModal.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
 import SemesterForm from '../components/SemesterForm.jsx'
-import QuickAdd from '../components/QuickAdd.jsx'
 
 export default function Overview() {
   const { semesterId } = useParams()
@@ -276,8 +275,6 @@ export default function Overview() {
           </AnimatePresence>
         </div>
       </div>
-
-      <QuickAdd semesterId={semesterId} subjects={subjects} />
 
       {selectedTaskForDetails && (
         <TaskDetailsModal
