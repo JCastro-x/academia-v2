@@ -47,7 +47,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
           name="nombre"
           value={formData.nombre}
           onChange={handleChange}
-          className="field-input"
+          className="field-input form-field"
           required
           disabled={isPending}
           autoComplete="off"
@@ -63,7 +63,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             name="codigo"
             value={formData.codigo}
             onChange={handleChange}
-            className="field-input"
+            className="field-input form-field"
             disabled={isPending}
             autoComplete="off"
           />
@@ -77,7 +77,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             name="creditos"
             value={formData.creditos}
             onChange={handleChange}
-            className="field-input"
+            className="field-input form-field"
             disabled={isPending}
             autoComplete="off"
           />
@@ -93,7 +93,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             name="catedratico"
             value={formData.catedratico}
             onChange={handleChange}
-            className="field-input"
+            className="field-input form-field"
             disabled={isPending}
             autoComplete="off"
           />
@@ -107,14 +107,14 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
               name="color"
               value={formData.color}
               onChange={handleChange}
-              className="w-10 h-8 border border-gray-300 rounded cursor-pointer dark:border-[var(--dm-border)]"
+              className="w-10 h-8 border border-gray-300 rounded cursor-pointer dark:border-[var(--dm-border)] form-field"
               disabled={isPending}
             />
             <input
               type="text"
               value={formData.color}
               onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-              className="flex-1 field-input text-sm"
+              className="flex-1 field-input text-sm form-field"
               disabled={isPending}
               autoComplete="off"
             />
@@ -131,7 +131,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             name="seccion"
             value={formData.seccion}
             onChange={handleChange}
-            className="field-input"
+            className="field-input form-field"
             disabled={isPending}
             autoComplete="off"
           />
@@ -145,7 +145,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             name="icono"
             value={formData.icono}
             onChange={handleChange}
-            className="field-input"
+            className="field-input form-field"
             maxLength={2}
             disabled={isPending}
             autoComplete="off"
@@ -158,7 +158,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="flex-1 interactive bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isPending ? 'Guardando...' : (initialData ? 'Guardar cambios' : 'Crear')}
         </button>
@@ -167,7 +167,7 @@ export default function SubjectForm({ semesterId, initialData, onSubmit, onCance
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] dark:disabled:bg-[var(--dm-border)]"
+            className="flex-1 interactive bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)] dark:disabled:bg-[var(--dm-border)]"
           >
             Cancelar
           </button>

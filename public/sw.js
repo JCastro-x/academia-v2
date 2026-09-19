@@ -37,8 +37,9 @@ self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(request.url)
   const isSameOrigin = requestUrl.origin === self.location.origin
   const isSupabaseRequest = requestUrl.hostname.includes('supabase')
+  const isViteRequest = requestUrl.pathname.includes('/@vite/') || requestUrl.pathname.includes('/@react-refresh')
 
-  if (!isSameOrigin || isSupabaseRequest) {
+  if (!isSameOrigin || isSupabaseRequest || isViteRequest) {
     return
   }
 
@@ -56,7 +57,15 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.destination === 'script' || request.destination === 'style') {
-    event.respondWith(fetch(request))
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const cloned = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned))
+          return response
+        })
+        .catch(() => caches.match(request))
+    )
     return
   }
 

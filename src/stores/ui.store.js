@@ -13,11 +13,18 @@ export const useUIStore = create((set) => ({
   temaColor: DEFAULT_THEME.temaColor,
   sonidosInteraccion: 'classic',
   horaFormato: '12h',
+  workingDays: [1, 2, 3, 4, 5], // Monday to Friday by default (0=Sunday, 6=Saturday)
   setModoOscuro: (val) => set({ modoOscuro: val }),
   setTipografia: (val) => set({ tipografia: val }),
   setTemaColor: (val) => set({ temaColor: val }),
   setSonidosInteraccion: (val) => set({ sonidosInteraccion: val }),
   setHoraFormato: (val) => set({ horaFormato: val === '24h' ? '24h' : '12h' }),
+  setWorkingDays: (days) => set({ workingDays: days }),
+  toggleWorkingDay: (day) => set((state) => ({
+    workingDays: state.workingDays.includes(day)
+      ? state.workingDays.filter(d => d !== day)
+      : [...state.workingDays, day].sort()
+  })),
   resetTheme: () => {
     set({
       modoOscuro: DEFAULT_THEME.modoOscuro,
@@ -25,6 +32,7 @@ export const useUIStore = create((set) => ({
       temaColor: DEFAULT_THEME.temaColor,
       sonidosInteraccion: 'classic',
       horaFormato: '12h',
+      workingDays: [1, 2, 3, 4, 5],
     })
   },
 

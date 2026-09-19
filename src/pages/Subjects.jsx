@@ -61,7 +61,10 @@ export default function Subjects() {
 
       <div
         className="subjects-grid grid gap-5 min-w-0 w-full max-w-full px-1"
-        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))' }}
+        style={{ 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+          willChange: 'transform'
+        }}
       >
         {subjects?.filter(subject => !pendingDeletes.some(pd => pd.type === 'subject' && pd.itemId === subject.id)).map(subject => (
           <SubjectCard

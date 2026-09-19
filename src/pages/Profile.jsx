@@ -24,14 +24,24 @@ const FONT_OPTIONS = [
   { name: 'System UI', value: 'System UI' },
 ]
 
+const WEEK_DAYS = [
+  { id: 0, name: 'Domingo', short: 'Dom' },
+  { id: 1, name: 'Lunes', short: 'Lun' },
+  { id: 2, name: 'Martes', short: 'Mar' },
+  { id: 3, name: 'Miércoles', short: 'Mié' },
+  { id: 4, name: 'Jueves', short: 'Jue' },
+  { id: 5, name: 'Viernes', short: 'Vie' },
+  { id: 6, name: 'Sábado', short: 'Sáb' },
+]
+
 export default function Profile() {
   const { data: profile, isLoading } = useProfile()
   const upsertProfile = useUpsertProfile()
   const hasAttemptedCreate = useRef(false)
 
   const {
-    modoOscuro, tipografia, temaColor, sonidosInteraccion, horaFormato,
-    setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato,
+    modoOscuro, tipografia, temaColor, sonidosInteraccion, horaFormato, workingDays,
+    setModoOscuro, setTipografia, setTemaColor, setSonidosInteraccion, setHoraFormato, toggleWorkingDay,
   } = useUIStore()
 
   // Form state for editable data fields (no asociado a preview)
@@ -357,6 +367,31 @@ export default function Profile() {
                 modoOscuro ? 'translate-x-6' : ''
               }`} />
             </button>
+          </div>
+
+          {/* Días de trabajo */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-[var(--dm-text-muted)] mb-2">
+              Días de trabajo
+            </label>
+            <p className="text-xs text-gray-500 dark:text-[var(--dm-text-muted)] mb-3">
+              Selecciona los días de la semana en los que trabajas para calcular días hábiles restantes en las tareas.
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {WEEK_DAYS.map(day => (
+                <button
+                  key={day.id}
+                  onClick={() => toggleWorkingDay(day.id)}
+                  className={`px-3 py-2 rounded-lg border transition-colors text-sm ${
+                    workingDays.includes(day.id)
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] bg-opacity-20 text-[var(--color-primary-fg)]'
+                      : 'border-gray-300 text-black dark:border-[var(--dm-border)] dark:text-white hover:border-gray-400 dark:hover:border-white'
+                  }`}
+                >
+                  {day.short}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>

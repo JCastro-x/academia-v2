@@ -1,14 +1,50 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getTaskStats, todayStr } from '../domain/task-stats.js'
+import { useIncrementTaskLogUnit } from '../features/tasks/hooks.js'
+import { useUIStore } from '../stores/ui.store.js'
 
 export default function TaskDetailsModal({ task, subject, onClose, onToggleSubtask, onUpdateTask, onToggleDone }) {
   const [newSubtask, setNewSubtask] = useState('')
   const [currentTask, setCurrentTask] = useState(task)
+  const [currentLog, setCurrentLog] = useState(task.log || {})
+  
+  const incrementLog = useIncrementTaskLogUnit()
+  const { workingDays } = useUIStore()
+  const today = todayStr()
+  const log = currentLog
+  const currentValue = Number(log[today]) || 0
+  const totalDone = Object.keys(log).reduce((sum, key) => sum + (Number(log[key]) || 0), 0)
+  const totalUnits = Number(currentTask.total_units) || 0
+  const showLogControls = currentTask.tipo === 'cantidad' && !currentTask.done && totalUnits > 0
+  
+  // Recalculate stats based on current log
+  const stats = getTaskStats({ ...currentTask, log: currentLog })
+  const remaining = Math.max(0, totalUnits - totalDone)
+  const metaHoy = stats.metaHoy || 0
+  const recomendadoRestante = stats.recomendadoRestante || 0
 
   // Update local state when task prop changes
   useEffect(() => {
     setCurrentTask(task)
-  }, [task])
+    setCurrentLog(task.log || {})
+  }, [task, task.log])
+
+  // Update local log state when incrementLog mutation succeeds
+  useEffect(() => {
+    if (incrementLog.isSuccess && incrementLog.data) {
+      setCurrentLog(incrementLog.data.log || {})
+      setCurrentTask(prev => ({ ...prev, log: incrementLog.data.log || {} }))
+    }
+  }, [incrementLog.isSuccess, incrementLog.data])
+
+  // Update stats when log changes
+  useEffect(() => {
+    if (currentTask.tipo === 'cantidad') {
+      const newStats = getTaskStats({ ...currentTask, log: currentLog })
+      // We'll recalculate derived values when needed
+    }
+  }, [currentLog, currentTask])
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Sin fecha'
@@ -21,12 +57,75 @@ export default function TaskDetailsModal({ task, subject, onClose, onToggleSubta
     })
   }
 
+  const calculateDaysRemaining = (dateString) => {
+    if (!dateString) return null
+    const dueDate = new Date(dateString)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    dueDate.setHours(0, 0, 0, 0)
+    
+    const diffTime = dueDate - today
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    // No contar la fecha de entrega
+    return diffDays > 0 ? diffDays - 1 : diffDays
+  }
+
+  const calculateWorkingDaysRemaining = (dateString) => {
+    if (!dateString) return null
+    const dueDate = new Date(dateString)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    dueDate.setHours(0, 0, 0, 0)
+    
+    let workingDaysCount = 0
+    let currentDate = new Date(today)
+    
+    // Iterar desde hoy hasta la fecha de entrega (sin incluir la fecha de entrega)
+    while (currentDate < dueDate) {
+      const dayOfWeek = currentDate.getDay()
+      if (workingDays.includes(dayOfWeek)) {
+        workingDaysCount++
+      }
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+    
+    return workingDaysCount
+  }
+
   const handleAddSubtask = () => {
     if (!newSubtask.trim()) return
     const updatedSubtasks = [...(currentTask.subtasks || []), { id: Date.now().toString(), titulo: newSubtask, done: false }]
     setCurrentTask({ ...currentTask, subtasks: updatedSubtasks })
     onUpdateTask(currentTask.id, { subtasks: updatedSubtasks })
     setNewSubtask('')
+  }
+
+  const handleIncrementLog = (delta) => {
+    // Optimistic update - update local state immediately
+    const newLog = { ...currentLog }
+    const currentValue = Number(newLog[today]) || 0
+    const newValue = currentValue + delta
+    
+    // Prevent negative values
+    if (newValue < 0) return
+    
+    // Prevent exceeding total_units
+    const totalDone = Object.keys(newLog).reduce((sum, key) => sum + (Number(newLog[key]) || 0), 0)
+    const totalDoneWithNewValue = totalDone - currentValue + newValue
+    if (totalUnits > 0 && totalDoneWithNewValue > totalUnits) return
+    
+    if (newValue === 0) {
+      delete newLog[today]
+    } else {
+      newLog[today] = newValue
+    }
+    
+    setCurrentLog(newLog)
+    setCurrentTask(prev => ({ ...prev, log: newLog }))
+    
+    // Then call the mutation
+    incrementLog.mutate({ taskId: task.id, dateStr: today, delta })
   }
 
   const handleToggleSubtask = (subtaskId) => {
@@ -65,14 +164,14 @@ export default function TaskDetailsModal({ task, subject, onClose, onToggleSubta
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] sm:max-h-[80vh] overflow-hidden dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] mx-4 sm:mx-0"
+          className="modal-panel bg-white rounded-xl shadow-xl w-full max-w-md sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] mx-2 sm:mx-4"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-[var(--dm-border)]">
@@ -85,6 +184,20 @@ export default function TaskDetailsModal({ task, subject, onClose, onToggleSubta
                 {task.due && (
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-[var(--dm-text-muted)] mt-1">
                     📅 Vence: {formatDate(task.due)}
+                    {(() => {
+                      const daysRemaining = calculateDaysRemaining(task.due)
+                      const workingDaysRemaining = calculateWorkingDaysRemaining(task.due)
+                      if (daysRemaining !== null) {
+                        if (daysRemaining > 0) {
+                          return ` (${daysRemaining} días restantes, ${workingDaysRemaining} días de trabajo)`
+                        } else if (daysRemaining === 0) {
+                          return ` (¡Vence hoy!)`
+                        } else {
+                          return ` (${Math.abs(daysRemaining)} días de retraso)`
+                        }
+                      }
+                      return ''
+                    })()}
                   </p>
                 )}
               </div>
@@ -123,7 +236,63 @@ export default function TaskDetailsModal({ task, subject, onClose, onToggleSubta
             )}
           </div>
 
-          <div className="p-4 sm:p-6 overflow-y-auto max-h-[50vh] sm:max-h-[60vh]">
+          <div className="p-3 sm:p-6 overflow-y-auto max-h-[35vh] sm:max-h-[55vh]">
+            {showLogControls && (
+              <div className="mb-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-[var(--dm-text)] mb-2 sm:mb-3">Control de Progreso</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className="bg-white dark:bg-[var(--dm-surface)] p-2 sm:p-3 rounded shadow-sm">
+                    <p className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">Llevas</p>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[var(--dm-text)]">{totalDone}</p>
+                  </div>
+                  <div className="bg-white dark:bg-[var(--dm-surface)] p-2 sm:p-3 rounded shadow-sm">
+                    <p className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">Faltan</p>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[var(--dm-text)]">{remaining}</p>
+                  </div>
+                  <div className="bg-white dark:bg-[var(--dm-surface)] p-2 sm:p-3 rounded shadow-sm">
+                    <p className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">Meta hoy</p>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[var(--dm-text)]">{metaHoy === 0 ? '✅' : metaHoy}</p>
+                  </div>
+                  <div className="bg-white dark:bg-[var(--dm-surface)] p-2 sm:p-3 rounded shadow-sm">
+                    <p className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">Recomendado</p>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[var(--dm-text)]">{recomendadoRestante === 0 ? '🔥' : recomendadoRestante}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center gap-3 sm:gap-4">
+                  <button
+                    onClick={() => handleIncrementLog(-1)}
+                    disabled={currentValue <= 0 || incrementLog.isPending}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all ripple ${
+                      currentValue <= 0 || incrementLog.isPending 
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500' 
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--dm-surface))] dark:text-[var(--color-primary)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_30%,var(--dm-surface))] hover:scale-105 active:scale-95 shadow-lg'
+                    }`}
+                  >
+                    <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <div className="text-center min-w-[50px] sm:min-w-[60px]">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">Hoy</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[var(--dm-text)]">{currentValue}</p>
+                  </div>
+                  <button
+                    onClick={() => handleIncrementLog(1)}
+                    disabled={totalDone >= totalUnits || incrementLog.isPending}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all ripple ${
+                      totalDone >= totalUnits || incrementLog.isPending 
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500' 
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--dm-surface))] dark:text-[var(--color-primary)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_30%,var(--dm-surface))] hover:scale-105 active:scale-95 shadow-lg'
+                    }`}
+                  >
+                    <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+            
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-[var(--dm-text)] mb-4">Subtareas</h3>
 
             <div className="space-y-2 mb-4">
@@ -173,18 +342,18 @@ export default function TaskDetailsModal({ task, subject, onClose, onToggleSubta
               )}
             </div>
 
-            <div className="flex gap-2 flex-col sm:flex-row">
+            <div className="flex gap-2 flex-col sm:flex-row bg-white dark:bg-[var(--dm-surface)] pt-3 sm:pt-4 pb-0 sm:pb-0">
               <input
                 type="text"
                 value={newSubtask}
                 onChange={(e) => setNewSubtask(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddSubtask()}
                 placeholder="Nueva subtarea..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] text-sm sm:text-base"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] dark:bg-[var(--dm-bg)] dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] dark:placeholder:text-[var(--dm-text-muted)] text-sm sm:text-base w-full"
               />
               <button
                 onClick={handleAddSubtask}
-                className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-fg)] rounded-lg hover:opacity-90 transition-colors text-sm sm:text-base"
+                className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-fg)] rounded-lg hover:opacity-90 transition-colors text-sm sm:text-base whitespace-nowrap w-full sm:w-auto"
               >
                 Agregar
               </button>
