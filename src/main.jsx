@@ -46,7 +46,7 @@ function SessionRedirect() {
         // Confíar en sesión local primero - sin llamada de red
         if (cachedSessionUser) {
           // Intentar obtener semesters de cache de TanStack Query
-          const cachedSemesters = queryClient.getQueryData(semestersQueryKeys.all())
+          const cachedSemesters = queryClient.getQueryData(semestersQueryKeys.all)
 
           if (cachedSemesters && cachedSemesters.length > 0) {
             const activeSemester = cachedSemesters.find((s) => s.activo) || cachedSemesters[0]
@@ -55,7 +55,7 @@ function SessionRedirect() {
             // Revalidar en background si hay conexión
             if (navigator.onLine) {
               queryClient.prefetchQuery({
-                queryKey: semestersQueryKeys.all(),
+                queryKey: semestersQueryKeys.all,
                 queryFn: getSemesters,
                 staleTime: 5 * 60 * 1000,
               })
@@ -461,7 +461,7 @@ function ColdStartRedirect() {
     }
 
     // Intentar obtener semesters de cache de TanStack Query
-    const cachedSemesters = queryClient.getQueryData(semestersQueryKeys.all())
+    const cachedSemesters = queryClient.getQueryData(semestersQueryKeys.all)
     
     if (cachedSemesters && cachedSemesters.length > 0) {
       const activeSemester = cachedSemesters.find((s) => s.activo) || cachedSemesters[0]
