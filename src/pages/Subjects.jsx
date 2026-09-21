@@ -15,6 +15,10 @@ export default function Subjects() {
     navigate(`/s/${semesterId}/grades?subject=${subject.id}`)
   }
 
+  const handleViewTopics = (subject) => {
+    navigate(`/s/${semesterId}/topics?subject=${subject.id}`)
+  }
+
   const handleDeleteSubject = async (subject) => {
     try {
       openConfirmDialog({
@@ -78,6 +82,7 @@ export default function Subjects() {
             onEdit={(subject) => openModal('subject', { editingSubject: subject })}
             onDelete={handleDeleteSubject}
             onViewGrades={handleViewGrades}
+            onViewTopics={handleViewTopics}
           />
         ))}
       </div>

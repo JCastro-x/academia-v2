@@ -113,17 +113,36 @@ create table topics (
   id uuid primary key default gen_random_uuid(),
   subject_id uuid references subjects not null,
   user_id uuid not null,
+  evaluation_period_id uuid references evaluation_periods(id) on delete set null,
   parcial text,
   nombre text,
+  subtema text,
+  descripcion text,
   subtemas jsonb default '[]',
   dificultad int,
   tiempo_dedicado_min int,
   fecha_examen date,
   comprension numeric default 0,
-  visto boolean default false
+  visto boolean default false,
+  repasado boolean default false,
+  subtemas_repasados jsonb default '[]',
+  created_at timestamptz default now()
 );
 create index on topics (subject_id);
 create index on topics (user_id);
+create index on topics (evaluation_period_id);
+
+-- Evaluation periods table (periodos de evaluación por materia)
+create table evaluation_periods (
+  id uuid primary key default gen_random_uuid(),
+  subject_id uuid references subjects not null,
+  user_id uuid not null,
+  nombre text not null, -- ej: "1er Parcial", "Segundo Parcial", "Final"
+  fecha date, -- fecha opcional del periodo
+  created_at timestamptz default now()
+);
+create index on evaluation_periods (subject_id);
+create index on evaluation_periods (user_id);
 
 -- Habits table
 create table habits (
@@ -208,6 +227,9 @@ create trigger trg_notes_user_id before insert on notes
 create trigger trg_topics_user_id before insert on topics
   for each row execute function set_user_id_from_subject();
 
+create trigger trg_evaluation_periods_user_id before insert on evaluation_periods
+  for each row execute function set_user_id_from_subject();
+
 create trigger trg_folders_user_id before insert on folders
   for each row execute function set_user_id_from_folder();
 
@@ -255,6 +277,11 @@ create policy "own rows" on topics
   for all using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+alter table evaluation_periods enable row level security;
+create policy "own rows" on evaluation_periods
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
 alter table habits enable row level security;
 create policy "own rows" on habits
   for all using (auth.uid() = user_id)
@@ -273,7 +300,7 @@ create table note_attachments (
   tipo text not null, -- 'imagen' | 'dibujo' | 'pdf'
   nombre text not null,
   storage_path text not null, -- path en Supabase Storage: notes/{user_id}/{note_id}/{filename}
-  metadata jsonb default '{}', -- info adicional (dimensiones, tamaño, etc)
+  metadata jsonb default '{}', -- info adicional   (dimensiones, tamaño, etc)
   created_at timestamptz default now()
 );
 create index on note_attachments (note_id);

@@ -20,7 +20,7 @@ export async function getSubjects(semesterId) {
 export async function getSubjectById(id) {
   const { data, error } = await supabase
     .from('subjects')
-    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, linked_lab_id, updated_at')
+    .select('id, semester_id, nombre, codigo, catedratico, seccion, creditos, color, icono, horario, linked_lab_id, updated_at, evaluation_periods(id, subject_id, user_id, nombre, fecha, created_at)')
     .eq('id', id)
     .limit(1)
     .maybeSingle()
@@ -83,6 +83,7 @@ export async function deleteSubject(id) {
   await optionalDelete('pomodoro_sessions')
   await optionalDelete('events')
   await optionalDelete('topics')
+  await optionalDelete('evaluation_periods')
   await optionalDelete('tasks')
 
   const { data: notes, error: notesError } = await supabase

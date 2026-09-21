@@ -4,11 +4,13 @@ import { useSubjects } from '../features/subjects/hooks.js'
 import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useCreateSubject, useUpdateSubject } from '../features/subjects/hooks.js'
 import { useCreateTask, useUpdateTask } from '../features/tasks/hooks.js'
+import { useCreateTopic } from '../features/topics/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import TaskForm from './TaskForm.jsx'
 import SubjectForm from './SubjectForm.jsx'
 import SemesterForm from './SemesterForm.jsx'
+import TopicForm from './TopicForm.jsx'
 
 export default function GlobalModalHost() {
   const navigate = useNavigate()
@@ -20,6 +22,7 @@ export default function GlobalModalHost() {
   const createSubject = useCreateSubject()
   const updateSubject = useUpdateSubject()
   const updateSemester = useUpdateSemester()
+  const createTopic = useCreateTopic()
   const {
     isModalOpen,
     modalContent,
@@ -80,6 +83,16 @@ export default function GlobalModalHost() {
     }
   }
 
+  const handleCreateTopic = async (topicData) => {
+    try {
+      await createTopic.mutateAsync(topicData)
+      playSound('save')
+      closeModal()
+    } catch (error) {
+      console.error('Error creating topic:', error)
+    }
+  }
+
   const quickAddOptions = [
     {
       id: 'task',
@@ -108,7 +121,7 @@ export default function GlobalModalHost() {
       enabled: (subjects?.length || 0) > 0,
       action: () => {
         closeModal()
-        navigate(`/s/${semesterId}/grades`, { state: { quickAdd: 'topic' } })
+        useUIStore.getState().openModal('topic')
       },
     },
     {
@@ -253,6 +266,35 @@ export default function GlobalModalHost() {
                 onSubmit={editingSubject ? (data) => handleUpdateSubject(editingSubject.id, data) : handleCreateSubject}
                 onCancel={closeModal}
                 isPending={editingSubject ? updateSubject.isPending : createSubject.isPending}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isModalOpen && modalContent === 'topic' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-[70] p-4 overflow-y-auto"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ scale: 0.96, y: 12, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.96, y: 12, opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="modal-panel bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain p-6 max-w-md pb-[max(1.5rem,env(safe-area-inset-bottom))] mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Nuevo tema</h3>
+              <TopicForm
+                semesterId={semesterId}
+                onSubmit={handleCreateTopic}
+                onCancel={closeModal}
+                isPending={createTopic.isPending}
               />
             </motion.div>
           </motion.div>

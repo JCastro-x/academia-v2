@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 
-export default function SubjectCard({ subject, onEdit, onDelete, onViewGrades }) {
+export default function SubjectCard({ subject, onEdit, onDelete, onViewGrades, onViewTopics }) {
   const schedule = Array.isArray(subject.horario) ? subject.horario : []
   const hasLab = schedule.some(h => h.tipo === 'lab')
   const cardColor = subject.color || '#8B5CF6'
@@ -48,6 +48,15 @@ export default function SubjectCard({ subject, onEdit, onDelete, onViewGrades })
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onViewTopics && onViewTopics(subject) }}
+          className="min-w-0 flex-1 interactive bg-[color-mix(in_srgb,purple_12%,transparent)] text-purple-600 py-2 px-2 rounded-lg hover:bg-[color-mix(in_srgb,purple_20%,transparent)] dark:bg-[color-mix(in_srgb,purple_12%,transparent)] dark:text-purple-300 dark:hover:bg-[color-mix(in_srgb,purple_20%,transparent)]"
+          title="Ver temas"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
         </button>
         <button

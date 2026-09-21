@@ -9,7 +9,7 @@ export default function QuickAdd({ semesterId, subjects, onAddTask, onAddSubject
   const options = [
     { id: 'task', label: 'Nueva Tarea', icon: '📝', enabled: true, action: () => openModal('task', { editingTask: null }) },
     { id: 'event', label: 'Nuevo Evento', icon: '📅', enabled: true, action: () => navigate(`/s/${semesterId}/calendar`, { state: { quickAdd: 'event' } }) },
-    { id: 'topic', label: 'Nuevo Tema', icon: '📖', enabled: (subjects?.length || 0) > 0, action: () => navigate(`/s/${semesterId}/grades`, { state: { quickAdd: 'topic' } }) },
+    { id: 'topic', label: 'Nuevo Tema', icon: '📖', enabled: (subjects?.length || 0) > 0, action: () => openModal('topic') },
     { id: 'class', label: 'Nueva Clase', icon: '🎓', enabled: true, action: () => openModal('subject', { editingSubject: null }) },
   ]
 

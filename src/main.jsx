@@ -23,6 +23,7 @@ import Habits from './pages/Habits.jsx'
 import Clock from './pages/Clock.jsx'
 import Profile from './pages/Profile.jsx'
 import Exam from './pages/Exam.jsx'
+import Topics from './pages/Topics.jsx'
 import { startServiceWorkerUpdateCoordinator } from './lib/serviceWorkerUpdate.js'
 // NOTA: El scheduler local de notificaciones (src/lib/notificationScheduler.js) está DESACTIVADO
 // a propósito. Fue reemplazado por el cron server-side de Supabase (Push Notifications) que
@@ -523,6 +524,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="grades" element={<Grades />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="notes" element={<Notes />} />
+            <Route path="topics" element={<Topics />} />
             <Route path="habits" element={<Habits />} />
             <Route path="clock" element={<Clock />} />
             <Route path="profile" element={<Profile />} />

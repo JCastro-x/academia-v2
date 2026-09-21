@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useSubjects, useCreateSubject } from '../features/subjects/hooks.js'
@@ -7,6 +7,7 @@ import { usePendingTasks, useCreateTask, useUpdateTask, useToggleTaskDone, useTo
 import { useFutureEvents } from '../features/events/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
+import { getTaskStats, todayStr, diffDays } from '../domain/task-stats.js'
 import TaskCard from '../components/TaskCard.jsx'
 import TaskDetailsModal from '../components/TaskDetailsModal.jsx'
 import SubjectForm from '../components/SubjectForm.jsx'
@@ -29,7 +30,93 @@ export default function Overview() {
   const [showEvents, setShowEvents] = useState(false)
   const [showPinnedOnly, setShowPinnedOnly] = useState(false)
   const [selectedTaskForDetails, setSelectedTaskForDetails] = useState(null)
+  const [showLaterTasks, setShowLaterTasks] = useState(false)
   const isLoading = semesterLoading || subjectsLoading || tasksLoading
+
+  // Categorize tasks into 2 sections using useMemo to prevent recalculation
+  const { thisWeek: thisWeekTasks, later: laterTasks } = useMemo(() => {
+    const filteredTasks = pendingTasks?.filter(t => 
+      !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id) && 
+      (!showPinnedOnly || t.pinned)
+    ) || []
+
+    if (!filteredTasks || filteredTasks.length === 0) {
+      return { thisWeek: [], later: [] }
+    }
+
+    const today = todayStr()
+    const thisWeekTasks = []
+    const laterTasks = []
+
+    filteredTasks.forEach(task => {
+      const stats = getTaskStats(task)
+      
+      // Section 1: "Esta semana" - tasks that need action soon
+      let needsActionSoon = false
+      
+      // Check 1: Tasks with daily progress/meta that haven't met today's goal
+      if (task.tipo === 'cantidad' && task.total_units > 0 && !task.done) {
+        const metaHoy = stats.metaHoy || 0
+        const doneToday = stats.doneToday || 0
+        
+        if (metaHoy > doneToday) {
+          needsActionSoon = true
+        }
+      }
+      
+      // Check 2: Tasks with pending subtasks
+      if (task.tipo === 'checklist' && !task.done) {
+        const totalSub = task.subtasks?.length || 0
+        const doneSub = task.subtasks?.filter(s => s.done).length || 0
+        if (doneSub < totalSub) {
+          needsActionSoon = true
+        }
+      }
+      
+      // Check 3: Tasks due within 10 days
+      if (task.due) {
+        const daysUntilDue = diffDays(today, task.due)
+        if (daysUntilDue <= 10) {
+          needsActionSoon = true
+        }
+      }
+      
+      if (needsActionSoon) {
+        thisWeekTasks.push(task)
+      } else {
+        laterTasks.push(task)
+      }
+    })
+
+    // Sort "this week" tasks: first those with daily progress pending, then by due date
+    thisWeekTasks.sort((a, b) => {
+      const statsA = getTaskStats(a)
+      const statsB = getTaskStats(b)
+      
+      // Priority: tasks with daily progress pending first
+      const aHasDailyProgress = a.tipo === 'cantidad' && a.total_units > 0 && !a.done && 
+                               (statsA.metaHoy || 0) > (statsA.doneToday || 0)
+      const bHasDailyProgress = b.tipo === 'cantidad' && b.total_units > 0 && !b.done && 
+                               (statsB.metaHoy || 0) > (statsB.doneToday || 0)
+      
+      if (aHasDailyProgress && !bHasDailyProgress) return -1
+      if (!aHasDailyProgress && bHasDailyProgress) return 1
+      
+      // Then sort by due date
+      if (!a.due) return 1
+      if (!b.due) return -1
+      return new Date(a.due) - new Date(b.due)
+    })
+
+    // Sort "later" tasks by due date ascending
+    laterTasks.sort((a, b) => {
+      if (!a.due) return 1
+      if (!b.due) return -1
+      return new Date(a.due) - new Date(b.due)
+    })
+
+    return { thisWeek: thisWeekTasks, later: laterTasks }
+  }, [pendingTasks, pendingDeletes, showPinnedOnly])
 
   const handleCreateTask = async (taskData) => {
     try {
@@ -216,7 +303,7 @@ export default function Overview() {
         <div className="min-w-0 pb-16">
           <AnimatePresence mode="popLayout">
             {showEvents && events?.length > 0 && (
-              <div className="mb-4 space-y-2">
+              <div key="events-section" className="mb-4 space-y-2">
                 {events.filter(e => !pendingDeletes.some(pd => pd.type === 'event' && pd.itemId === e.id)).map(event => {
                   const eventDate = new Date(event.start_at)
                   const formattedDate = eventDate.toLocaleDateString('es-ES', {
@@ -237,7 +324,7 @@ export default function Overview() {
                   
                   return (
                     <div
-                      key={event.id}
+                      key={event.id || `event-${event.start_at}-${event.nombre}`}
                       className={`p-3 rounded-lg border border-transparent ${getEventColorClass(event.tipo)}`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -259,19 +346,77 @@ export default function Overview() {
                 })}
               </div>
             )}
-            
-            {pendingTasks?.filter(t => !pendingDeletes.some(pd => pd.type === 'task' && pd.itemId === t.id) && (!showPinnedOnly || t.pinned)).map(task => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                subject={subjects?.find(s => s.id === task.subject_id)}
-                onToggleDone={handleToggleDone}
-                onTogglePin={handleTogglePin}
-                onViewDetails={handleViewDetails}
-                onEdit={(t) => openModal('task', { editingTask: t })}
-                onDelete={handleDeleteTask}
-              />
-            ))}
+
+            {/* Section 1: Esta semana */}
+            {thisWeekTasks.length > 0 && (
+              <div key="this-week-section" className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-[var(--dm-text-muted)] mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Esta semana
+                </h3>
+                <div className="space-y-3">
+                  {thisWeekTasks.map(task => (
+                    <TaskCard
+                      key={task.id || `task-${task.titulo}-${task.due}`}
+                      task={task}
+                      subject={subjects?.find(s => s.id === task.subject_id)}
+                      onToggleDone={handleToggleDone}
+                      onTogglePin={handleTogglePin}
+                      onViewDetails={handleViewDetails}
+                      onEdit={(t) => openModal('task', { editingTask: t })}
+                      onDelete={handleDeleteTask}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Section 2: Más adelante (collapsible) */}
+            {laterTasks.length > 0 && (
+              <div key="later-section">
+                <button
+                  onClick={() => setShowLaterTasks(!showLaterTasks)}
+                  className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-[var(--dm-text-muted)] mb-3 hover:text-gray-900 dark:hover:text-[var(--dm-text)] transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Más adelante
+                  </span>
+                  <span className="text-xs bg-gray-100 dark:bg-[var(--dm-border)] px-2 py-1 rounded-full">
+                    {showLaterTasks ? '-' : `+${laterTasks.length}`}
+                  </span>
+                </button>
+                <AnimatePresence>
+                  {showLaterTasks && (
+                    <div key="later-tasks" className="space-y-3">
+                      {laterTasks.map(task => (
+                        <TaskCard
+                          key={task.id || `task-${task.titulo}-${task.due}`}
+                          task={task}
+                          subject={subjects?.find(s => s.id === task.subject_id)}
+                          onToggleDone={handleToggleDone}
+                          onTogglePin={handleTogglePin}
+                          onViewDetails={handleViewDetails}
+                          onEdit={(t) => openModal('task', { editingTask: t })}
+                          onDelete={handleDeleteTask}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {thisWeekTasks.length === 0 && laterTasks.length === 0 && (
+              <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
+                <p>No hay tareas pendientes</p>
+              </div>
+            )}
           </AnimatePresence>
         </div>
       </div>
