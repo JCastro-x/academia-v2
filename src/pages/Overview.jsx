@@ -30,6 +30,7 @@ export default function Overview() {
   const [showEvents, setShowEvents] = useState(false)
   const [showPinnedOnly, setShowPinnedOnly] = useState(false)
   const [selectedTaskForDetails, setSelectedTaskForDetails] = useState(null)
+  const [showThisWeekTasks, setShowThisWeekTasks] = useState(true)
   const [showLaterTasks, setShowLaterTasks] = useState(false)
   const isLoading = semesterLoading || subjectsLoading || tasksLoading
 
@@ -88,21 +89,8 @@ export default function Overview() {
       }
     })
 
-    // Sort "this week" tasks: first those with daily progress pending, then by due date
+    // Sort "this week" tasks by due date ascending (tasks without due date go last)
     thisWeekTasks.sort((a, b) => {
-      const statsA = getTaskStats(a)
-      const statsB = getTaskStats(b)
-      
-      // Priority: tasks with daily progress pending first
-      const aHasDailyProgress = a.tipo === 'cantidad' && a.total_units > 0 && !a.done && 
-                               (statsA.metaHoy || 0) > (statsA.doneToday || 0)
-      const bHasDailyProgress = b.tipo === 'cantidad' && b.total_units > 0 && !b.done && 
-                               (statsB.metaHoy || 0) > (statsB.doneToday || 0)
-      
-      if (aHasDailyProgress && !bHasDailyProgress) return -1
-      if (!aHasDailyProgress && bHasDailyProgress) return 1
-      
-      // Then sort by due date
       if (!a.due) return 1
       if (!b.due) return -1
       return new Date(a.due) - new Date(b.due)
@@ -350,26 +338,38 @@ export default function Overview() {
             {/* Section 1: Esta semana */}
             {thisWeekTasks.length > 0 && (
               <div key="this-week-section" className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-[var(--dm-text-muted)] mb-3 flex items-center gap-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Esta semana
-                </h3>
-                <div className="space-y-3">
-                  {thisWeekTasks.map(task => (
-                    <TaskCard
-                      key={task.id || `task-${task.titulo}-${task.due}`}
-                      task={task}
-                      subject={subjects?.find(s => s.id === task.subject_id)}
-                      onToggleDone={handleToggleDone}
-                      onTogglePin={handleTogglePin}
-                      onViewDetails={handleViewDetails}
-                      onEdit={(t) => openModal('task', { editingTask: t })}
-                      onDelete={handleDeleteTask}
-                    />
-                  ))}
-                </div>
+                <button
+                  onClick={() => setShowThisWeekTasks(!showThisWeekTasks)}
+                  className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-[var(--dm-text-muted)] mb-3 hover:text-gray-900 dark:hover:text-[var(--dm-text)] transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Esta semana
+                  </span>
+                  <span className="text-xs bg-gray-100 dark:bg-[var(--dm-border)] px-2 py-1 rounded-full">
+                    {showThisWeekTasks ? '-' : `+${thisWeekTasks.length}`}
+                  </span>
+                </button>
+                <AnimatePresence>
+                  {showThisWeekTasks && (
+                    <div key="this-week-tasks" className="space-y-3">
+                      {thisWeekTasks.map(task => (
+                        <TaskCard
+                          key={task.id || `task-${task.titulo}-${task.due}`}
+                          task={task}
+                          subject={subjects?.find(s => s.id === task.subject_id)}
+                          onToggleDone={handleToggleDone}
+                          onTogglePin={handleTogglePin}
+                          onViewDetails={handleViewDetails}
+                          onEdit={(t) => openModal('task', { editingTask: t })}
+                          onDelete={handleDeleteTask}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
 
