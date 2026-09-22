@@ -443,7 +443,8 @@ export function computeCantidadStats(task) {
     exigencia,
     necesitasHoy,
     doneToday,
-    baseDiaria
+    baseDiaria,
+    metaHoy
   }
 
   const status = statusFromProgress(statsForStatus)
@@ -510,6 +511,7 @@ export function computeChecklistStats(task) {
   const workDaysElapsed = workDaysTotal - workDaysRemaining
 
   const necesitasHoy = isDone ? 0 : Math.ceil(remaining / Math.max(1, workDaysRemaining))
+  const metaHoy = necesitasHoy // For checklist, metaHoy = necesitasHoy
   
   const ritmoActual = workDaysElapsed > 0 ? doneSub / Math.max(1, workDaysElapsed) : 0
   
@@ -540,7 +542,8 @@ export function computeChecklistStats(task) {
     diasDeAtraso,
     necesitasHoy,
     doneToday: 0,
-    baseDiaria: 0
+    baseDiaria: 0,
+    metaHoy
   }
   const status = statusFromProgress(statsForStatus)
   
@@ -558,6 +561,7 @@ export function computeChecklistStats(task) {
     doneSub,
     remaining,
     necesitasHoy,
+    metaHoy,
     baseDiaria: 0,
     ritmoActual,
     ritmoNecesario,
