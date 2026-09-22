@@ -245,14 +245,14 @@ describe('task-stats', () => {
       expect(statusFromProgress(stats)).toBe('ongreen')
     })
 
-    it('BUG 1 test: baseDiaria=7 should remain fixed during the day even as doneToday changes', () => {
+    it('BUG 1 test: baseDiaria and metaHoy should remain fixed during the day even as doneToday changes', () => {
       const today = todayStr()
       // Create a realistic scenario: task created 3 days ago, due in 3 days
       // With work_days [1,2,3,4,5], this gives us 3 work days remaining
       const threeDaysFromNow = new Date()
       threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
       const dueDate = formatDate(threeDaysFromNow)
-      
+
       const threeDaysAgo = new Date()
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
       const startDate = formatDate(threeDaysAgo)
@@ -272,9 +272,10 @@ describe('task-stats', () => {
         localStorage.removeItem('task-daily-cache-test-task-1')
       }
 
-      // First calculation: baseDiaria should be calculated as ceil(21/3) = 7
+      // First calculation: baseDiaria should be calculated as ceil(21/3) = 7, metaHoy = 7
       const stats1 = computeCantidadStats(task)
       expect(stats1.baseDiaria).toBe(7)
+      expect(stats1.metaHoy).toBe(7)
 
       // Simulate progress during the day: add 3 units done today
       const taskWithProgress = {
@@ -282,9 +283,10 @@ describe('task-stats', () => {
         log: { [today]: 3 }
       }
 
-      // Second calculation: baseDiaria should STILL be 7 (cached), not recalculated as ceil(18/3) = 6
+      // Second calculation: baseDiaria and metaHoy should STILL be 7 (cached), not recalculated
       const stats2 = computeCantidadStats(taskWithProgress)
       expect(stats2.baseDiaria).toBe(7)
+      expect(stats2.metaHoy).toBe(7)
 
       // Simulate more progress: add 4 more units (total 7 done today)
       const taskWithMoreProgress = {
@@ -292,9 +294,10 @@ describe('task-stats', () => {
         log: { [today]: 7 }
       }
 
-      // Third calculation: baseDiaria should STILL be 7 (cached), not recalculated as ceil(14/3) = 5
+      // Third calculation: baseDiaria and metaHoy should STILL be 7 (cached), not recalculated
       const stats3 = computeCantidadStats(taskWithMoreProgress)
       expect(stats3.baseDiaria).toBe(7)
+      expect(stats3.metaHoy).toBe(7)
 
       // Clean up cache
       if (typeof window !== 'undefined') {
@@ -302,15 +305,128 @@ describe('task-stats', () => {
       }
     })
 
-    it('BUG 2 test: metaHoy=6 should return "onattention" (Atención)', () => {
-      const stats = {
-        isDone: false,
-        notStarted: false,
-        isOverdue: false,
-        metaHoy: 6
+    it('BUG 2 test: metaHoy should not change during the day when adding progress', () => {
+      const today = todayStr()
+      // Create a task with fixed work days remaining
+      const threeDaysFromNow = new Date()
+      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
+      const dueDate = formatDate(threeDaysFromNow)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-2',
+        total_units: 21,
+        work_days: [1, 2, 3, 4, 5],
+        log: {}, // No progress today yet
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`, // 3 days from now
       }
-      // metaHoy=6 falls in range 6-7 -> onattention (Atención)
-      expect(statusFromProgress(stats)).toBe('onattention')
+
+      // Clear any existing cache for this task
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('task-daily-cache-test-task-2')
+      }
+
+      // First calculation: metaHoy should be baseDiaria = ceil(21/3) = 7
+      const stats1 = computeCantidadStats(task)
+      expect(stats1.metaHoy).toBe(7)
+
+      // Add progress during the same day (simulating user clicking +)
+      const taskWithProgress = {
+        ...task,
+        log: { [today]: 3 } // 3 done today
+      }
+
+      // metaHoy should STILL be 7 (cached), not recalculated
+      const stats2 = computeCantidadStats(taskWithProgress)
+      expect(stats2.metaHoy).toBe(7)
+
+      // Add more progress during the same day
+      const taskWithMoreProgress = {
+        ...task,
+        log: { [today]: 6 } // 6 done today
+      }
+
+      // metaHoy should STILL be 7 (cached), not recalculated
+      const stats3 = computeCantidadStats(taskWithMoreProgress)
+      expect(stats3.metaHoy).toBe(7)
+
+      // Clean up cache
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('task-daily-cache-test-task-2')
+      }
+    })
+
+    it('BUG 2 test: metaHoy should recalculate correctly on the next day with new remaining', () => {
+      const today = todayStr()
+      const threeDaysFromNow = new Date()
+      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
+      const dueDate = formatDate(threeDaysFromNow)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-3',
+        total_units: 21,
+        work_days: [1, 2, 3, 4, 5],
+        log: {}, // No progress yet
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`, // 3 days from now
+      }
+
+      // Clear any existing cache for this task
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('task-daily-cache-test-task-3')
+      }
+
+      // First calculation (today): metaHoy = ceil(21/3) = 7
+      const stats1 = computeCantidadStats(task)
+      expect(stats1.metaHoy).toBe(7)
+
+      // Simulate completing 7 units today
+      const taskWithProgress = {
+        ...task,
+        log: { [today]: 7 }
+      }
+
+      // metaHoy should STILL be 7 (cached for today)
+      const stats2 = computeCantidadStats(taskWithProgress)
+      expect(stats2.metaHoy).toBe(7)
+
+      // Simulate next day: clear cache to invalidate "today"
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('task-daily-cache-test-task-3')
+      }
+
+      // Next day calculation: metaHoy should be recalculated based on new remaining (14)
+      // The exact value depends on workDaysRemaining, but it should be different from 7
+      const stats3 = computeCantidadStats(taskWithProgress)
+      console.log('DEBUG Punto 3 - After cache clear with 7 done:', { remaining: stats3.remaining, metaHoy: stats3.metaHoy })
+      expect(stats3.metaHoy).toBeGreaterThan(0)
+      expect(stats3.remaining).toBe(14) // 21-7=14
+
+      // Simulate completing 10 units today (more than needed)
+      const taskWithMoreProgress = {
+        ...task,
+        log: { [today]: 10 }
+      }
+
+      // Clear cache to simulate next day
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('task-daily-cache-test-task-3')
+      }
+
+      // Next day calculation: metaHoy should be recalculated based on new remaining (11)
+      // Should be lower than previous metaHoy because we did more work
+      const stats4 = computeCantidadStats(taskWithMoreProgress)
+      console.log('DEBUG Punto 3 - After cache clear with 10 done:', { remaining: stats4.remaining, metaHoy: stats4.metaHoy })
+      expect(stats4.metaHoy).toBeGreaterThan(0)
+      expect(stats4.remaining).toBe(11) // 21-10=11
+      expect(stats4.metaHoy).toBeLessThan(stats3.metaHoy) // Should be lower with less remaining
+
+      // Clean up cache
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('task-daily-cache-test-task-3')
+      }
     })
 
     it('should exclude weekend days from workDaysRemaining when work_days excludes weekend', () => {

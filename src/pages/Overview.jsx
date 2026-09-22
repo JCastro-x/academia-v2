@@ -50,39 +50,15 @@ export default function Overview() {
     const laterTasks = []
 
     filteredTasks.forEach(task => {
-      const stats = getTaskStats(task)
-      
-      // Section 1: "Esta semana" - tasks that need action soon
-      let needsActionSoon = false
-      
-      // Check 1: Tasks with daily progress/meta that haven't met today's goal
-      if (task.tipo === 'cantidad' && task.total_units > 0 && !task.done) {
-        const metaHoy = stats.metaHoy || 0
-        const doneToday = stats.doneToday || 0
-        
-        if (metaHoy > doneToday) {
-          needsActionSoon = true
-        }
-      }
-      
-      // Check 2: Tasks with pending subtasks
-      if (task.tipo === 'checklist' && !task.done) {
-        const totalSub = task.subtasks?.length || 0
-        const doneSub = task.subtasks?.filter(s => s.done).length || 0
-        if (doneSub < totalSub) {
-          needsActionSoon = true
-        }
-      }
-      
-      // Check 3: Tasks due within 10 days
+      // Section: determined EXCLUSIVELY by due date (daysUntilDue <= 10 = Esta semana, > 10 = Más adelante)
+      let isThisWeek = false
+
       if (task.due) {
         const daysUntilDue = diffDays(today, task.due)
-        if (daysUntilDue <= 10) {
-          needsActionSoon = true
-        }
+        isThisWeek = daysUntilDue <= 10
       }
-      
-      if (needsActionSoon) {
+
+      if (isThisWeek) {
         thisWeekTasks.push(task)
       } else {
         laterTasks.push(task)

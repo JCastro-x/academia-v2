@@ -194,42 +194,43 @@ function getTaskFingerprint(task) {
 }
 
 /**
- * Get cached baseDiaria for a task for the current day.
+ * Get cached daily values for a task for the current day.
  * @param {string} taskId - Task ID
  * @param {string} currentFingerprint - Current task fingerprint
- * @returns {number|null} Cached baseDiaria for today, or null if not cached, from different day, or task changed
+ * @returns {Object|null} Cached values { baseDiaria, metaHoy, date, fingerprint } or null if not cached, from different day, or task changed
  */
-function getCachedBaseDiaria(taskId, currentFingerprint) {
+function getCachedDailyValues(taskId, currentFingerprint) {
   if (typeof window === 'undefined' || !taskId) return null
-  
+
   try {
     const cacheKey = `task-daily-cache-${taskId}`
     const cached = localStorage.getItem(cacheKey)
     if (!cached) return null
-    
-    const { baseDiaria, date, fingerprint } = JSON.parse(cached)
+
+    const { baseDiaria, metaHoy, date, fingerprint } = JSON.parse(cached)
     const today = todayStr()
-    
-    // Return cached value only if it's from today AND task hasn't changed
-    return date === today && fingerprint === currentFingerprint ? baseDiaria : null
+
+    // Return cached values only if it's from today AND task hasn't changed
+    return date === today && fingerprint === currentFingerprint ? { baseDiaria, metaHoy } : null
   } catch (error) {
     return null
   }
 }
 
 /**
- * Cache baseDiaria for a task for the current day.
+ * Cache daily values for a task for the current day.
  * @param {string} taskId - Task ID
  * @param {number} baseDiaria - baseDiaria value to cache
+ * @param {number} metaHoy - metaHoy value to cache
  * @param {string} fingerprint - Task fingerprint
  */
-function setCachedBaseDiaria(taskId, baseDiaria, fingerprint) {
+function setCachedDailyValues(taskId, baseDiaria, metaHoy, fingerprint) {
   if (typeof window === 'undefined' || !taskId) return
-  
+
   try {
     const cacheKey = `task-daily-cache-${taskId}`
     const today = todayStr()
-    localStorage.setItem(cacheKey, JSON.stringify({ baseDiaria, date: today, fingerprint }))
+    localStorage.setItem(cacheKey, JSON.stringify({ baseDiaria, metaHoy, date: today, fingerprint }))
   } catch (error) {
     // Silently fail if localStorage is not available
   }
@@ -382,16 +383,35 @@ export function computeCantidadStats(task) {
 
   const metaDiariaOriginal = Math.ceil(totalUnits / Math.max(1, workDaysTotal))
 
-  // Base diaria con caché diario: se fija UNA VEZ AL DÍA usando remaining y workDaysRemaining del inicio del día
+  // Base diaria y metaHoy con caché diario: se fijan UNA VEZ AL DÍA usando remaining y workDaysRemaining del inicio del día
   // El caché se invalida si cambian campos base (total_units, due, work_days) el mismo día
   const taskFingerprint = getTaskFingerprint(task)
-  let baseDiaria = getCachedBaseDiaria(task.id, taskFingerprint)
-  if (baseDiaria === null) {
-    // No hay caché válido para hoy o la tarea cambió, calcular nuevo valor usando remaining y workDaysRemaining actuales
+  const cachedValues = getCachedDailyValues(task.id, taskFingerprint)
+
+  let baseDiaria
+  let metaHoy
+
+  if (cachedValues) {
+    // Usar valores cacheados de hoy
+    baseDiaria = cachedValues.baseDiaria
+    metaHoy = cachedValues.metaHoy
+  } else {
+    // No hay caché válido para hoy o la tarea cambió, calcular nuevos valores usando remaining y workDaysRemaining actuales
     baseDiaria = Math.ceil(remaining / Math.max(1, workDaysRemaining))
-    setCachedBaseDiaria(task.id, baseDiaria, taskFingerprint)
+
+    // metaHoy se calcula una vez al día en base a baseDiaria (no se resta doneToday para evitar recálculo en vivo)
+    if (isDone) {
+      metaHoy = 0
+    } else if (bt.isOverdue) {
+      metaHoy = remaining // Si está atrasada, la meta es terminarla toda
+    } else {
+      metaHoy = baseDiaria // metaHoy = baseDiaria al inicio del día (sin restar doneToday)
+    }
+
+    setCachedDailyValues(task.id, baseDiaria, metaHoy, taskFingerprint)
   }
-  // necesitasHoy dinámico según lo que queda ahora para que la etiqueta se actualice
+
+  // necesitasHoy dinámico según lo que queda ahora para mostrar en UI
   const necesitasHoy = Math.ceil(remaining / Math.max(1, workDaysRemaining))
   const recomendado = Math.ceil(baseDiaria * 1.15)
   // recomendadoRestante no puede exceder lo que realmente falta (remaining)
@@ -400,15 +420,6 @@ export function computeCantidadStats(task) {
 
   // metaHoyRestante: lo que aún falta hacer hoy (base estática menos lo ya hecho)
   const metaHoyRestante = Math.max(0, baseDiaria - doneToday)
-
-  let metaHoy
-  if (isDone) {
-    metaHoy = 0
-  } else if (bt.isOverdue) {
-    metaHoy = remaining // Si está atrasada, la meta es terminarla toda
-  } else {
-    metaHoy = Math.max(0, baseDiaria - doneToday)
-  }
   
   const daysElapsedForPace = workDaysElapsed > 0 ? workDaysElapsed : 1
   const ritmoActual = workDaysElapsed > 0 ? totalDone / workDaysElapsed : totalDone
