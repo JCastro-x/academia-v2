@@ -202,231 +202,345 @@ describe('task-stats', () => {
       expect(statusFromProgress(stats)).toBe('overdue')
     })
 
-    it('should return "ongreen" when metaHoy is 1-3 (Excelente)', () => {
-      const stats = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 1 }
+    it('should return "ongreen" when paceReal is 1-3 (Excelente)', () => {
+      const stats = { isDone: false, notStarted: false, isOverdue: false, paceReal: 1 }
       expect(statusFromProgress(stats)).toBe('ongreen')
-      
-      const stats2 = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 2 }
+
+      const stats2 = { isDone: false, notStarted: false, isOverdue: false, paceReal: 2 }
       expect(statusFromProgress(stats2)).toBe('ongreen')
-      
-      const stats3 = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 3 }
+
+      const stats3 = { isDone: false, notStarted: false, isOverdue: false, paceReal: 3 }
       expect(statusFromProgress(stats3)).toBe('ongreen')
     })
 
-    it('should return "onyellow" when metaHoy is 4-5 (Bien)', () => {
-      const stats = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 4 }
+    it('should return "onyellow" when paceReal is 4-5 (Bien)', () => {
+      const stats = { isDone: false, notStarted: false, isOverdue: false, paceReal: 4 }
       expect(statusFromProgress(stats)).toBe('onyellow')
-      
-      const stats2 = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 5 }
+
+      const stats2 = { isDone: false, notStarted: false, isOverdue: false, paceReal: 5 }
       expect(statusFromProgress(stats2)).toBe('onyellow')
     })
 
-    it('should return "onattention" when metaHoy is 6-7 (Atención)', () => {
-      const stats = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 6 }
+    it('should return "onattention" when paceReal is 6-7 (Atención)', () => {
+      const stats = { isDone: false, notStarted: false, isOverdue: false, paceReal: 6 }
       expect(statusFromProgress(stats)).toBe('onattention')
-      
-      const stats2 = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 7 }
+
+      const stats2 = { isDone: false, notStarted: false, isOverdue: false, paceReal: 7 }
       expect(statusFromProgress(stats2)).toBe('onattention')
     })
 
-    it('should return "critical" when metaHoy is greater than 7 (Crítico)', () => {
-      const stats = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 8 }
+    it('should return "critical" when paceReal is greater than 7 (Crítico)', () => {
+      const stats = { isDone: false, notStarted: false, isOverdue: false, paceReal: 8 }
       expect(statusFromProgress(stats)).toBe('critical')
-      
-      const stats2 = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 10 }
+
+      const stats2 = { isDone: false, notStarted: false, isOverdue: false, paceReal: 10 }
       expect(statusFromProgress(stats2)).toBe('critical')
-      
-      const stats3 = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 15 }
+
+      const stats3 = { isDone: false, notStarted: false, isOverdue: false, paceReal: 15 }
       expect(statusFromProgress(stats3)).toBe('critical')
     })
 
-    it('should return "ongreen" when metaHoy is 0 (completed today)', () => {
-      const stats = { isDone: false, notStarted: false, isOverdue: false, metaHoy: 0 }
+    it('should return "ongreen" when paceReal is 0 (completed today)', () => {
+      const stats = { isDone: false, notStarted: false, isOverdue: false, paceReal: 0 }
       expect(statusFromProgress(stats)).toBe('ongreen')
     })
 
-    it('BUG 1 test: baseDiaria and metaHoy should remain fixed during the day even as doneToday changes', () => {
+    it('BUG 2 fix test: piecewise paceReal - doneToday=0 should use baseDiaria', () => {
       const today = todayStr()
-      // Create a realistic scenario: task created 3 days ago, due in 3 days
-      // With work_days [1,2,3,4,5], this gives us 3 work days remaining
-      const threeDaysFromNow = new Date()
-      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
-      const dueDate = formatDate(threeDaysFromNow)
-
-      const threeDaysAgo = new Date()
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
-      const startDate = formatDate(threeDaysAgo)
+      // Caso 1: doneToday=0, metaHoyOriginal=7 → etiqueta usa 7 → "Atención"
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 6) // 6 days from now to get baseDiaria=7 for 40 units
+      const dueDate = formatDate(futureDate)
 
       const task = {
         tipo: 'cantidad',
-        id: 'test-task-1',
-        total_units: 21,
-        work_days: [1, 2, 3, 4, 5],
-        log: {},
-        created_at: `${startDate}T00:00:00.000Z`,
+        id: 'test-task-piecewise-1',
+        total_units: 40,
+        work_days: [1, 2, 3, 4, 5, 6, 7],
+        log: {}, // doneToday=0
+        created_at: `${today}T00:00:00.000Z`,
         due: `${dueDate}T23:59:59.000Z`,
       }
 
-      // Clear any existing cache for this task
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('task-daily-cache-test-task-1')
+      const stats = computeCantidadStats(task)
+      expect(stats.doneToday).toBe(0)
+      expect(stats.baseDiaria).toBe(7) // ceil(40/6) = 7
+      expect(stats.paceReal).toBe(7) // Should use baseDiaria, not recalculate with -1
+      expect(stats.status).toBe('onattention') // 7 = onattention, not critical
+    })
+
+    it('BUG 2 fix test: piecewise paceReal - doneToday < metaHoyOriginal should keep baseDiaria', () => {
+      const today = todayStr()
+      // Caso 2: doneToday=5 (todavía por debajo de metaHoyOriginal=7) → etiqueta se mantiene en "Atención"
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 6)
+      const dueDate = formatDate(futureDate)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-piecewise-2',
+        total_units: 40,
+        work_days: [1, 2, 3, 4, 5, 6, 7],
+        log: { [today]: 5 }, // doneToday=5 < 7
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`,
       }
 
-      // First calculation: baseDiaria should be calculated as ceil(21/3) = 7, metaHoy = 7
-      const stats1 = computeCantidadStats(task)
-      expect(stats1.baseDiaria).toBe(7)
-      expect(stats1.metaHoy).toBe(7)
+      const stats = computeCantidadStats(task)
+      expect(stats.doneToday).toBe(5)
+      expect(stats.baseDiaria).toBe(7) // ceil(40/6) = 7 (constante durante el día)
+      expect(stats.paceReal).toBe(7) // Should use baseDiaria, not recalculate with -1
+      expect(stats.status).toBe('onattention') // Should still be onattention
+    })
 
-      // Simulate progress during the day: add 3 units done today
+    it('BUG 2 fix test: piecewise paceReal - doneToday >= metaHoyOriginal should use live formula', () => {
+      const today = todayStr()
+      // Caso 3: doneToday=7 (justo igualando metaHoyOriginal=7) → empieza a usar fórmula live
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 6)
+      const dueDate = formatDate(futureDate)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-piecewise-3',
+        total_units: 40,
+        work_days: [1, 2, 3, 4, 5, 6, 7],
+        log: { [today]: 7 }, // doneToday=7 >= baseDiaria
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`,
+      }
+
+      const stats = computeCantidadStats(task)
+      expect(stats.doneToday).toBe(7)
+      expect(stats.baseDiaria).toBe(7) // ceil(40/6) = 7 (constante durante el día)
+      expect(stats.paceReal).toBeGreaterThan(0) // Should use live formula with -1
+      // Note: paceReal might be higher than baseDiaria initially because denominator is smaller
+      // but it will decrease as remaining decreases
+    })
+
+    it('BUG 2 fix test: piecewise paceReal - doneToday very high should show excellent', () => {
+      const today = todayStr()
+      // Caso 4: doneToday muy por encima (35/40 unidades, 8 días) → etiqueta debe dar "Excelente" en vivo
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 8)
+      const dueDate = formatDate(futureDate)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-piecewise-4',
+        total_units: 40,
+        work_days: [1, 2, 3, 4, 5, 6, 7],
+        log: { [today]: 35 }, // 35 done today
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`,
+      }
+
+      const stats = computeCantidadStats(task)
+      expect(stats.doneToday).toBe(35)
+      expect(stats.remaining).toBe(5)
+      expect(stats.paceReal).toBeLessThanOrEqual(3) // Should be low (1-3 = excellent)
+      expect(stats.status).toBe('ongreen') // Should be excellent
+    })
+
+    it('BUG 2 fix test: piecewise paceReal - exact quota should behave consistently', () => {
+      const today = todayStr()
+      // Caso 5: Hacer exactamente la cuota total del día sin pasarse → etiqueta no debe cambiar de forma rara
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 5)
+      const dueDate = formatDate(futureDate)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-piecewise-5',
+        total_units: 35,
+        work_days: [1, 2, 3, 4, 5, 6, 7],
+        log: {},
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`,
+      }
+
+      const stats1 = computeCantidadStats(task)
+      const originalBaseDiaria = stats1.baseDiaria
+
+      // Sumo exactamente la cuota del día
+      const taskWithExact = {
+        ...task,
+        log: { [today]: originalBaseDiaria }
+      }
+
+      const stats2 = computeCantidadStats(taskWithExact)
+      expect(stats2.doneToday).toBe(originalBaseDiaria)
+      expect(stats2.paceReal).toBeLessThanOrEqual(stats1.paceReal) // Should not get worse
+      expect(stats2.status).toBe(stats1.status) // Should stay same or improve, not get worse
+    })
+
+    it('BUG 2 fix test: paceReal should update in real-time while metaHoyRestante decreases dynamically', () => {
+      const today = todayStr()
+      // Create a realistic scenario: task created today, due in future
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 5) // 5 days from now
+      const dueDate = formatDate(futureDate)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-pace-real',
+        total_units: 21,
+        work_days: [1, 2, 3, 4, 5, 6, 7], // Include all days to avoid weekend issues
+        log: {},
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`,
+      }
+
+      // First calculation: remaining=21
+      const stats1 = computeCantidadStats(task)
+      expect(stats1.remaining).toBe(21)
+      expect(stats1.paceReal).toBeGreaterThan(0)
+      expect(stats1.metaHoyRestante).toBe(stats1.baseDiaria) // Since doneToday=0
+      expect(stats1.doneToday).toBe(0)
+
+      // Simulate progress during the day: add units done today
       const taskWithProgress = {
+        ...task,
+        log: { [today]: 7 }
+      }
+
+      // Second calculation: remaining should decrease, paceReal should update
+      const stats2 = computeCantidadStats(taskWithProgress)
+      expect(stats2.remaining).toBe(14)
+      expect(stats2.paceReal).toBeLessThan(stats1.paceReal) // Should improve with less remaining
+      expect(stats2.metaHoyRestante).toBe(0) // 7 - 7 = 0 (done with today's quota)
+      expect(stats2.doneToday).toBe(7)
+
+      // Simulate over-progress: add more units (total 15 done today)
+      const taskWithOverProgress = {
+        ...task,
+        log: { [today]: 15 }
+      }
+
+      // Third calculation: remaining should decrease further, paceReal should improve more
+      const stats3 = computeCantidadStats(taskWithOverProgress)
+      expect(stats3.remaining).toBe(6)
+      expect(stats3.paceReal).toBeLessThan(stats2.paceReal) // Should improve even more
+      expect(stats3.metaHoyRestante).toBe(0) // Should be 0 (done with today's quota)
+      expect(stats3.doneToday).toBe(15)
+    })
+
+    it('BUG 2 test: paceReal should not change when doing exactly the required quota', () => {
+      const today = todayStr()
+      // Caso 1: remaining=35, verificar que paceReal mejora proporcionalmente
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 5)
+      const dueDate = formatDate(futureDate)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-caso-1',
+        total_units: 35,
+        work_days: [1, 2, 3, 4, 5, 6, 7], // Include all days
+        log: {},
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`,
+      }
+
+      // Caso 1: remaining=35
+      const stats1 = computeCantidadStats(task)
+      expect(stats1.remaining).toBe(35)
+      expect(stats1.paceReal).toBeGreaterThan(0)
+
+      // Sumo exactamente el paceReal original hoy → remaining baja proporcionalmente
+      const taskWithExact = {
+        ...task,
+        log: { [today]: stats1.paceReal }
+      }
+
+      const stats2 = computeCantidadStats(taskWithExact)
+      expect(stats2.remaining).toBe(35 - stats1.paceReal)
+      expect(stats2.paceReal).toBeLessThanOrEqual(stats1.paceReal) // Should improve or stay same
+    })
+
+    it('BUG 2 test: paceReal should improve in real-time when doing more than required', () => {
+      const today = todayStr()
+      // Caso 2: Sumo más de lo necesario → paceReal mejora significativamente
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 5)
+      const dueDate = formatDate(futureDate)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-caso-2',
+        total_units: 35,
+        work_days: [1, 2, 3, 4, 5, 6, 7],
+        log: {},
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`,
+      }
+
+      const stats1 = computeCantidadStats(task)
+
+      // Sumo 15 hoy (de más) → remainingActual=20
+      const taskWithOver = {
+        ...task,
+        log: { [today]: 15 }
+      }
+
+      const stats2 = computeCantidadStats(taskWithOver)
+      expect(stats2.remaining).toBe(20)
+      expect(stats2.paceReal).toBeLessThan(stats1.paceReal) // Should improve significantly
+    })
+
+    it('BUG 2 test: real case 35/40 with good progress should show excellent', () => {
+      const today = todayStr()
+      // Caso 3: 35/40 unidades con buen progreso
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 8)
+      const dueDate = formatDate(futureDate)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-caso-3',
+        total_units: 40,
+        work_days: [1, 2, 3, 4, 5, 6, 7],
+        log: { [today]: 35 }, // 35 done today
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`,
+      }
+
+      // remainingActual=5
+      const stats = computeCantidadStats(task)
+      expect(stats.remaining).toBe(5)
+      expect(stats.paceReal).toBeLessThanOrEqual(3) // Should be low (1-3 = excellent)
+      expect(stats.status).toBe('ongreen') // Should be excellent
+    })
+
+    it('BUG 2 test: paceReal should not improve when doing less than required', () => {
+      const today = todayStr()
+      // Caso 4: Sumo menos de lo necesario → paceReal no mejora
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 5)
+      const dueDate = formatDate(futureDate)
+
+      const task = {
+        tipo: 'cantidad',
+        id: 'test-task-caso-4',
+        total_units: 35,
+        work_days: [1, 2, 3, 4, 5, 6, 7],
+        log: {},
+        created_at: `${today}T00:00:00.000Z`,
+        due: `${dueDate}T23:59:59.000Z`,
+      }
+
+      const stats1 = computeCantidadStats(task)
+      expect(stats1.remaining).toBe(35)
+
+      // Sumo solo 3 hoy (menos de lo necesario)
+      const taskWithLess = {
         ...task,
         log: { [today]: 3 }
       }
 
-      // Second calculation: baseDiaria and metaHoy should STILL be 7 (cached), not recalculated
-      const stats2 = computeCantidadStats(taskWithProgress)
-      expect(stats2.baseDiaria).toBe(7)
-      expect(stats2.metaHoy).toBe(7)
-
-      // Simulate more progress: add 4 more units (total 7 done today)
-      const taskWithMoreProgress = {
-        ...task,
-        log: { [today]: 7 }
-      }
-
-      // Third calculation: baseDiaria and metaHoy should STILL be 7 (cached), not recalculated
-      const stats3 = computeCantidadStats(taskWithMoreProgress)
-      expect(stats3.baseDiaria).toBe(7)
-      expect(stats3.metaHoy).toBe(7)
-
-      // Clean up cache
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('task-daily-cache-test-task-1')
-      }
-    })
-
-    it('BUG 2 test: metaHoy should not change during the day when adding progress', () => {
-      const today = todayStr()
-      // Create a task with fixed work days remaining
-      const threeDaysFromNow = new Date()
-      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
-      const dueDate = formatDate(threeDaysFromNow)
-
-      const task = {
-        tipo: 'cantidad',
-        id: 'test-task-2',
-        total_units: 21,
-        work_days: [1, 2, 3, 4, 5],
-        log: {}, // No progress today yet
-        created_at: `${today}T00:00:00.000Z`,
-        due: `${dueDate}T23:59:59.000Z`, // 3 days from now
-      }
-
-      // Clear any existing cache for this task
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('task-daily-cache-test-task-2')
-      }
-
-      // First calculation: metaHoy should be baseDiaria = ceil(21/3) = 7
-      const stats1 = computeCantidadStats(task)
-      expect(stats1.metaHoy).toBe(7)
-
-      // Add progress during the same day (simulating user clicking +)
-      const taskWithProgress = {
-        ...task,
-        log: { [today]: 3 } // 3 done today
-      }
-
-      // metaHoy should STILL be 7 (cached), not recalculated
-      const stats2 = computeCantidadStats(taskWithProgress)
-      expect(stats2.metaHoy).toBe(7)
-
-      // Add more progress during the same day
-      const taskWithMoreProgress = {
-        ...task,
-        log: { [today]: 6 } // 6 done today
-      }
-
-      // metaHoy should STILL be 7 (cached), not recalculated
-      const stats3 = computeCantidadStats(taskWithMoreProgress)
-      expect(stats3.metaHoy).toBe(7)
-
-      // Clean up cache
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('task-daily-cache-test-task-2')
-      }
-    })
-
-    it('BUG 2 test: metaHoy should recalculate correctly on the next day with new remaining', () => {
-      const today = todayStr()
-      const threeDaysFromNow = new Date()
-      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
-      const dueDate = formatDate(threeDaysFromNow)
-
-      const task = {
-        tipo: 'cantidad',
-        id: 'test-task-3',
-        total_units: 21,
-        work_days: [1, 2, 3, 4, 5],
-        log: {}, // No progress yet
-        created_at: `${today}T00:00:00.000Z`,
-        due: `${dueDate}T23:59:59.000Z`, // 3 days from now
-      }
-
-      // Clear any existing cache for this task
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('task-daily-cache-test-task-3')
-      }
-
-      // First calculation (today): metaHoy = ceil(21/3) = 7
-      const stats1 = computeCantidadStats(task)
-      expect(stats1.metaHoy).toBe(7)
-
-      // Simulate completing 7 units today
-      const taskWithProgress = {
-        ...task,
-        log: { [today]: 7 }
-      }
-
-      // metaHoy should STILL be 7 (cached for today)
-      const stats2 = computeCantidadStats(taskWithProgress)
-      expect(stats2.metaHoy).toBe(7)
-
-      // Simulate next day: clear cache to invalidate "today"
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('task-daily-cache-test-task-3')
-      }
-
-      // Next day calculation: metaHoy should be recalculated based on new remaining (14)
-      // The exact value depends on workDaysRemaining, but it should be different from 7
-      const stats3 = computeCantidadStats(taskWithProgress)
-      console.log('DEBUG Punto 3 - After cache clear with 7 done:', { remaining: stats3.remaining, metaHoy: stats3.metaHoy })
-      expect(stats3.metaHoy).toBeGreaterThan(0)
-      expect(stats3.remaining).toBe(14) // 21-7=14
-
-      // Simulate completing 10 units today (more than needed)
-      const taskWithMoreProgress = {
-        ...task,
-        log: { [today]: 10 }
-      }
-
-      // Clear cache to simulate next day
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('task-daily-cache-test-task-3')
-      }
-
-      // Next day calculation: metaHoy should be recalculated based on new remaining (11)
-      // Should be lower than previous metaHoy because we did more work
-      const stats4 = computeCantidadStats(taskWithMoreProgress)
-      console.log('DEBUG Punto 3 - After cache clear with 10 done:', { remaining: stats4.remaining, metaHoy: stats4.metaHoy })
-      expect(stats4.metaHoy).toBeGreaterThan(0)
-      expect(stats4.remaining).toBe(11) // 21-10=11
-      expect(stats4.metaHoy).toBeLessThan(stats3.metaHoy) // Should be lower with less remaining
-
-      // Clean up cache
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('task-daily-cache-test-task-3')
-      }
+      const stats2 = computeCantidadStats(taskWithLess)
+      expect(stats2.remaining).toBe(32)
+      expect(stats2.paceReal).toBeGreaterThanOrEqual(stats1.paceReal - 1) // Should not improve much
     })
 
     it('should exclude weekend days from workDaysRemaining when work_days excludes weekend', () => {

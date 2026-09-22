@@ -176,67 +176,6 @@ export function countWorkDaysExcludingEnd(startStr, endStr, workDays) {
 }
 
 // ============================================================
-// DAILY CACHE UTILITIES
-// ============================================================
-
-/**
- * Generate a fingerprint of task base fields to detect changes.
- * @param {Object} task - Task object
- * @returns {string} Fingerprint string
- */
-function getTaskFingerprint(task) {
-  const fields = [
-    task.total_units || 0,
-    task.due || '',
-    JSON.stringify(task.work_days || [1, 2, 3, 4, 5])
-  ]
-  return fields.join('|')
-}
-
-/**
- * Get cached daily values for a task for the current day.
- * @param {string} taskId - Task ID
- * @param {string} currentFingerprint - Current task fingerprint
- * @returns {Object|null} Cached values { baseDiaria, metaHoy, date, fingerprint } or null if not cached, from different day, or task changed
- */
-function getCachedDailyValues(taskId, currentFingerprint) {
-  if (typeof window === 'undefined' || !taskId) return null
-
-  try {
-    const cacheKey = `task-daily-cache-${taskId}`
-    const cached = localStorage.getItem(cacheKey)
-    if (!cached) return null
-
-    const { baseDiaria, metaHoy, date, fingerprint } = JSON.parse(cached)
-    const today = todayStr()
-
-    // Return cached values only if it's from today AND task hasn't changed
-    return date === today && fingerprint === currentFingerprint ? { baseDiaria, metaHoy } : null
-  } catch (error) {
-    return null
-  }
-}
-
-/**
- * Cache daily values for a task for the current day.
- * @param {string} taskId - Task ID
- * @param {number} baseDiaria - baseDiaria value to cache
- * @param {number} metaHoy - metaHoy value to cache
- * @param {string} fingerprint - Task fingerprint
- */
-function setCachedDailyValues(taskId, baseDiaria, metaHoy, fingerprint) {
-  if (typeof window === 'undefined' || !taskId) return
-
-  try {
-    const cacheKey = `task-daily-cache-${taskId}`
-    const today = todayStr()
-    localStorage.setItem(cacheKey, JSON.stringify({ baseDiaria, metaHoy, date: today, fingerprint }))
-  } catch (error) {
-    // Silently fail if localStorage is not available
-  }
-}
-
-// ============================================================
 // BASE TIME STATISTICS
 // ============================================================
 
@@ -300,13 +239,13 @@ export function statusFromProgress(stats) {
   if (stats.notStarted) return 'notstarted'
   if (stats.isOverdue) return 'overdue'
 
-  // Use metaHoy directly for status calculation
-  const metaHoy = stats.metaHoy || 0
+  // Use paceReal directly for status calculation (en vivo, sin caché)
+  const paceReal = stats.paceReal || 0
 
-  if (metaHoy === 0) return 'ongreen'
-  if (metaHoy >= 1 && metaHoy <= 3) return 'ongreen'
-  if (metaHoy >= 4 && metaHoy <= 5) return 'onyellow'
-  if (metaHoy >= 6 && metaHoy <= 7) return 'onattention'
+  if (paceReal === 0) return 'ongreen'
+  if (paceReal >= 1 && paceReal <= 3) return 'ongreen'
+  if (paceReal >= 4 && paceReal <= 5) return 'onyellow'
+  if (paceReal >= 6 && paceReal <= 7) return 'onattention'
   return 'critical'
 }
 
@@ -383,32 +322,22 @@ export function computeCantidadStats(task) {
 
   const metaDiariaOriginal = Math.ceil(totalUnits / Math.max(1, workDaysTotal))
 
-  // Base diaria y metaHoy con caché diario: se fijan UNA VEZ AL DÍA usando remaining y workDaysRemaining del inicio del día
-  // El caché se invalida si cambian campos base (total_units, due, work_days) el mismo día
-  const taskFingerprint = getTaskFingerprint(task)
-  const cachedValues = getCachedDailyValues(task.id, taskFingerprint)
+  // Base diaria calculada al inicio del día (sin dependencia de doneToday)
+  // remainingAlIniciarDia = totalUnits - (totalDone - doneToday)
+  // Esto nos da el remaining que había al iniciar el día, independientemente
+  // de cuánto progreso se haya hecho hoy, para que metaHoyRestante y
+  // recomendadoRestante bajen de 1 en 1.
+  const remainingAlIniciarDia = Math.max(0, totalUnits - (totalDone - doneToday))
+  const baseDiaria = Math.ceil(remainingAlIniciarDia / Math.max(1, workDaysRemaining))
 
-  let baseDiaria
+  // metaHoy para mostrar en UI (valor informativo de "cuánto me falta hoy")
   let metaHoy
-
-  if (cachedValues) {
-    // Usar valores cacheados de hoy
-    baseDiaria = cachedValues.baseDiaria
-    metaHoy = cachedValues.metaHoy
+  if (isDone) {
+    metaHoy = 0
+  } else if (bt.isOverdue) {
+    metaHoy = remaining // Si está atrasada, la meta es terminarla toda
   } else {
-    // No hay caché válido para hoy o la tarea cambió, calcular nuevos valores usando remaining y workDaysRemaining actuales
-    baseDiaria = Math.ceil(remaining / Math.max(1, workDaysRemaining))
-
-    // metaHoy se calcula una vez al día en base a baseDiaria (no se resta doneToday para evitar recálculo en vivo)
-    if (isDone) {
-      metaHoy = 0
-    } else if (bt.isOverdue) {
-      metaHoy = remaining // Si está atrasada, la meta es terminarla toda
-    } else {
-      metaHoy = baseDiaria // metaHoy = baseDiaria al inicio del día (sin restar doneToday)
-    }
-
-    setCachedDailyValues(task.id, baseDiaria, metaHoy, taskFingerprint)
+    metaHoy = baseDiaria // metaHoy = baseDiaria actual
   }
 
   // necesitasHoy dinámico según lo que queda ahora para mostrar en UI
@@ -420,6 +349,22 @@ export function computeCantidadStats(task) {
 
   // metaHoyRestante: lo que aún falta hacer hoy (base estática menos lo ya hecho)
   const metaHoyRestante = Math.max(0, baseDiaria - doneToday)
+
+  // Cálculo de paceReal para la etiqueta (en vivo, sin caché, pero piecewise)
+  // metaHoyOriginal = baseDiaria (ritmo necesario al inicio del día)
+  // SI doneToday < metaHoyOriginal: usar metaHoyOriginal para etiqueta (no restar 1)
+  // SI doneToday >= metaHoyOriginal: usar paceReal = ceil(remaining / (workDaysRemaining - 1))
+  let paceReal
+  if (doneToday < baseDiaria) {
+    // Todavía no completé la cuota de hoy → usar metaHoyOriginal (no restar 1)
+    paceReal = baseDiaria
+  } else {
+    // Ya completé o superé la cuota de hoy → usar fórmula live (restar 1)
+    const diasRestantesFuturos = Math.max(0, workDaysRemaining - 1)
+    paceReal = diasRestantesFuturos > 0
+      ? Math.ceil(remaining / diasRestantesFuturos)
+      : (isDone ? 0 : remaining) // Si es el último día, paceReal = remaining (o 0 si está hecho)
+  }
   
   const daysElapsedForPace = workDaysElapsed > 0 ? workDaysElapsed : 1
   const ritmoActual = workDaysElapsed > 0 ? totalDone / workDaysElapsed : totalDone
@@ -455,7 +400,8 @@ export function computeCantidadStats(task) {
     necesitasHoy,
     doneToday,
     baseDiaria,
-    metaHoy
+    metaHoy,
+    paceReal // Nuevo: ritmo real para etiqueta (en vivo)
   }
 
   const status = statusFromProgress(statsForStatus)
@@ -485,6 +431,7 @@ export function computeCantidadStats(task) {
     ritmoOriginal,
     diasDeAtraso,
     exigencia,
+    paceReal, // Nuevo: ritmo real para etiqueta (en vivo)
     unitLabel: 'unidades',
     progressLabel: `${totalDone}/${totalUnits} unidades`
   }
@@ -523,9 +470,9 @@ export function computeChecklistStats(task) {
 
   const necesitasHoy = isDone ? 0 : Math.ceil(remaining / Math.max(1, workDaysRemaining))
   const metaHoy = necesitasHoy // For checklist, metaHoy = necesitasHoy
-  
+
   const ritmoActual = workDaysElapsed > 0 ? doneSub / Math.max(1, workDaysElapsed) : 0
-  
+
   let ritmoNecesario
   if (isDone) {
     ritmoNecesario = 0
@@ -534,12 +481,18 @@ export function computeChecklistStats(task) {
   } else {
     ritmoNecesario = remaining / Math.max(1, workDaysRemaining)
   }
-  
+
   const ritmoOriginal = totalSub / Math.max(1, workDaysTotal)
   const esperadoHoy = ritmoOriginal * workDaysElapsed
   const diferencia = doneSub - esperadoHoy
   const diasDeAtraso = ritmoOriginal > 0 ? diferencia / ritmoOriginal : 0
-  
+
+  // Cálculo de paceReal para la etiqueta (en vivo, sin caché)
+  const diasRestantesFuturos = Math.max(0, workDaysRemaining - 1)
+  const paceReal = diasRestantesFuturos > 0
+    ? Math.ceil(remaining / diasRestantesFuturos)
+    : (isDone ? 0 : remaining)
+
   const statsForStatus = {
     isDone,
     notStarted: bt.notStarted,
@@ -554,7 +507,8 @@ export function computeChecklistStats(task) {
     necesitasHoy,
     doneToday: 0,
     baseDiaria: 0,
-    metaHoy
+    metaHoy,
+    paceReal // Nuevo: ritmo real para etiqueta (en vivo)
   }
   const status = statusFromProgress(statsForStatus)
   
