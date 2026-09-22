@@ -59,6 +59,10 @@ export default function Topics() {
     openModal('topic')
   }
 
+  const handleEditTopic = (topic) => {
+    openModal('topic', { editingTopic: topic })
+  }
+
   const handleViewTopics = (subjectId) => {
     setSearchParams({ subject: subjectId })
   }
@@ -92,6 +96,7 @@ export default function Topics() {
     if (!periods || !topics) return []
     
     return periods.map(period => {
+      // Only include topics with evaluation_period_id (exclude general topics)
       const periodTopics = topics.filter(t => t.evaluation_period_id === period.id)
       const studyDays = calculateStudyDays(period.fecha)
       const distribution = distributeTopics(periodTopics, studyDays)
@@ -119,6 +124,9 @@ export default function Topics() {
     }
     return acc
   }, {}) : {}
+
+  // Get topics without period (General)
+  const generalTopics = topics?.filter(t => !t.evaluation_period_id) || []
 
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId)
   const periodsWithStudyPlan = getPeriodsWithStudyPlan()
@@ -328,6 +336,42 @@ export default function Topics() {
             </div>
           ) : (
             <div className="space-y-6">
+              {/* General section for topics without period */}
+              {generalTopics.length > 0 && (
+                <div className="bg-white dark:bg-[var(--dm-surface)] rounded-xl border border-gray-200 dark:border-[var(--dm-border)] overflow-hidden">
+                  <div className="p-4 border-b border-gray-200 dark:border-[var(--dm-border)]">
+                    <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--dm-text)]">
+                      General
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-[var(--dm-text-muted)]">Temas sin periodo asignado</p>
+                  </div>
+                  <div className="divide-y divide-gray-200 dark:divide-[var(--dm-border)]">
+                    {generalTopics.map(topic => (
+                      <div key={topic.id} className="p-4 hover:bg-gray-50 dark:hover:bg-[var(--dm-bg)] transition-colors flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 dark:text-[var(--dm-text)]">{topic.nombre}</h4>
+                          {topic.subtema && (
+                            <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)] mt-1">{topic.subtema}</p>
+                          )}
+                          {topic.descripcion && (
+                            <p className="text-sm text-gray-500 dark:text-[var(--dm-text-muted)] mt-2 line-clamp-2">{topic.descripcion}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleEditTopic(topic)}
+                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]"
+                          aria-label={`Editar tema ${topic.nombre}`}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {sortedPeriods.map(period => {
                 const periodData = topicsByPeriod[period.id]
                 const periodTopics = periodData?.topics || []
@@ -363,14 +407,25 @@ export default function Topics() {
                     ) : (
                       <div className="divide-y divide-gray-200 dark:divide-[var(--dm-border)]">
                         {periodTopics.map(topic => (
-                          <div key={topic.id} className="p-4 hover:bg-gray-50 dark:hover:bg-[var(--dm-bg)] transition-colors">
-                            <h4 className="font-medium text-gray-900 dark:text-[var(--dm-text)]">{topic.nombre}</h4>
-                            {topic.subtema && (
-                              <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)] mt-1">{topic.subtema}</p>
-                            )}
-                            {topic.descripcion && (
-                              <p className="text-sm text-gray-500 dark:text-[var(--dm-text-muted)] mt-2 line-clamp-2">{topic.descripcion}</p>
-                            )}
+                          <div key={topic.id} className="p-4 hover:bg-gray-50 dark:hover:bg-[var(--dm-bg)] transition-colors flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900 dark:text-[var(--dm-text)]">{topic.nombre}</h4>
+                              {topic.subtema && (
+                                <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)] mt-1">{topic.subtema}</p>
+                              )}
+                              {topic.descripcion && (
+                                <p className="text-sm text-gray-500 dark:text-[var(--dm-text-muted)] mt-2 line-clamp-2">{topic.descripcion}</p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => handleEditTopic(topic)}
+                              className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded dark:text-[var(--dm-text-muted)] dark:hover:text-[var(--dm-text)] dark:hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]"
+                              aria-label={`Editar tema ${topic.nombre}`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
                           </div>
                         ))}
                       </div>

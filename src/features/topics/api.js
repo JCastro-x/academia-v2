@@ -59,7 +59,7 @@ export async function createTopic(topic) {
     .from('topics')
     .insert({
       subject_id: topic.subject_id,
-      evaluation_period_id: topic.evaluation_period_id,
+      evaluation_period_id: topic.evaluation_period_id || null, // Allow null for general topics
       nombre: topic.nombre,
       subtema: topic.subtema,
       descripcion: topic.descripcion,
@@ -82,7 +82,7 @@ export async function updateTopic(id, updates) {
   const { data, error } = await supabase
     .from('topics')
     .update({
-      evaluation_period_id: updates.evaluation_period_id,
+      evaluation_period_id: updates.evaluation_period_id !== undefined ? updates.evaluation_period_id : undefined,
       nombre: updates.nombre,
       subtema: updates.subtema,
       descripcion: updates.descripcion,

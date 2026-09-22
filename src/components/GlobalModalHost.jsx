@@ -4,7 +4,7 @@ import { useSubjects } from '../features/subjects/hooks.js'
 import { useSemester, useUpdateSemester } from '../features/semesters/hooks.js'
 import { useCreateSubject, useUpdateSubject } from '../features/subjects/hooks.js'
 import { useCreateTask, useUpdateTask } from '../features/tasks/hooks.js'
-import { useCreateTopic } from '../features/topics/hooks.js'
+import { useCreateTopic, useUpdateTopic } from '../features/topics/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import TaskForm from './TaskForm.jsx'
@@ -23,6 +23,7 @@ export default function GlobalModalHost() {
   const updateSubject = useUpdateSubject()
   const updateSemester = useUpdateSemester()
   const createTopic = useCreateTopic()
+  const updateTopic = useUpdateTopic()
   const {
     isModalOpen,
     modalContent,
@@ -32,6 +33,7 @@ export default function GlobalModalHost() {
 
   const editingTask = modalPayload?.editingTask ?? null
   const editingSubject = modalPayload?.editingSubject ?? null
+  const editingTopic = modalPayload?.editingTopic ?? null
 
   const handleCreateTask = async (taskData) => {
     try {
@@ -90,6 +92,16 @@ export default function GlobalModalHost() {
       closeModal()
     } catch (error) {
       console.error('Error creating topic:', error)
+    }
+  }
+
+  const handleUpdateTopic = async (id, updates) => {
+    try {
+      await updateTopic.mutateAsync({ id, updates })
+      playSound('save')
+      closeModal()
+    } catch (error) {
+      console.error('Error updating topic:', error)
     }
   }
 
@@ -289,12 +301,13 @@ export default function GlobalModalHost() {
               className="modal-panel bg-white rounded-2xl shadow-[var(--shadow-md)] dark:bg-[var(--dm-surface)] dark:border dark:border-[var(--dm-border)] dark:text-[var(--dm-text)] w-full max-w-full max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain p-6 max-w-md pb-[max(1.5rem,env(safe-area-inset-bottom))] mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">Nuevo tema</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--dm-text)]">{editingTopic ? 'Editar tema' : 'Nuevo tema'}</h3>
               <TopicForm
                 semesterId={semesterId}
-                onSubmit={handleCreateTopic}
+                initialData={editingTopic}
+                onSubmit={editingTopic ? (data) => handleUpdateTopic(editingTopic.id, data) : handleCreateTopic}
                 onCancel={closeModal}
-                isPending={createTopic.isPending}
+                isPending={editingTopic ? updateTopic.isPending : createTopic.isPending}
               />
             </motion.div>
           </motion.div>

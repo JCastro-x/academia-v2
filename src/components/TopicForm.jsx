@@ -10,18 +10,19 @@ export default function TopicForm({ semesterId, initialData, onSubmit, onCancel,
   const [titulo, setTitulo] = useState(initialData?.nombre || '')
   const [subtema, setSubtema] = useState(initialData?.subtema || '')
   const [descripcion, setDescripcion] = useState(initialData?.descripcion || '')
+  const isEditing = !!initialData?.id
 
   const { data: periods } = useEvaluationPeriodsBySubject(selectedSubjectId)
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!selectedSubjectId || !selectedPeriodId || !titulo.trim()) {
+    if (!selectedSubjectId || !titulo.trim()) {
       alert('Por favor completa los campos obligatorios')
       return
     }
     onSubmit({
       subject_id: selectedSubjectId,
-      evaluation_period_id: selectedPeriodId,
+      evaluation_period_id: selectedPeriodId || null, // null si no se selecciona periodo
       nombre: titulo.trim(),
       subtema: subtema.trim(),
       descripcion: descripcion.trim(),
@@ -29,6 +30,7 @@ export default function TopicForm({ semesterId, initialData, onSubmit, onCancel,
   }
 
   const handleSubjectChange = (e) => {
+    if (isEditing) return // Don't allow subject change when editing
     setSelectedSubjectId(e.target.value)
     setSelectedPeriodId('') // Reset period when subject changes
   }
@@ -43,48 +45,53 @@ export default function TopicForm({ semesterId, initialData, onSubmit, onCancel,
           onChange={handleSubjectChange}
           className="field-input form-field"
           required
-          disabled={isPending}
+          disabled={isPending || isEditing}
         >
           <option value="">Selecciona una materia</option>
           {subjects?.map(subject => (
             <option key={subject.id} value={subject.id}>{subject.nombre}</option>
           ))}
         </select>
+        {isEditing && (
+          <p className="text-xs text-gray-500 mt-1 dark:text-[var(--dm-text-muted)]">La materia no se puede cambiar al editar</p>
+        )}
       </div>
 
       <div className="field">
-        <label htmlFor="periodo" className="field-label required">Periodo de evaluación</label>
-        {selectedSubjectId && periods && periods.length > 0 ? (
-          <select
-            id="periodo"
-            value={selectedPeriodId}
-            onChange={(e) => setSelectedPeriodId(e.target.value)}
-            className="field-input form-field"
-            required
-            disabled={isPending}
-          >
-            <option value="">Selecciona un periodo</option>
-            {periods.map(period => (
-              <option key={period.id} value={period.id}>{period.nombre}</option>
-            ))}
-          </select>
-        ) : selectedSubjectId ? (
-          <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              Esta materia no tiene periodos configurados. Ve a Materias → Editar para crear periodos de evaluación.
-            </p>
-          </div>
+        <label htmlFor="periodo" className="field-label">Periodo de evaluación (opcional)</label>
+        {selectedSubjectId ? (
+          <>
+            <select
+              id="periodo"
+              value={selectedPeriodId}
+              onChange={(e) => setSelectedPeriodId(e.target.value)}
+              className="field-input form-field"
+              disabled={isPending}
+            >
+              <option value="">Sin periodo (General)</option>
+              {periods && periods.length > 0 && periods.map(period => (
+                <option key={period.id} value={period.id}>{period.nombre}</option>
+              ))}
+            </select>
+            {!isEditing && (!periods || periods.length === 0) && (
+              <p className="text-xs text-gray-500 mt-1 dark:text-[var(--dm-text-muted)]">
+                Esta materia no tiene periodos configurados. El tema se guardará en la sección "General".
+              </p>
+            )}
+          </>
         ) : (
           <select
             id="periodo"
             value={selectedPeriodId}
             onChange={(e) => setSelectedPeriodId(e.target.value)}
             className="field-input form-field"
-            required
             disabled
           >
             <option value="">Primero selecciona una materia</option>
           </select>
+        )}
+        {isEditing && (
+          <p className="text-xs text-gray-500 mt-1 dark:text-[var(--dm-text-muted)]">Puedes asignar o quitar el periodo al editar</p>
         )}
       </div>
 
@@ -132,7 +139,7 @@ export default function TopicForm({ semesterId, initialData, onSubmit, onCancel,
       <div className="flex gap-3 pt-4">
         <button
           type="submit"
-          disabled={isPending || !selectedSubjectId || !selectedPeriodId || !titulo.trim()}
+          disabled={isPending || !selectedSubjectId || !titulo.trim()}
           className="flex-1 interactive bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_85%,black)] disabled:bg-gray-400 disabled:cursor-not-allowed"
           style={{ color: '#000000' }}
         >

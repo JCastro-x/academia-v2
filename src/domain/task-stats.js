@@ -284,7 +284,13 @@ export function baseTimeStats(startStr, endStr) {
 
 /**
  * Determine task status based on remaining daily load.
- * Uses necesitasHoy exclusively; it does not depend on task start date.
+ * Uses metaHoy exclusively; it does not depend on task start date.
+ * Status ranges based on metaHoy:
+ * - 0 → "Excelente" (ongreen) - meta completed for today
+ * - 1 to 3 → "Excelente" (ongreen)
+ * - 4 to 5 → "Bien" (onyellow)
+ * - 6 to 7 → "Atención" (onattention)
+ * - More than 7 → "Crítico" (critical)
  * @param {Object} stats - Progress statistics from computeCantidadStats or computeChecklistStats
  * @returns {string} Status: 'done', 'notstarted', 'overdue', 'critical', 'ongreen', 'onyellow', 'onattention'
  */
@@ -293,28 +299,14 @@ export function statusFromProgress(stats) {
   if (stats.notStarted) return 'notstarted'
   if (stats.isOverdue) return 'overdue'
 
-  let cargaDiariaReal;
+  // Use metaHoy directly for status calculation
+  const metaHoy = stats.metaHoy || 0
 
-  if (stats.workDaysRemaining <= 1) {
-    // Si vence hoy (o ya venció), la carga es literalmente lo que falta,
-    // ya no hay días futuros para repartir.
-    cargaDiariaReal = stats.remaining;
-  } else {
-    // Si vence a futuro, calculamos el ritmo proyectado para los días que vienen.
-    // Lo que falta por hacer HOY para cumplir la meta base
-    const faltaHoy = Math.max(0, (stats.baseDiaria || 0) - (stats.doneToday || 0));
-
-    // Proyección futura descontando lo de hoy
-    const cargaFutura = Math.max(0, stats.remaining - faltaHoy);
-    const diasFuturos = Math.max(1, stats.workDaysRemaining - 1);
-
-    cargaDiariaReal = cargaFutura / diasFuturos;
-  }
-
-  if (cargaDiariaReal <= 3) return 'ongreen';
-  if (cargaDiariaReal <= 5) return 'onyellow';
-  if (cargaDiariaReal <= 7) return 'onattention';
-  return 'critical';
+  if (metaHoy === 0) return 'ongreen'
+  if (metaHoy >= 1 && metaHoy <= 3) return 'ongreen'
+  if (metaHoy >= 4 && metaHoy <= 5) return 'onyellow'
+  if (metaHoy >= 6 && metaHoy <= 7) return 'onattention'
+  return 'critical'
 }
 
 // ============================================================
