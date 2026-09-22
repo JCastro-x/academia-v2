@@ -4,7 +4,7 @@ import { QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { queryClient } from './lib/queryClient.js'
 import { getSession, onAuthStateChange, getStoredSessionUser, ensurePushSubscriptionForCurrentUser } from './lib/supabase.js'
-import { getSemesters, semestersQueryKeys } from './features/semesters/api.js'
+import { getSemesters, createSemester, semestersQueryKeys } from './features/semesters/api.js'
 import AppLayout from './layouts/AppLayout.jsx'
 import Auth from './pages/Auth.jsx'
 import AuthCallback from './pages/AuthCallback.jsx'
@@ -79,6 +79,26 @@ function SessionRedirect() {
                 navigate(`/s/${activeSemester.id}`, { replace: true })
                 return
               } else {
+                // Skip onboarding in dev mode
+                if (import.meta.env.DEV) {
+                  console.log('DEV mode: Skipping onboarding, creating test semester')
+                  // Auto-create a test semester for dev
+                  const testSemester = {
+                    nombre: 'Dev Test Semester',
+                    start_date: new Date().toISOString().split('T')[0],
+                    end_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  }
+                  try {
+                    const result = await createSemester(testSemester)
+                    navigate(`/s/${result.id}`, { replace: true })
+                    return
+                  } catch (error) {
+                    console.error('Error creating test semester in dev mode:', error)
+                    // Fallback to onboarding if auto-creation fails
+                    navigate('/create-first-semester', { replace: true })
+                    return
+                  }
+                }
                 navigate('/create-first-semester', { replace: true })
                 return
               }
@@ -117,7 +137,26 @@ function SessionRedirect() {
                 const activeSemester = semesters.find((s) => s.activo) || semesters[0]
                 navigate(`/s/${activeSemester.id}`, { replace: true })
               } else {
-                navigate('/create-first-semester', { replace: true })
+                // Skip onboarding in dev mode
+                if (import.meta.env.DEV) {
+                  console.log('DEV mode: Skipping onboarding, creating test semester')
+                  // Auto-create a test semester for dev
+                  const testSemester = {
+                    nombre: 'Dev Test Semester',
+                    start_date: new Date().toISOString().split('T')[0],
+                    end_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  }
+                  try {
+                    const result = await createSemester(testSemester)
+                    navigate(`/s/${result.id}`, { replace: true })
+                  } catch (error) {
+                    console.error('Error creating test semester in dev mode:', error)
+                    // Fallback to onboarding if auto-creation fails
+                    navigate('/create-first-semester', { replace: true })
+                  }
+                } else {
+                  navigate('/create-first-semester', { replace: true })
+                }
               }
             } else {
               navigate('/auth', { replace: true })
