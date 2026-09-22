@@ -129,7 +129,7 @@ const TaskCard = forwardRef(({ task, subject, onToggleDone, onEdit, onDelete, on
             )}
             {showLogControls && (
               <div className="mt-1">
-                <span>Meta hoy: <strong>{stats.metaHoy === 0 ? '✅' : stats.metaHoy}</strong> • Recomendado: <strong>{stats.recomendadoRestante === 0 ? '🔥' : stats.recomendadoRestante}</strong></span>
+                <span>Meta hoy: <strong>{stats.metaHoyRestante === 0 ? '✅' : stats.metaHoyRestante}</strong> • Recomendado: <strong>{stats.recomendadoRestante === 0 ? '🔥' : stats.recomendadoRestante}</strong></span>
               </div>
             )}
             {showLogControls && (
