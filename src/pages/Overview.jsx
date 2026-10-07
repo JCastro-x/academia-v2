@@ -31,7 +31,7 @@ export default function Overview() {
   const [showPinnedOnly, setShowPinnedOnly] = useState(false)
   const [selectedTaskForDetails, setSelectedTaskForDetails] = useState(null)
   const [showThisWeekTasks, setShowThisWeekTasks] = useState(true)
-  const [showLaterTasks, setShowLaterTasks] = useState(false)
+  const [showLaterTasks, setShowLaterTasks] = useState(true)
   const isLoading = semesterLoading || subjectsLoading || tasksLoading
 
   // Categorize tasks into 2 sections using useMemo to prevent recalculation
