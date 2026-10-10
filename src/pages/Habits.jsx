@@ -227,7 +227,6 @@ export default function Habits() {
 
   const createHabit = useCreateHabit()
   const updateHabit = useUpdateHabit()
-  const deleteHabit = useDeleteHabit()
 
   const { openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
 
