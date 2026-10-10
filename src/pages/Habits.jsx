@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useArchiveHabit, useTogglePauseDay } from '../features/habits/hooks.js'
+import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useArchiveHabit, useTogglePauseDay, useDeleteHabit } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import { getMondayOfCurrentWeek, addDays, getDayOfWeek, getTodayDate } from '../lib/date-utils.js'
@@ -137,6 +137,7 @@ export default function Habits() {
   const updateHabitMutation = useUpdateHabit()
   const archiveHabitMutation = useArchiveHabit()
   const togglePauseDayMutation = useTogglePauseDay()
+  const deleteHabitMutation = useDeleteHabit()
 
   const { data: habits, isLoading: habitsLoading } = useHabits()
   const { data: programaciones } = useProgramaciones()
@@ -267,6 +268,10 @@ export default function Habits() {
     }
   }
 
+  const handleDeleteHabit = (id) => {
+    deleteHabitMutation.mutate(id)
+  }
+
   if (habitsLoading || isSeeding) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -313,6 +318,7 @@ export default function Habits() {
             onEditHabit={(habit) => setEditingHabit(habit)}
             onArchiveHabit={handleArchive}
             onTogglePause={handleTogglePause}
+            onDeleteHabit={handleDeleteHabit}
             userId="guest"
             showArchived={showArchived}
             onToggleShowArchived={() => setShowArchived(!showArchived)}

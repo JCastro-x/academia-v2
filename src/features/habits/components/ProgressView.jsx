@@ -6,7 +6,8 @@ import { calculateOverallPercent } from '../stats.js'
 export default function ProgressView({ habits, logs, programaciones, pauseDays, config }) {
   const [selectedMonth, setSelectedMonth] = useState(() => getTodayDate().slice(0, 7)) // YYYY-MM
 
-  const hasEnoughData = (logs || []).length >= 7
+  const hasAnyLog = (logs || []).length > 0
+  const hasMultipleWeeks = hasAnyLog && new Set(dataLogs.map(l => l.fecha.slice(0, 7))).size > 1
   const dataLogs = logs || []
   const dataHabits = habits || []
 
@@ -123,17 +124,17 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
     return heatmapData
   }
 
-  const dailyData = hasEnoughData ? calculateDailyData() : []
+  const dailyData = hasAnyLog ? calculateDailyData() : []
 
-  const weeklyData = hasEnoughData ? calculateWeeklyTrend() : []
+  const weeklyData = hasMultipleWeeks ? calculateWeeklyTrend() : []
 
-  const heatmapData = hasEnoughData ? calculateHeatmapData() : []
+  const heatmapData = hasAnyLog ? calculateHeatmapData() : []
 
-  const distribution = hasEnoughData ? calculateDistribution() : []
+  const distribution = hasAnyLog ? calculateDistribution() : []
 
   // Calcular insights reales
   const calculateInsights = () => {
-    if (!hasEnoughData) return null
+    if (!hasAnyLog) return null
 
     // Mejor día de la semana
     const dayStats = { 1: { total: 0, cumplidos: 0 }, 2: { total: 0, cumplidos: 0 }, 3: { total: 0, cumplidos: 0 }, 4: { total: 0, cumplidos: 0 }, 5: { total: 0, cumplidos: 0 }, 6: { total: 0, cumplidos: 0 }, 7: { total: 0, cumplidos: 0 } }
@@ -215,7 +216,7 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
 
   return (
     <div className="space-y-6 pb-32 md:pb-12">
-      {!hasEnoughData && (
+      {!hasAnyLog && (
         <div className="bg-gray-50 dark:bg-[var(--dm-bg)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
           <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
             Aún no hay suficientes datos para mostrar estadísticas reales.
@@ -223,7 +224,7 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
         </div>
       )}
 
-      {hasEnoughData && (
+      {hasAnyLog && (
         <>
           {/* Gráfico de barras por día */}
           <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
@@ -319,29 +320,38 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
           </div>
 
           {/* Tendencia semanal */}
-          <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
-            <h3 className="text-sm font-semibold dark:text-[var(--dm-text)] mb-4">Tendencia semanal (últimas 8 semanas)</h3>
-            <div className="flex items-end justify-between gap-2 mb-1">
-              {weeklyData.map((item) => (
-                <div key={item.week} className="flex-1 flex flex-col items-center">
-                  <div className="text-xs font-medium dark:text-[var(--dm-text)] mb-1">{item.hasRecords ? item.percent + '%' : '-'}</div>
-                  <div className="w-full flex items-end" style={{ height: 128 }}>
-                    {item.hasRecords ? (
-                      <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: Math.max(item.percent > 0 ? 4 : 0, Math.round(128 * item.percent / 100)) }}
-                        transition={{ duration: 0.5 }}
-                        className={`w-full rounded-t ${item.isCurrentWeek ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-primary)]'}`}
-                      />
-                    ) : (
-                      <div className="w-full bg-gray-200 dark:bg-[var(--dm-border)] rounded-t" style={{ height: 4 }} />
-                    )}
-                  </div>
-                  <span className={`text-xs mt-1 ${item.isCurrentWeek ? 'font-bold text-[var(--color-accent)]' : 'text-gray-600 dark:text-[var(--dm-text-muted)]'}`}>S{item.week}</span>
-                </div>
-              ))}
+          {!hasMultipleWeeks ? (
+            <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
+              <h3 className="text-sm font-semibold dark:text-[var(--dm-text)] mb-4">Tendencia semanal (últimas 8 semanas)</h3>
+              <div className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
+                Se mostrará con más semanas de datos.
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
+              <h3 className="text-sm font-semibold dark:text-[var(--dm-text)] mb-4">Tendencia semanal (últimas 8 semanas)</h3>
+              <div className="flex items-end justify-between gap-2 mb-1">
+                {weeklyData.map((item) => (
+                  <div key={item.week} className="flex-1 flex flex-col items-center">
+                    <div className="text-xs font-medium dark:text-[var(--dm-text)] mb-1">{item.hasRecords ? item.percent + '%' : '-'}</div>
+                    <div className="w-full flex items-end" style={{ height: 128 }}>
+                      {item.hasRecords ? (
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: Math.max(item.percent > 0 ? 4 : 0, Math.round(128 * item.percent / 100)) }}
+                          transition={{ duration: 0.5 }}
+                          className={`w-full rounded-t ${item.isCurrentWeek ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-primary)]'}`}
+                        />
+                      ) : (
+                        <div className="w-full bg-gray-200 dark:bg-[var(--dm-border)] rounded-t" style={{ height: 4 }} />
+                      )}
+                    </div>
+                    <span className={`text-xs mt-1 ${item.isCurrentWeek ? 'font-bold text-[var(--color-accent)]' : 'text-gray-600 dark:text-[var(--dm-text-muted)]'}`}>S{item.week}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Dona de distribución */}
           <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">

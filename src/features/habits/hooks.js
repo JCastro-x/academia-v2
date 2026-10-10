@@ -512,9 +512,21 @@ export function useDeleteHabit() {
   return useMutation({
     mutationFn: async (id) => {
       if (isGuestMode()) {
+        // Borrar programaciones
+        const programaciones = getGuestProgramaciones()
+        const updatedProgramaciones = programaciones.filter(p => p.habit_id !== id)
+        saveGuestProgramaciones(updatedProgramaciones)
+
+        // Borrar logs
+        const logs = getGuestLogs()
+        const updatedLogs = logs.filter(l => l.habit_id !== id)
+        saveGuestLogs(updatedLogs)
+
+        // Borrar hábito
         const habits = getGuestHabits()
         const updatedHabits = habits.filter(h => h.id !== id)
         saveGuestHabits(updatedHabits)
+
         return id
       }
       return deleteHabit(id)

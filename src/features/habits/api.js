@@ -363,6 +363,23 @@ export async function updateHabit(id, updates) {
 }
 
 export async function deleteHabit(id) {
+  // Borrar programaciones
+  const { error: progError } = await supabase
+    .from('programaciones_habito')
+    .delete()
+    .eq('habit_id', id)
+
+  if (progError) throw progError
+
+  // Borrar logs
+  const { error: logsError } = await supabase
+    .from('habit_logs')
+    .delete()
+    .eq('habit_id', id)
+
+  if (logsError) throw logsError
+
+  // Borrar hábito
   const { error } = await supabase
     .from('habits')
     .delete()
