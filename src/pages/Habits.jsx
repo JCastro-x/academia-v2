@@ -115,7 +115,8 @@ export default function Habits() {
   // Auto-seed: crear hábitos iniciales si no existen (solo una vez por usuario)
   useEffect(() => {
     const seeded = localStorage.getItem('habitos_sembrados')
-    if (!habitsLoading && habits && habits.length === 0 && !seeded) {
+    const hasActiveHabits = habits && habits.some(h => !h.archivado)
+    if (!habitsLoading && !hasActiveHabits && !seeded) {
       seedInitialHabits()
     }
   }, [habits, habitsLoading])
@@ -129,6 +130,10 @@ export default function Habits() {
 
   const seedInitialHabits = async () => {
     setIsSeeding(true)
+    
+    // Marcar como sembrado al empezar para evitar reintento en bucle
+    localStorage.setItem('habitos_sembrados', 'true')
+    
     try {
       const existingNames = new Set(habits?.filter(h => !h.archivado).map(h => h.nombre) || [])
 
@@ -147,11 +152,10 @@ export default function Habits() {
         })
         existingNames.add(habit.nombre) // Agregar a set para evitar duplicados en la misma ejecución
       }
-      
-      // Marcar como sembrado después de éxito
-      localStorage.setItem('habitos_sembrados', 'true')
     } catch (error) {
       console.error('Error seeding habits:', error)
+      // Si falla, limpiar la bandera para permitir reintento manual
+      localStorage.removeItem('habitos_sembrados')
     } finally {
       setIsSeeding(false)
     }
@@ -248,6 +252,7 @@ export default function Habits() {
             logs={logs || []}
             pauseDays={pauseDays || []}
             config={config || {}}
+            onEditHabit={(habit) => setEditingHabit(habit)}
           />
           <div className="mt-4 text-center text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
             {showExampleData
@@ -278,6 +283,7 @@ export default function Habits() {
         }}
         isPending={createHabit.isPending || updateHabit.isPending}
         editingHabit={editingHabit}
+        programaciones={programaciones}
         onSubmit={editingHabit ? handleEdit : handleCreate}
       />
     </div>

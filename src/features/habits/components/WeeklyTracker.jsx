@@ -4,7 +4,7 @@ import { getTodayDate, addDays, getDayOfWeek } from '../../../lib/date-utils.js'
 import DaysHeader from './DaysHeader.jsx'
 import HabitRow from './HabitRow.jsx'
 
-export default function WeeklyTracker({ habits, programaciones, logs, pauseDays, config }) {
+export default function WeeklyTracker({ habits, programaciones, logs, pauseDays, config, onEditHabit }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const today = getTodayDate()
     const dayOfWeek = getDayOfWeek(today)
@@ -104,6 +104,7 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
                     logs={logs}
                     pauseDays={pauseDays}
                     config={config}
+                    onEdit={onEditHabit}
                   />
                 ))}
               </div>

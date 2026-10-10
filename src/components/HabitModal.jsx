@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import HabitForm from './HabitForm.jsx'
 
-export default function HabitModal({ isOpen, onClose, isPending, editingHabit, onSubmit }) {
+export default function HabitModal({ isOpen, onClose, isPending, editingHabit, onSubmit, programaciones }) {
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -20,6 +20,11 @@ export default function HabitModal({ isOpen, onClose, isPending, editingHabit, o
     }
   }
 
+  // Obtener programación vigente del hábito que se está editando
+  const editingProgramacion = editingHabit && programaciones
+    ? programaciones.find(p => p.habit_id === editingHabit.id)
+    : null
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
@@ -33,7 +38,7 @@ export default function HabitModal({ isOpen, onClose, isPending, editingHabit, o
           onSubmit={onSubmit}
           onCancel={onClose}
           isPending={isPending}
-          editingHabit={editingHabit}
+          editingHabit={editingHabit ? { ...editingHabit, programacion: editingProgramacion } : null}
         />
       </div>
     </div>

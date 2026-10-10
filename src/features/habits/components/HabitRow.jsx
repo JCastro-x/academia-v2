@@ -13,7 +13,7 @@ const formatAriaLabel = (date) => {
   return `${dayLabels[getDayOfWeek(date) - 1]} ${day} ${monthLabels[month]}`
 }
 
-export default function HabitRow({ habit, days, programaciones, logs, pauseDays, config }) {
+export default function HabitRow({ habit, days, programaciones, logs, pauseDays, config, onEdit }) {
   const streak = calculateStreak(habit, logs, programaciones, pauseDays, config)
   const weeklyPercent = calculateWeeklyPercent(habit, logs, programaciones, pauseDays, config)
 
@@ -25,8 +25,17 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
       className="grid gap-2 items-center min-h-[44px]"
       style={{ gridTemplateColumns: GRID_TEMPLATE }}
     >
-      <div className="text-xs font-medium dark:text-[var(--dm-text)] break-words leading-tight pr-2" title={habit.nombre}>
-        {habit.nombre}
+      <div className="text-xs font-medium dark:text-[var(--dm-text)] break-words leading-tight pr-2 flex items-center gap-2" title={habit.nombre}>
+        <span className="flex-1">{habit.nombre}</span>
+        {onEdit && (
+          <button
+            onClick={() => onEdit(habit)}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-[var(--dm-text)] text-xs"
+            title="Editar hábito"
+          >
+            ✏️
+          </button>
+        )}
       </div>
       {days.map(day => (
         <DayCell

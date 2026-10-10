@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getMondayOfCurrentWeek } from '../lib/date-utils.js'
+import { getMondayOfCurrentWeek, getTodayDate } from '../lib/date-utils.js'
 
 const TIPO_OPTIONS = [
   { value: 'dias_fijos', label: 'Días fijos' },
@@ -37,7 +37,17 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
       setMomentoDia(editingHabit.momento_dia || 'manana')
       setVersionMinima(editingHabit.version_minima || '')
       
-      // TODO: cargar programación cuando se implemente edición
+      // Cargar programación si se proporciona
+      if (editingHabit.programacion) {
+        setTipo(editingHabit.programacion.tipo || 'dias_fijos')
+        setDiasSemana(editingHabit.programacion.dias_semana || [1, 2, 3, 4, 5])
+        setMetaSemanal(editingHabit.programacion.meta_semanal || 1)
+        setDiasSugeridos(editingHabit.programacion.dias_sugeridos || [])
+        setPeriodoSemanas(editingHabit.programacion.periodo_semanas || 1)
+        setDiaSugerido(editingHabit.programacion.dias_sugeridos?.[0] || 1)
+        setPermitirFindePlus(editingHabit.programacion.permitir_finde_plus || false)
+        setTolerarRojoAislado(editingHabit.programacion.tolerar_rojo_aislado || false)
+      }
     }
   }, [editingHabit])
 
@@ -47,7 +57,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
 
     const programacion = {
       tipo,
-      vigente_desde: getMondayOfCurrentWeek(),
+      vigente_desde: editingHabit ? getTodayDate() : getMondayOfCurrentWeek(),
       permitir_finde_plus: permitirFindePlus,
       tolerar_rojo_aislado: tolerarRojoAislado,
     }

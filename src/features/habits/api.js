@@ -122,6 +122,18 @@ export function isWeekendPlus(habit, fecha, programaciones) {
 }
 
 // =====================================================
+// DÍA SUGERIDO (META SEMANAL / PERIÓDICO)
+// =====================================================
+
+export function isDaySugerido(habit, fecha, programaciones) {
+  const prog = getProgramacionVigente(habit, fecha, programaciones)
+  if (!prog || !prog.dias_sugeridos) return false
+
+  const dayOfWeek = getDayOfWeek(fecha)
+  return prog.dias_sugeridos.includes(dayOfWeek)
+}
+
+// =====================================================
 // VALOR NUMÉRICO DEL ESTADO
 // =====================================================
 
@@ -252,12 +264,19 @@ export async function createHabit(habit) {
   if (error) throw error
 
   // Crear programación inicial (empieza el lunes de la semana actual)
+  // Si falla, hacer rollback borrando el hábito
   if (habit.programacion) {
-    await createProgramacion({
-      habit_id: data.id,
-      ...habit.programacion,
-      vigente_desde: getMondayOfCurrentWeek(), // Lunes de la semana actual
-    })
+    try {
+      await createProgramacion({
+        habit_id: data.id,
+        ...habit.programacion,
+        vigente_desde: getMondayOfCurrentWeek(), // Lunes de la semana actual
+      })
+    } catch (progError) {
+      // Rollback: borrar el hábito si la programación falló
+      await supabase.from('habits').delete().eq('id', data.id)
+      throw progError
+    }
   }
 
   return data
@@ -281,11 +300,17 @@ export async function updateHabit(id, updates) {
 
   // Si hay cambios en programación, crear nueva versión (empieza hoy)
   if (updates.programacion) {
-    await createProgramacion({
-      habit_id: id,
-      ...updates.programacion,
-      vigente_desde: getTodayDate(), // Hoy al editar
-    })
+    try {
+      await createProgramacion({
+        habit_id: id,
+        ...updates.programacion,
+        vigente_desde: getTodayDate(), // Hoy al editar
+      })
+    } catch (progError) {
+      // Rollback: revertir cambios al hábito si la programación falló
+      // Nota: esto es simplificado, idealmente se debería guardar el estado anterior
+      throw progError
+    }
   }
 
   return data

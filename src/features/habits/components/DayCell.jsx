@@ -5,6 +5,7 @@ import {
   getEstado,
   isDayApplicable,
   isWeekendPlus,
+  isDaySugerido,
 } from '../../../features/habits/api.js'
 import { isFuture, daysBetween, getTodayDate } from '../../../lib/date-utils.js'
 import { playSound } from '../../../lib/sound.js'
@@ -62,6 +63,7 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
   const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
   const applicable = isDayApplicable(habit, fecha, programaciones, pauseDays)
   const weekendPlus = isWeekendPlus(habit, fecha, programaciones)
+  const sugerido = isDaySugerido(habit, fecha, programaciones)
   const future = isFuture(fecha)
 
   // Verificar si está dentro de ventana de edición
@@ -117,6 +119,11 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
     ? 'border-2'
     : 'border-2 border-transparent'
 
+  // Resaltar días sugeridos (meta semanal / periódico)
+  const sugeridoClass = sugerido && applicable
+    ? 'ring-2 ring-[var(--color-primary)] ring-opacity-50'
+    : ''
+
   // Tooltip para fuera de ventana
   const tooltip = diasDesdeHoy > ventanaEdicion ? 'Fuera de la ventana de edición' : null
 
@@ -130,7 +137,7 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
       aria-label={ariaLabel || fecha}
       className={`
         w-10 h-10 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0
-        ${style.bg} ${style.border} ${style.text} ${borderClass}
+        ${style.bg} ${style.border} ${style.text} ${borderClass} ${sugeridoClass}
         ${!canEdit || (!applicable && !weekendPlus) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
         transition-colors
         ${isTodayDate ? 'ring-2 ring-[var(--color-primary)]' : ''}

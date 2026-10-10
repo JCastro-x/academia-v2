@@ -160,13 +160,45 @@ const migrateGuestSchema = () => {
     localStorage.setItem(HABITS_SCHEMA_KEY, '4')
   }
 
-  // Migración de versión 4 a 5: reparar hábitos sin programación
+  // Migración de versión 4 a 5: reparar hábitos sin programación y limpiar duplicados
   if (currentVersion < 5) {
     const habits = getGuestHabits()
     const programaciones = getGuestProgramaciones()
+    const logs = JSON.parse(localStorage.getItem('guest-habit-logs') || '[]')
     const mondayOfCurrentWeek = getMondayOfCurrentWeek()
     
-    const habitsWithoutProg = habits.filter(h => !programaciones.some(p => p.habit_id === h.id))
+    // Limpiar duplicados por nombre
+    const byName = {}
+    habits.forEach(h => {
+      if (!byName[h.nombre]) {
+        byName[h.nombre] = []
+      }
+      byName[h.nombre].push(h)
+    })
+    
+    const habitsToKeep = []
+    const idsToDelete = []
+    
+    Object.entries(byName).forEach(([nombre, habitList]) => {
+      if (habitList.length > 1) {
+        const logCounts = habitList.map(h => logs.filter(l => l.habit_id === h.id).length)
+        const maxLogs = Math.max(...logCounts)
+        const indexToKeep = logCounts.indexOf(maxLogs)
+        
+        habitList.forEach((h, i) => {
+          if (i === indexToKeep) {
+            habitsToKeep.push(h)
+          } else {
+            idsToDelete.push(h.id)
+          }
+        })
+      } else {
+        habitsToKeep.push(habitList[0])
+      }
+    })
+    
+    // Reparar hábitos sin programación
+    const habitsWithoutProg = habitsToKeep.filter(h => !programaciones.some(p => p.habit_id === h.id))
     
     if (habitsWithoutProg.length > 0) {
       const newProgramaciones = habitsWithoutProg.map(h => ({
@@ -182,6 +214,14 @@ const migrateGuestSchema = () => {
       saveGuestProgramaciones([...programaciones, ...newProgramaciones])
     }
     
+    // Guardar estado limpio
+    const filteredLogs = logs.filter(l => !idsToDelete.includes(l.habit_id))
+    localStorage.setItem('guest-habit-logs', JSON.stringify(filteredLogs))
+    saveGuestHabits(habitsToKeep)
+    
+    const filteredProgramaciones = programaciones.filter(p => !idsToDelete.includes(p.habit_id))
+    saveGuestProgramaciones(filteredProgramaciones)
+    
     localStorage.setItem(HABITS_SCHEMA_KEY, '5')
   }
 }
@@ -194,69 +234,7 @@ export function useHabits() {
     queryKey: habitsQueryKeys.all,
     queryFn: () => {
       if (isGuestMode()) {
-        let habits = getGuestHabits()
-        const programaciones = getGuestProgramaciones()
-        const logs = JSON.parse(localStorage.getItem('guest-habit-logs') || '[]')
-        
-        // Limpiar duplicados por nombre en cada lectura
-        const byName = {}
-        habits.forEach(h => {
-          if (!byName[h.nombre]) {
-            byName[h.nombre] = []
-          }
-          byName[h.nombre].push(h)
-        })
-        
-        const habitsToKeep = []
-        const idsToDelete = []
-        
-        Object.entries(byName).forEach(([nombre, habitList]) => {
-          if (habitList.length > 1) {
-            const logCounts = habitList.map(h => logs.filter(l => l.habit_id === h.id).length)
-            const maxLogs = Math.max(...logCounts)
-            const indexToKeep = logCounts.indexOf(maxLogs)
-            
-            habitList.forEach((h, i) => {
-              if (i === indexToKeep) {
-                habitsToKeep.push(h)
-              } else {
-                idsToDelete.push(h.id)
-              }
-            })
-          } else {
-            habitsToKeep.push(habitList[0])
-          }
-        })
-        
-        // Reparar hábitos sin programación
-        const mondayOfCurrentWeek = getMondayOfCurrentWeek()
-        const habitsWithoutProg = habitsToKeep.filter(h => !programaciones.some(p => p.habit_id === h.id))
-        
-        if (habitsWithoutProg.length > 0) {
-          const newProgramaciones = habitsWithoutProg.map(h => ({
-            id: crypto.randomUUID(),
-            habit_id: h.id,
-            tipo: 'dias_fijos',
-            dias_semana: [1, 2, 3, 4, 5],
-            permitir_finde_plus: false,
-            tolerar_rojo_aislado: false,
-            vigente_desde: mondayOfCurrentWeek,
-          }))
-          
-          saveGuestProgramaciones([...programaciones, ...newProgramaciones])
-        }
-        
-        // Guardar estado limpio si hubo cambios
-        if (idsToDelete.length > 0 || habitsWithoutProg.length > 0) {
-          const filteredLogs = logs.filter(l => !idsToDelete.includes(l.habit_id))
-          localStorage.setItem('guest-habit-logs', JSON.stringify(filteredLogs))
-          saveGuestHabits(habitsToKeep)
-          
-          const filteredProgramaciones = programaciones.filter(p => !idsToDelete.includes(p.habit_id))
-          saveGuestProgramaciones(filteredProgramaciones)
-        }
-        
-        return habitsToKeep
+        return getGuestHabits()
       }
       return getHabits()
     },
@@ -358,12 +336,14 @@ export function useCreateHabit() {
           ...habit.programacion,
         } : null
         
-        // Guardar todo en una sola operación (todo o nada)
-        saveGuestHabits([...habits, newHabit])
+        // Armar en memoria, guardar todo al final (todo o nada)
+        const newHabits = [...habits, newHabit]
+        const newProgramaciones = newProgramacion 
+          ? [...programaciones, newProgramacion]
+          : programaciones
         
-        if (newProgramacion) {
-          saveGuestProgramaciones([...programaciones, newProgramacion])
-        }
+        saveGuestHabits(newHabits)
+        saveGuestProgramaciones(newProgramaciones)
         
         return newHabit
       }
