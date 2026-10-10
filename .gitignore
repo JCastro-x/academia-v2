@@ -6,4 +6,3 @@ dist
 Prueba/
 setup-test-data.js
 test-results/
-tests/e2e/
