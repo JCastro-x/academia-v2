@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useArchiveHabit, useTogglePauseDay, useDeleteHabit } from '../features/habits/hooks.js'
+import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useArchiveHabit, useTogglePauseDay, useDeleteHabit, useSeedHabits } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import { getMondayOfCurrentWeek, addDays, getDayOfWeek, getTodayDate } from '../lib/date-utils.js'
+import { getStoredSessionUser } from '../lib/supabase.js'
 import HabitModal from '../components/HabitModal.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 import WeeklyTracker from '../features/habits/components/WeeklyTracker.jsx'
@@ -138,28 +139,33 @@ export default function Habits() {
   const archiveHabitMutation = useArchiveHabit()
   const togglePauseDayMutation = useTogglePauseDay()
   const deleteHabitMutation = useDeleteHabit()
+  const seedHabitsMutation = useSeedHabits()
 
   const { data: habits, isLoading: habitsLoading } = useHabits()
   const { data: programaciones } = useProgramaciones()
   const { data: logs } = useHabitLogs()
-  const { data: pauseDays } = usePauseDays()
-  const { data: config } = useAppConfig()
+  const userId = localStorage.getItem('academia-guest-mode') === 'true'
+    ? null
+    : getStoredSessionUser()?.id || null
+  const { data: pauseDays } = usePauseDays(userId)
+  const { data: config } = useAppConfig(userId)
 
   // Auto-seed: crear hábitos iniciales si no existen (solo una vez por usuario)
   useEffect(() => {
     const seeded = localStorage.getItem('habitos_sembrados')
     const hasActiveHabits = habits && habits.some(h => !h.archivado)
-    if (!habitsLoading && !hasActiveHabits && !seeded) {
+    const shouldSeed = userId ? habits?.length === 0 : !hasActiveHabits && !seeded
+    if (!habitsLoading && shouldSeed) {
       seedInitialHabits()
     }
-  }, [habits, habitsLoading])
+  }, [habits, habitsLoading, userId])
 
   // Config por defecto en guest mode
   useEffect(() => {
-    if (!config) {
+    if (!userId && !config) {
       localStorage.setItem('guest-app-config', JSON.stringify({ ventana_edicion_dias: 7 }))
     }
-  }, [config])
+  }, [config, userId])
 
   // Verificar si la semana está completa (solo hábitos de días fijos)
   const isWeekComplete = () => {
@@ -195,11 +201,14 @@ export default function Habits() {
 
   const seedInitialHabits = async () => {
     setIsSeeding(true)
-    
-    // Marcar como sembrado al empezar para evitar reintento en bucle
-    localStorage.setItem('habitos_sembrados', 'true')
-    
+
     try {
+      if (userId) {
+        await seedHabitsMutation.mutateAsync(initialHabits.filter(habit => !habit.nombre.startsWith('Demo:')))
+        return
+      }
+
+      localStorage.setItem('habitos_sembrados', 'true')
       const existingNames = new Set(habits?.filter(h => !h.archivado).map(h => h.nombre) || [])
 
       for (const habit of initialHabits) {
@@ -219,8 +228,7 @@ export default function Habits() {
       }
     } catch (error) {
       console.error('Error seeding habits:', error)
-      // Si falla, limpiar la bandera para permitir reintento manual
-      localStorage.removeItem('habitos_sembrados')
+      if (!userId) localStorage.removeItem('habitos_sembrados')
     } finally {
       setIsSeeding(false)
     }
@@ -262,7 +270,7 @@ export default function Habits() {
 
   const handleTogglePause = async (fecha) => {
     try {
-      await togglePauseDayMutation.mutateAsync({ fecha, userId: 'guest' })
+      await togglePauseDayMutation.mutateAsync({ fecha, userId: userId || 'guest' })
     } catch (error) {
       console.error('Error toggling pause day:', error)
     }
@@ -358,7 +366,7 @@ export default function Habits() {
             onArchiveHabit={handleArchive}
             onTogglePause={handleTogglePause}
             onDeleteHabit={handleDeleteHabit}
-            userId="guest"
+            userId={userId || 'guest'}
             showArchived={showArchived}
             onToggleShowArchived={() => setShowArchived(!showArchived)}
           />
