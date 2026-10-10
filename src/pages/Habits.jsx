@@ -229,7 +229,7 @@ export default function Habits() {
   const createHabit = useCreateHabit()
   const updateHabit = useUpdateHabit()
 
-  const { openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
+  const { openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes, addToast } = useUIStore()
 
   const handleCreate = async (habitData) => {
     try {
@@ -268,9 +268,48 @@ export default function Habits() {
     }
   }
 
-  const handleDeleteHabit = (id) => {
-    deleteHabitMutation.mutate(id)
+  const handleDeleteHabit = (habit) => {
+    openConfirmDialog({
+      title: 'Eliminar hábito',
+      message: `¿Eliminar "${habit.nombre}" y todo su historial?`,
+      confirmText: 'Eliminar',
+      onConfirm: () => {
+        const pendingDeleteId = crypto.randomUUID()
+
+        const habitProgramaciones = (programaciones || []).filter(p => p.habit_id === habit.id)
+        const habitLogs = (logs || []).filter(l => l.habit_id === habit.id)
+
+        const pendingId = addPendingDelete({
+          type: 'habit',
+          itemId: habit.id,
+          pendingId: pendingDeleteId,
+          data: { habit, programaciones: habitProgramaciones, logs: habitLogs }
+        })
+
+        showUndoToast({
+          message: 'Hábito eliminado',
+          durationSeconds: 6,
+          onTimeout: async () => {
+            try {
+              await deleteHabitMutation.mutateAsync(habit.id)
+              removePendingDelete(pendingId)
+            } catch (error) {
+              console.error('Error deleting habit:', error)
+              addToast({ type: 'error', message: 'No se pudo eliminar el hábito' })
+              removePendingDelete(pendingId)
+            }
+          },
+          onUndo: () => {
+            removePendingDelete(pendingId)
+          }
+        })
+      }
+    })
   }
+
+  const visibleHabits = (habits || []).filter(
+    habit => !pendingDeletes.some(pending => pending.type === 'habit' && pending.itemId === habit.id)
+  )
 
   if (habitsLoading || isSeeding) {
     return (
@@ -302,7 +341,7 @@ export default function Habits() {
       {activeTab === 'semana' ? (
         <div className="space-y-4">
           <TodayCard
-            habits={habits || []}
+            habits={visibleHabits}
             logs={logs || []}
             programaciones={programaciones || []}
             pauseDays={pauseDays || []}
@@ -310,7 +349,7 @@ export default function Habits() {
             isWeekComplete={isWeekComplete()}
           />
           <WeeklyTracker
-            habits={habits || []}
+            habits={visibleHabits}
             programaciones={programaciones || []}
             logs={logs || []}
             pauseDays={pauseDays || []}
@@ -330,7 +369,7 @@ export default function Habits() {
       ) : (
         <div className="space-y-6">
           <ProgressView
-            habits={habits || []}
+            habits={visibleHabits}
             logs={logs || []}
             programaciones={programaciones || []}
             pauseDays={pauseDays || []}

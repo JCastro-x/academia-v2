@@ -93,10 +93,8 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
                 </button>
                 <button
                   onClick={() => {
-                    if (confirm(`¿Eliminar "${habit.nombre}" y todo su historial? No se puede deshacer.`)) {
-                      onDelete(habit.id)
-                      setShowMenu(false)
-                    }
+                    onDelete(habit)
+                    setShowMenu(false)
                   }}
                   className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400"
                 >
@@ -186,10 +184,8 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
                   </button>
                   <button
                     onClick={() => {
-                      if (confirm(`¿Eliminar "${habit.nombre}" y todo su historial? No se puede deshacer.`)) {
-                        onDelete(habit.id)
-                        setShowMenu(false)
-                      }
+                      onDelete(habit)
+                      setShowMenu(false)
                     }}
                     className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400"
                   >

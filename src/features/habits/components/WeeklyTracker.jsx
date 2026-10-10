@@ -126,7 +126,7 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
           )
         })}
 
-        {habits.filter(h => !h.archivado).length === 0 && (
+        {Object.values(groupedHabits).every(habitList => habitList.length === 0) && (
           <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
             <p>No hay hábitos aún. Crea el primero para empezar.</p>
           </div>

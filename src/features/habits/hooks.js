@@ -51,6 +51,28 @@ const saveGuestProgramaciones = (programaciones) => {
   localStorage.setItem('guest-programaciones', JSON.stringify(programaciones))
 }
 
+const getGuestLogs = () => {
+  const logs = JSON.parse(localStorage.getItem('guest-habit-logs') || '[]')
+  const legacyLogs = JSON.parse(localStorage.getItem('guest-logs') || '[]')
+
+  if (legacyLogs.length === 0) return logs
+
+  const logsByHabitAndDate = new Map()
+  for (const log of [...legacyLogs, ...logs]) {
+    const key = log.habit_id && log.fecha ? `${log.habit_id}:${log.fecha}` : log.id
+    logsByHabitAndDate.set(key, log)
+  }
+
+  const mergedLogs = [...logsByHabitAndDate.values()]
+  saveGuestLogs(mergedLogs)
+  return mergedLogs
+}
+
+const saveGuestLogs = (logs) => {
+  localStorage.setItem('guest-habit-logs', JSON.stringify(logs))
+  localStorage.removeItem('guest-logs')
+}
+
 const migrateGuestSchema = () => {
   const currentVersion = parseInt(localStorage.getItem(HABITS_SCHEMA_KEY) || '0')
   
@@ -341,8 +363,7 @@ export function useHabitLogs(habitId = null, startDate = null, endDate = null) {
     queryKey: [...habitsQueryKeys.logs, habitId, startDate, endDate],
     queryFn: () => {
       if (isGuestMode()) {
-        const logsKey = 'guest-habit-logs'
-        const logs = JSON.parse(localStorage.getItem(logsKey) || '[]')
+        const logs = getGuestLogs()
         if (habitId) {
           return logs.filter(l => l.habit_id === habitId)
         }
@@ -531,10 +552,13 @@ export function useDeleteHabit() {
       }
       return deleteHabit(id)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: habitsQueryKeys.all,
-      })
+    onSettled: async (_data, _error, id) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: habitsQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: habitsQueryKeys.byId(id) }),
+        queryClient.invalidateQueries({ queryKey: habitsQueryKeys.programaciones }),
+        queryClient.invalidateQueries({ queryKey: habitsQueryKeys.logs }),
+      ])
     },
   })
 }
