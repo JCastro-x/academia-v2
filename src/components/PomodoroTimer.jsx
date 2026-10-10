@@ -302,7 +302,7 @@ export default function PomodoroTimer() {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="border-t pt-4 pb-20 md:pb-0 space-y-3"
+          className="border-t pt-4 pb-[calc(var(--mobile-bottom-bar-height)+env(safe-area-inset-bottom)+1.5rem)] min-[640px]:pb-20 md:pb-0 space-y-3"
         >
           <div>
             <label className="block text-sm font-medium mb-1 dark:text-[var(--dm-text)]">Trabajo (minutos)</label>

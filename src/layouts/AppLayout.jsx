@@ -248,12 +248,12 @@ export default function AppLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 basis-0 min-w-0 max-w-full h-full overflow-x-hidden overflow-y-auto overscroll-contain p-4 pb-0 md:p-6 md:pb-0">
+        <main className="flex-1 basis-0 min-w-0 max-w-full h-full overflow-x-hidden overflow-y-auto overscroll-contain p-4 pb-[calc(var(--mobile-bottom-bar-height)+env(safe-area-inset-bottom)+1.5rem)] min-[640px]:pb-0 md:p-6 md:pb-0">
           <Outlet />
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-[60] border-t border-[var(--dm-border)] bg-[var(--dm-surface)]/95 px-2 py-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md max-[639px]:h-[calc(var(--mobile-bottom-bar-height)+env(safe-area-inset-bottom))] max-[639px]:pb-[calc(0.5rem+env(safe-area-inset-bottom))] max-[639px]:pt-2 md:hidden">
         <div className="mx-auto flex max-w-md items-center justify-between gap-1">
           {/* Left side: Inicio, Tareas */}
           <div className="flex-1 grid grid-cols-2 gap-1">

@@ -231,7 +231,7 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
   }
 
   return (
-    <div className="space-y-6 pb-32 md:pb-12">
+    <div className="space-y-6 pb-0 min-[640px]:pb-32 md:pb-12">
       {!hasAnyLog && (
         <div className="bg-gray-50 dark:bg-[var(--dm-bg)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
           <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">

@@ -93,20 +93,21 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
   }
 
   return (
-    <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-gray-900 dark:text-[var(--dm-text)]">
-      <div>
-        <label htmlFor="nombre" className="block text-sm font-medium mb-1">Nombre del hábito</label>
-        <input
-          id="nombre"
-          type="text"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-          placeholder="Ej. Leer 30 minutos"
-          autoFocus
-          autoComplete="off"
-        />
-      </div>
+    <form onSubmit={handleSubmit} autoComplete="off" className="flex min-h-0 flex-1 flex-col text-gray-900 dark:text-[var(--dm-text)]">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4 sm:p-0">
+        <div>
+          <label htmlFor="nombre" className="block text-sm font-medium mb-1">Nombre del hábito</label>
+          <input
+            id="nombre"
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            className="w-full px-3 py-2 text-base sm:text-[inherit] rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+            placeholder="Ej. Leer 30 minutos"
+            autoFocus
+            autoComplete="off"
+          />
+        </div>
 
       <div>
         <label htmlFor="momento_dia" className="block text-sm font-medium mb-1">Momento del día</label>
@@ -114,7 +115,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
           id="momento_dia"
           value={momentoDia}
           onChange={(e) => setMomentoDia(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+          className="w-full px-3 py-2 text-base sm:text-[inherit] rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
         >
           <option value="manana">Mañana</option>
           <option value="tarde">Tarde</option>
@@ -130,7 +131,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
               key={option.value}
               type="button"
               onClick={() => setTipo(option.value)}
-              className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`min-h-[44px] sm:min-h-0 flex-1 px-2 py-2 rounded-md text-sm font-medium transition-colors ${
                 tipo === option.value
                   ? 'bg-white dark:bg-[var(--dm-surface)] shadow-sm text-[var(--color-primary)]'
                   : 'text-gray-600 dark:text-[var(--dm-text-muted)] hover:text-gray-900 dark:hover:text-[var(--dm-text)]'
@@ -151,7 +152,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
                 key={day.value}
                 type="button"
                 onClick={() => toggleDia(day.value)}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`min-h-[44px] sm:min-h-0 flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                   diasSemana.includes(day.value)
                     ? 'bg-[var(--color-primary)] text-[var(--color-primary-fg)]'
                     : 'bg-gray-100 dark:bg-[var(--dm-border)] text-gray-600 dark:text-[var(--dm-text-muted)]'
@@ -175,7 +176,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
               max="7"
               value={metaSemanal}
               onChange={(e) => setMetaSemanal(parseInt(e.target.value) || 1)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              className="w-full px-3 py-2 text-base sm:text-[inherit] rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
             />
           </div>
           <div>
@@ -186,7 +187,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
                   key={day.value}
                   type="button"
                   onClick={() => toggleDiaSugerido(day.value)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`min-h-[44px] sm:min-h-0 flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                     diasSugeridos.includes(day.value)
                       ? 'bg-[var(--color-primary)] text-[var(--color-primary-fg)]'
                       : 'bg-gray-100 dark:bg-[var(--dm-border)] text-gray-600 dark:text-[var(--dm-text-muted)]'
@@ -210,7 +211,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
               min="1"
               value={periodoSemanas}
               onChange={(e) => setPeriodoSemanas(parseInt(e.target.value) || 1)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              className="w-full px-3 py-2 text-base sm:text-[inherit] rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
             />
           </div>
           <div>
@@ -219,7 +220,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
               id="dia_sugerido"
               value={diaSugerido}
               onChange={(e) => setDiaSugerido(parseInt(e.target.value))}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              className="w-full px-3 py-2 text-base sm:text-[inherit] rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
             >
               {DAYS_OF_WEEK.map((day) => (
                 <option key={day.value} value={day.value}>{day.label}</option>
@@ -242,7 +243,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
           type="text"
           value={versionMinima}
           onChange={(e) => setVersionMinima(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+          className="w-full px-3 py-2 text-base sm:text-[inherit] rounded-lg border border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
           placeholder="Ej. 10 min de ejercicio"
           autoComplete="off"
         />
@@ -253,7 +254,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
 
       {tipo !== 'evitar' && (
         <div className="space-y-2">
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex min-h-[44px] sm:min-h-0 w-full items-center gap-3 sm:gap-2 cursor-pointer">
             <div className="relative">
               <input
                 type="checkbox"
@@ -261,7 +262,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
                 onChange={(e) => setPermitirFindePlus(e.target.checked)}
                 className="sr-only"
               />
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+              <div className={`h-6 w-6 sm:h-5 sm:w-5 rounded border-2 flex items-center justify-center transition-colors ${
                 permitirFindePlus
                   ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
                   : 'border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)]'
@@ -271,7 +272,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
             </div>
             <span className="text-sm dark:text-[var(--dm-text)]">Sábado y domingo son plus</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex min-h-[44px] sm:min-h-0 w-full items-center gap-3 sm:gap-2 cursor-pointer">
             <div className="relative">
               <input
                 type="checkbox"
@@ -279,7 +280,7 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
                 onChange={(e) => setTolerarRojoAislado(e.target.checked)}
                 className="sr-only"
               />
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+              <div className={`h-6 w-6 sm:h-5 sm:w-5 rounded border-2 flex items-center justify-center transition-colors ${
                 tolerarRojoAislado
                   ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
                   : 'border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)]'
@@ -292,18 +293,19 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
         </div>
       )}
 
-      <div className="flex gap-3 pt-4">
+      </div>
+      <div className="sticky bottom-0 flex flex-none gap-3 border-t border-gray-200 bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)] sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:pt-4">
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 border border-gray-300 dark:border-[var(--dm-border)] text-gray-700 dark:text-[var(--dm-text)] py-2 px-4 rounded-lg hover:bg-gray-100 dark:hover:bg-[var(--dm-surface)]"
+          className="min-h-[44px] sm:min-h-0 flex-1 border border-gray-300 dark:border-[var(--dm-border)] text-gray-700 dark:text-[var(--dm-text)] py-2 px-4 rounded-lg hover:bg-gray-100 dark:hover:bg-[var(--dm-surface)]"
         >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={!nombre.trim() || isPending}
-          className="flex-1 bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-h-[44px] sm:min-h-0 flex-1 bg-[var(--color-primary)] text-[var(--color-primary-fg)] py-2 px-4 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending ? 'Guardando...' : (editingHabit ? 'Guardar' : 'Crear')}
         </button>
