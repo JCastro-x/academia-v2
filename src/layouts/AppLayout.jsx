@@ -3,7 +3,7 @@ import { Outlet, useParams, Link, useLocation, useNavigate } from 'react-router-
 import { useUIStore } from '../stores/ui.store.js'
 import { useProfile, useProfileRealtimeSync } from '../features/profile/hooks.js'
 import { useSemesters } from '../features/semesters/hooks.js'
-import { playSound } from '../lib/sound.js'
+import { playSound, unlockAudio } from '../lib/sound.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import ImportModal from '../components/ImportModal.jsx'
 import UndoToast from '../components/UndoToast.jsx'
@@ -15,6 +15,8 @@ import ServiceWorkerUpdateBanner from '../components/ServiceWorkerUpdateBanner.j
 import OfflineIndicator from '../components/OfflineIndicator.jsx'
 import ToastContainer from '../components/ToastContainer.jsx'
 import { getContrastTextColor } from '../lib/contrast.js'
+import PomodoroRuntime from '../features/pomodoro/PomodoroRuntime.jsx'
+import PomodoroPictureInPicture from '../features/pomodoro/PomodoroPictureInPicture.jsx'
 
 export default function AppLayout() {
   const { semesterId } = useParams()
@@ -41,6 +43,24 @@ export default function AppLayout() {
     window.addEventListener('academia:toast', handleGlobalToast)
     return () => window.removeEventListener('academia:toast', handleGlobalToast)
   }, [addToast])
+
+  useEffect(() => {
+    const unlockFromGesture = () => {
+      void unlockAudio().then((context) => {
+        if (!context || context.state === 'running') {
+          window.removeEventListener('pointerdown', unlockFromGesture, true)
+          window.removeEventListener('keydown', unlockFromGesture, true)
+        }
+      })
+    }
+
+    window.addEventListener('pointerdown', unlockFromGesture, true)
+    window.addEventListener('keydown', unlockFromGesture, true)
+    return () => {
+      window.removeEventListener('pointerdown', unlockFromGesture, true)
+      window.removeEventListener('keydown', unlockFromGesture, true)
+    }
+  }, [])
 
   useEffect(() => {
     if (prevPathRef.current !== location.pathname) {
@@ -320,6 +340,8 @@ export default function AppLayout() {
       <ServiceWorkerUpdateBanner />
       <OfflineIndicator />
       <ToastContainer />
+      <PomodoroRuntime />
+      <PomodoroPictureInPicture />
     </div>
   )
 }
