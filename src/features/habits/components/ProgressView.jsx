@@ -165,21 +165,49 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
       habitStats[habit.nombre] = total > 0 ? cumplidos / total : 0
     })
 
-    let bestHabit = { name: 'Journaling corto', percent: 0 }
+    let bestHabit = { nombre: 'N/A', percent: 0 }
     Object.entries(habitStats).forEach(([nombre, percent]) => {
       if (percent > bestHabit.percent) {
         bestHabit = { nombre, percent }
       }
     })
 
-    // Tendencia vs mes anterior (simplificado)
-    const trend = Math.random() > 0.5 ? '↗ Mejorando' : '↘ Bajando'
-    const diff = Math.floor(Math.random() * 30)
+    // Tendencia vs mes anterior (calculada real)
+    const today = getTodayDate()
+    const currentMonth = today.slice(0, 7)
+    const lastMonthDate = new Date(today)
+    lastMonthDate.setMonth(lastMonthDate.getMonth() - 1)
+    const lastMonth = lastMonthDate.toISOString().slice(0, 7)
+
+    let currentMonthTotal = 0
+    let currentMonthCumplidos = 0
+    let lastMonthTotal = 0
+    let lastMonthCumplidos = 0
+
+    dataLogs.forEach(log => {
+      if (log.estado === 'cumplido') {
+        if (log.fecha.startsWith(currentMonth)) {
+          currentMonthCumplidos++
+        } else if (log.fecha.startsWith(lastMonth)) {
+          lastMonthCumplidos++
+        }
+      }
+      if (log.fecha.startsWith(currentMonth)) {
+        currentMonthTotal++
+      } else if (log.fecha.startsWith(lastMonth)) {
+        lastMonthTotal++
+      }
+    })
+
+    const currentPercent = currentMonthTotal > 0 ? (currentMonthCumplidos / currentMonthTotal) * 100 : 0
+    const lastPercent = lastMonthTotal > 0 ? (lastMonthCumplidos / lastMonthTotal) * 100 : 0
+    const diff = Math.round(currentPercent - lastPercent)
+    const trend = diff > 0 ? '↗ Mejorando' : diff < 0 ? '↘ Bajando' : '→ Estable'
 
     return {
       bestDay: `${bestDay.day} (${Math.round(bestDay.percent)}% cumplimiento)`,
       bestHabit: bestHabit.nombre,
-      trend: `${trend} (+${diff} pts vs mes anterior)`,
+      trend: lastMonthTotal > 0 ? `${trend} (${diff > 0 ? '+' : ''}${diff} pts vs mes anterior)` : 'Sin datos de mes anterior',
     }
   }
 
