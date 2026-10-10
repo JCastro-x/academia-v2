@@ -1,85 +1,149 @@
 import { supabase } from '../../lib/supabase.js'
+import {
+  parseLocalDate,
+  toLocalDateString,
+  getDayOfWeek,
+  addDays,
+  daysBetween,
+  isToday,
+  isFuture,
+  compareDates,
+  getWeekRange,
+  getMonthRange,
+  getTodayDate,
+  getMondayOfCurrentWeek,
+} from '../../lib/date-utils.js'
 
 export const habitsQueryKeys = {
   all: ['habits'],
   byId: (id) => ['habits', id],
+  programaciones: ['programaciones_habito'],
+  logs: ['habit_logs'],
+  pauseDays: ['dias_pausa'],
+  config: ['app_config'],
 }
 
-// Helper: get today's LOCAL date in YYYY-MM-DD format (avoids toISOString's UTC shift)
-function getTodayDate() {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+// =====================================================
+// OBTENER PROGRAMACIÓN VIGENTE
+// =====================================================
+
+export function getProgramacionVigente(habit, fecha, programaciones) {
+  // Buscar la programación más reciente con vigente_desde <= fecha
+  const prog = programaciones
+    .filter(p => p.habit_id === habit.id && p.vigente_desde <= fecha)
+    .sort((a, b) => compareDates(b.vigente_desde, a.vigente_desde))[0]
+
+  return prog || null
 }
 
-// Helper: get day of week (1=lunes, 7=domingo) from a YYYY-MM-DD string,
-// parsed with the LOCAL constructor (never UTC) to avoid timezone drift
-function getDayOfWeek(dateStr) {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  const day = date.getDay()
-  // Convert JS day (0=Sunday, 6=Saturday) to our format (1=Monday, 7=Sunday)
-  return day === 0 ? 7 : day
-}
+// =====================================================
+// ESTADO DE UN DÍA
+// =====================================================
 
-// Calculate streak from history (client-side calculation)
-export function calculateStreak(habit) {
-  const today = getTodayDate()
-  const history = habit.historial || []
-  const historySet = new Set(history)
-  
-  let streak = 0
-  let currentDate = new Date(today)
-  
-  // Check if today is completed
-  const todayCompleted = historySet.has(today)
-  
-  // If today is not completed, start checking from yesterday
-  if (!todayCompleted) {
-    currentDate.setDate(currentDate.getDate() - 1)
+export function getEstado(habit, fecha, logs, programaciones, pauseDays, config) {
+  // Verificar si es futuro
+  if (isFuture(fecha)) {
+    return 'futuro'
   }
-  
-  while (true) {
-    const [yy, mm, dd] = [currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()]
-    const dateStr = `${yy}-${String(mm + 1).padStart(2, '0')}-${String(dd).padStart(2, '0')}`
-    const dayOfWeek = getDayOfWeek(dateStr)
-    
-    if (habit.frecuencia === 'diario') {
-      // Any unmarked day breaks the streak
-      if (historySet.has(dateStr)) {
-        streak++
-      } else {
-        break
-      }
-    } else if (habit.frecuencia === 'semanal') {
-      const scheduledDays = habit.dias_semana || []
-      // Check if this day is scheduled
-      if (scheduledDays.includes(dayOfWeek)) {
-        // Scheduled day without completion breaks the streak
-        if (historySet.has(dateStr)) {
-          streak++
-        } else {
-          break
-        }
-      }
-      // Non-scheduled day: skip (doesn't count or break streak)
-    }
-    
-    currentDate.setDate(currentDate.getDate() - 1)
-    
-    // Safety: don't loop forever (max 365 days)
-    if (streak > 365) break
+
+  // Buscar log explícito
+  const log = logs.find(l => l.habit_id === habit.id && l.fecha === fecha)
+
+  if (log) {
+    return log.estado // cumplido, fallado, parcial
   }
-  
-  return streak
+
+  // Si no hay log, verificar si es hábito de evitar
+  const prog = getProgramacionVigente(habit, fecha, programaciones)
+  if (prog?.tipo === 'evitar') {
+    // Cumplido por defecto en días cerrados (no depende de ventana)
+    return 'cumplido' // Derivado
+  }
+
+  // Sin log: pendiente dentro de ventana, sin_registro fuera
+  const diasDesdeHoy = daysBetween(fecha, getTodayDate())
+  const ventanaEdicion = config?.ventana_edicion_dias || 7
+
+  if (diasDesdeHoy >= 0 && diasDesdeHoy <= ventanaEdicion) {
+    return 'pendiente'
+  }
+
+  return 'sin_registro'
 }
+
+// =====================================================
+// DÍA APLICA PARA EL HÁBITO
+// =====================================================
+
+export function isDayApplicable(habit, fecha, programaciones, pauseDays) {
+  // Pausa: no aplica
+  if (pauseDays.some(p => p.fecha === fecha)) {
+    return false
+  }
+
+  const prog = getProgramacionVigente(habit, fecha, programaciones)
+  if (!prog) return false
+
+  const dayOfWeek = getDayOfWeek(fecha)
+
+  switch (prog.tipo) {
+    case 'dias_fijos':
+      // Si está en días programados, aplica
+      if (prog.dias_semana.includes(dayOfWeek)) {
+        return true
+      }
+      // Si es weekend plus y es sábado/domingo, también aplica
+      if (prog.permitir_finde_plus && (dayOfWeek === 6 || dayOfWeek === 7)) {
+        return true
+      }
+      return false
+
+    case 'meta_semanal':
+    case 'evitar':
+      return true
+
+    case 'periodico':
+      const vigencia = prog.vigente_desde
+      const semanasDesdeVigencia = Math.floor(daysBetween(vigencia, fecha) / 7)
+      return semanasDesdeVigencia % prog.periodo_semanas === 0
+  }
+}
+
+// =====================================================
+// WEEKEND PLUS
+// =====================================================
+
+export function isWeekendPlus(habit, fecha, programaciones) {
+  const prog = getProgramacionVigente(habit, fecha, programaciones)
+  if (!prog || !prog.permitir_finde_plus) return false
+
+  const dayOfWeek = getDayOfWeek(fecha)
+  return dayOfWeek === 6 || dayOfWeek === 7 // Sábado o domingo
+}
+
+// =====================================================
+// VALOR NUMÉRICO DEL ESTADO
+// =====================================================
+
+export function getEstadoValor(estado) {
+  switch (estado) {
+    case 'cumplido': return 1
+    case 'parcial': return 0.5
+    case 'fallado': return 0
+    case 'pendiente': return null // No cuenta
+    case 'sin_registro': return null // No cuenta
+    case 'futuro': return null // No cuenta
+  }
+}
+
+// =====================================================
+// API CALLS
+// =====================================================
 
 export async function getHabits() {
   const { data, error } = await supabase
     .from('habits')
-    .select('id, user_id, nombre, frecuencia, dias_semana, racha, historial')
+    .select('id, user_id, nombre, momento_dia, version_minima, archivado, fecha_archivado')
     .order('nombre', { ascending: true })
 
   if (error) throw error
@@ -89,9 +153,84 @@ export async function getHabits() {
 export async function getHabitById(id) {
   const { data, error } = await supabase
     .from('habits')
-    .select('id, user_id, nombre, frecuencia, dias_semana, racha, historial')
+    .select('id, user_id, nombre, momento_dia, version_minima, archivado, fecha_archivado')
     .eq('id', id)
     .limit(1)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
+}
+
+export async function getProgramaciones(habitId = null) {
+  let query = supabase
+    .from('programaciones_habito')
+    .select('*')
+    .order('vigente_desde', { ascending: false })
+
+  if (habitId) {
+    query = query.eq('habit_id', habitId)
+  }
+
+  const { data, error } = await query
+
+  if (error) throw error
+  return data
+}
+
+export async function getHabitLogs(habitId = null, startDate = null, endDate = null) {
+  let query = supabase
+    .from('habit_logs')
+    .select('*')
+    .order('fecha', { ascending: true })
+
+  if (habitId) {
+    query = query.eq('habit_id', habitId)
+  }
+
+  if (startDate) {
+    query = query.gte('fecha', startDate)
+  }
+
+  if (endDate) {
+    query = query.lte('fecha', endDate)
+  }
+
+  const { data, error } = await query
+
+  if (error) throw error
+  return data
+}
+
+export async function getPauseDays(userId = null, startDate = null, endDate = null) {
+  let query = supabase
+    .from('dias_pausa')
+    .select('*')
+    .order('fecha', { ascending: true })
+
+  if (userId) {
+    query = query.eq('user_id', userId)
+  }
+
+  if (startDate) {
+    query = query.gte('fecha', startDate)
+  }
+
+  if (endDate) {
+    query = query.lte('fecha', endDate)
+  }
+
+  const { data, error } = await query
+
+  if (error) throw error
+  return data
+}
+
+export async function getAppConfig(userId) {
+  const { data, error } = await supabase
+    .from('app_config')
+    .select('*')
+    .eq('user_id', userId)
     .maybeSingle()
 
   if (error && error.code !== 'PGRST116') throw error
@@ -102,47 +241,53 @@ export async function createHabit(habit) {
   const { data, error } = await supabase
     .from('habits')
     .insert({
+      user_id: habit.user_id,
       nombre: habit.nombre,
-      frecuencia: habit.frecuencia,
-      dias_semana: habit.dias_semana || [],
-      racha: 0,
-      historial: [],
+      momento_dia: habit.momento_dia || 'manana',
+      version_minima: habit.version_minima || null,
     })
-    .select('id, user_id, nombre, frecuencia, dias_semana, racha, historial')
+    .select('id, user_id, nombre, momento_dia, version_minima, archivado, fecha_archivado')
     .single()
 
   if (error) throw error
+
+  // Crear programación inicial (empieza el lunes de la semana actual)
+  if (habit.programacion) {
+    await createProgramacion({
+      habit_id: data.id,
+      ...habit.programacion,
+      vigente_desde: getMondayOfCurrentWeek(), // Lunes de la semana actual
+    })
+  }
+
   return data
 }
 
 export async function updateHabit(id, updates) {
-  // Get current habit to recalculate streak if dias_semana changes
-  const currentHabit = await getHabitById(id)
-  
-  // Recalculate streak if dias_semana or frecuencia changes
-  let newStreak = currentHabit.racha
-  if (updates.dias_semana !== undefined || updates.frecuencia !== undefined) {
-    const updatedHabit = {
-      ...currentHabit,
-      dias_semana: updates.dias_semana !== undefined ? updates.dias_semana : currentHabit.dias_semana,
-      frecuencia: updates.frecuencia !== undefined ? updates.frecuencia : currentHabit.frecuencia,
-    }
-    newStreak = calculateStreak(updatedHabit)
-  }
-
   const { data, error } = await supabase
     .from('habits')
     .update({
       nombre: updates.nombre,
-      frecuencia: updates.frecuencia,
-      dias_semana: updates.dias_semana,
-      racha: newStreak,
+      momento_dia: updates.momento_dia,
+      version_minima: updates.version_minima,
+      archivado: updates.archivado,
+      fecha_archivado: updates.archivado ? getTodayDate() : null,
     })
     .eq('id', id)
-    .select('id, user_id, nombre, frecuencia, dias_semana, racha, historial')
+    .select('id, user_id, nombre, momento_dia, version_minima, archivado, fecha_archivado')
     .single()
 
   if (error) throw error
+
+  // Si hay cambios en programación, crear nueva versión (empieza hoy)
+  if (updates.programacion) {
+    await createProgramacion({
+      habit_id: id,
+      ...updates.programacion,
+      vigente_desde: getTodayDate(), // Hoy al editar
+    })
+  }
+
   return data
 }
 
@@ -155,33 +300,85 @@ export async function deleteHabit(id) {
   if (error) throw error
 }
 
-export async function toggleHabitCompletion(id, date) {
-  // First get current habit
-  const habit = await getHabitById(id)
-  const history = habit.historial || []
-  const historySet = new Set(history)
-  
-  let newHistory
-  if (historySet.has(date)) {
-    // Remove date from history (unmark)
-    newHistory = history.filter(d => d !== date)
-  } else {
-    // Add date to history (mark)
-    newHistory = [...history, date].sort()
-  }
-  
-  // Calculate new streak
-  const newStreak = calculateStreak({ ...habit, historial: newHistory })
-  
-  // Update habit
+export async function createProgramacion(programacion) {
   const { data, error } = await supabase
-    .from('habits')
-    .update({
-      historial: newHistory,
-      racha: newStreak,
+    .from('programaciones_habito')
+    .insert({
+      habit_id: programacion.habit_id,
+      tipo: programacion.tipo,
+      dias_semana: programacion.dias_semana || [],
+      meta_semanal: programacion.meta_semanal || null,
+      periodo_semanas: programacion.periodo_semanas || null,
+      dias_sugeridos: programacion.dias_sugeridos || [],
+      permitir_finde_plus: programacion.permitir_finde_plus || false,
+      tolerar_rojo_aislado: programacion.tolerar_rojo_aislado || false,
+      vigente_desde: programacion.vigente_desde || getTodayDate(),
     })
-    .eq('id', id)
-    .select('id, user_id, nombre, frecuencia, dias_semana, racha, historial')
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function updateHabitLog(habitId, fecha, estado) {
+  const { data, error } = await supabase
+    .from('habit_logs')
+    .upsert({
+      habit_id: habitId,
+      fecha,
+      estado,
+    })
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function deleteHabitLog(habitId, fecha) {
+  const { error } = await supabase
+    .from('habit_logs')
+    .delete()
+    .eq('habit_id', habitId)
+    .eq('fecha', fecha)
+
+  if (error) throw error
+}
+
+export async function createPauseDay(userId, fecha, motivo = null) {
+  const { data, error } = await supabase
+    .from('dias_pausa')
+    .insert({
+      user_id: userId,
+      fecha,
+      motivo,
+    })
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function deletePauseDay(userId, fecha) {
+  const { error } = await supabase
+    .from('dias_pausa')
+    .delete()
+    .eq('user_id', userId)
+    .eq('fecha', fecha)
+
+  if (error) throw error
+}
+
+export async function upsertAppConfig(userId, config) {
+  const { data, error } = await supabase
+    .from('app_config')
+    .upsert({
+      user_id: userId,
+      ventana_edicion_dias: config.ventana_edicion_dias || 7,
+    })
+    .select('*')
     .single()
 
   if (error) throw error

@@ -1,60 +1,179 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useHabits, useCreateHabit, useDeleteHabit, useUpdateHabit, useToggleHabitCompletion } from '../features/habits/hooks.js'
+import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useDeleteHabit } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
+import { getCurrentUser } from '../lib/supabase.js'
+import { supabase } from '../lib/supabase.js'
+import { getTodayDate, getMondayOfCurrentWeek } from '../lib/date-utils.js'
 import HabitForm from '../components/HabitForm.jsx'
-import HabitHistoryModal from '../components/HabitHistoryModal.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
+import WeeklyTracker from '../features/habits/components/WeeklyTracker.jsx'
 
-// Helper: get today's LOCAL date in YYYY-MM-DD format (avoids toISOString's UTC shift)
-function getTodayDate() {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-// Helper: get day of week (1=lunes, 7=domingo) from a YYYY-MM-DD string,
-// parsed with the LOCAL constructor (never UTC) to avoid timezone drift
-function getDayOfWeek(dateStr) {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  const day = date.getDay()
-  return day === 0 ? 7 : day
-}
+const initialHabits = [
+  {
+    nombre: 'Despertar a las 7',
+    momento_dia: 'manana',
+    programacion: {
+      tipo: 'dias_fijos',
+      dias_semana: [1, 2, 3, 4, 5],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Celular lejos al levantarme y desayuno',
+    momento_dia: 'manana',
+    programacion: {
+      tipo: 'dias_fijos',
+      dias_semana: [1, 2, 3, 4, 5],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Lectura',
+    momento_dia: 'manana',
+    programacion: {
+      tipo: 'dias_fijos',
+      dias_semana: [1, 2, 3, 4, 5],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Bloque de estudio',
+    momento_dia: 'tarde',
+    programacion: {
+      tipo: 'dias_fijos',
+      dias_semana: [1, 2, 3, 4, 5],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Python',
+    momento_dia: 'tarde',
+    programacion: {
+      tipo: 'dias_fijos',
+      dias_semana: [1, 2, 3, 4, 5],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Ejercicio',
+    momento_dia: 'tarde',
+    version_minima: '10-15 min',
+    programacion: {
+      tipo: 'dias_fijos',
+      dias_semana: [1, 2, 3, 4, 5],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Journaling corto',
+    momento_dia: 'noche',
+    programacion: {
+      tipo: 'dias_fijos',
+      dias_semana: [1, 2, 3, 4, 5, 6, 7],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Dormir 10:05 con celular fuera de la cama',
+    momento_dia: 'noche',
+    programacion: {
+      tipo: 'dias_fijos',
+      dias_semana: [1, 2, 3, 4, 5, 6, 7],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+]
 
 export default function Habits() {
   const [isCreating, setIsCreating] = useState(false)
   const [editingHabit, setEditingHabit] = useState(null)
-  const [historyHabit, setHistoryHabit] = useState(null)
-  const [today, setToday] = useState(getTodayDate())
-  const [todayDayOfWeek, setTodayDayOfWeek] = useState(getDayOfWeek(getTodayDate()))
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newToday = getTodayDate()
-      if (newToday !== today) {
-        setToday(newToday)
-        setTodayDayOfWeek(getDayOfWeek(newToday))
-      }
-    }, 60000) // Check every minute
-
-    return () => clearInterval(interval)
-  }, [today])
+  const [user, setUser] = useState(null)
+  const [isSeeding, setIsSeeding] = useState(false)
 
   const { data: habits, isLoading } = useHabits()
+  const { data: programaciones } = useProgramaciones()
+  const { data: logs } = useHabitLogs()
+  const { data: pauseDays } = usePauseDays(user?.id)
+  const { data: config } = useAppConfig(user?.id)
+
   const createHabit = useCreateHabit()
+
+  // Cargar usuario al montar
+  useEffect(() => {
+    getCurrentUser().then(setUser).catch(console.error)
+  }, [])
+
+  const handleSeedInitialHabits = async () => {
+    if (!user) return
+    setIsSeeding(true)
+
+    try {
+      // Obtener hábitos activos existentes
+      const { data: existingActiveHabits } = await supabase
+        .from('habits')
+        .select('id, nombre')
+        .eq('user_id', user.id)
+        .eq('archivado', false)
+
+      const existingNames = new Set(existingActiveHabits?.map(h => h.nombre) || [])
+
+      let createdCount = 0
+      let skippedCount = 0
+
+      for (const habit of initialHabits) {
+        if (existingNames.has(habit.nombre)) {
+          skippedCount++
+          continue
+        }
+
+        await createHabitMutation.mutateAsync({
+          ...habit,
+          user_id: user.id,
+          programacion: {
+            ...habit.programacion,
+            vigente_desde: getMondayOfCurrentWeek(), // Lunes de la semana actual
+          },
+        })
+        createdCount++
+      }
+
+      // Crear config por defecto
+      await supabase
+        .from('app_config')
+        .upsert({
+          user_id: user.id,
+          ventana_edicion_dias: 7,
+        })
+
+      playSound('save')
+      alert(`Semilla completada: ${createdCount} creados, ${skippedCount} saltados`)
+    } catch (error) {
+      console.error('Error seeding habits:', error)
+      alert('Error al sembrar hábitos')
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
+  const createHabitMutation = useCreateHabit()
   const updateHabit = useUpdateHabit()
   const deleteHabit = useDeleteHabit()
-  const toggleCompletion = useToggleHabitCompletion()
-  
+
   const { openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
 
   const handleCreate = async (habitData) => {
     try {
-      await createHabit.mutateAsync(habitData)
+      await createHabitMutation.mutateAsync(habitData)
       playSound('save')
       setIsCreating(false)
     } catch (error) {
@@ -100,27 +219,6 @@ export default function Habits() {
     })
   }
 
-  const handleToggle = async (habit) => {
-    try {
-      await toggleCompletion.mutateAsync({ id: habit.id, date: today })
-      playSound(isCompletedToday(habit) ? 'task-undone' : 'task-done')
-    } catch (error) {
-      console.error('Error toggling habit:', error)
-    }
-  }
-
-  const isCompletedToday = (habit) => {
-    return (habit.historial || []).includes(today)
-  }
-
-  const shouldShowToday = (habit) => {
-    if (habit.frecuencia === 'diario') return true
-    if (habit.frecuencia === 'semanal') {
-      return (habit.dias_semana || []).includes(todayDayOfWeek)
-    }
-    return false
-  }
-
   if (isLoading) return <div>Cargando...</div>
 
   const filteredHabits = habits?.filter(habit => !pendingDeletes.some(pd => pd.type === 'habit' && pd.itemId === habit.id)) || []
@@ -130,97 +228,33 @@ export default function Habits() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Hábitos</h1>
-        <button
-          onClick={() => setIsCreating(true)}
-          className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-4 py-2 rounded-lg hover:opacity-90"
-        >
-          + Hábito
-        </button>
+        <div className="flex gap-2">
+          {habits && habits.filter(h => !h.archivado).length === 0 && (
+            <button
+              onClick={handleSeedInitialHabits}
+              disabled={isSeeding}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
+            >
+              {isSeeding ? 'Sembrando...' : 'Crear hábitos iniciales'}
+            </button>
+          )}
+          <button
+            onClick={() => setIsCreating(true)}
+            className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-4 py-2 rounded-lg hover:opacity-90"
+          >
+            + Hábito
+          </button>
+        </div>
       </div>
 
-      {/* Habits List */}
-      <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
-        {filteredHabits.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
-            <p>No hay hábitos aún. Crea el primero para empezar.</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {filteredHabits.map((habit) => {
-              const completed = isCompletedToday(habit)
-              const showToday = shouldShowToday(habit)
-              
-              return (
-                <motion.div
-                  key={habit.id}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: showToday ? 1 : 0.5, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className={`bg-white border rounded-lg p-4 hover:shadow-md transition-shadow dark:bg-[var(--dm-surface)] dark:border-[var(--dm-border)] ${
-                    !showToday ? 'opacity-50' : ''
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg dark:text-[var(--dm-text)]">{habit.nombre}</h3>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
-                        <span>
-                          {habit.frecuencia === 'diario' ? 'Diario' : 
-                           habit.dias_semana?.map(d => ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][d - 1]).join(', ')}
-                        </span>
-                        <span className="text-orange-600 font-medium">
-                          🔥 {habit.racha} días
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {showToday && (
-                        <button
-                          onClick={() => handleToggle(habit)}
-                          disabled={toggleCompletion.isPending}
-                          className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-colors ${
-                            completed 
-                              ? 'bg-green-500 border-green-500 text-white' 
-                              : 'border-gray-300 hover:border-green-500 dark:border-[var(--dm-border)]'
-                          }`}
-                        >
-                          {completed && <span>✓</span>}
-                        </button>
-                      )}
-                      
-                      <button
-                        onClick={() => setHistoryHabit(habit)}
-                        className="text-blue-500 hover:text-blue-700 p-2 dark:text-blue-400 dark:hover:text-blue-300"
-                        title="Ver historial"
-                      >
-                        📅
-                      </button>
-                      
-                      <button
-                        onClick={() => setEditingHabit(habit)}
-                        className="text-gray-500 hover:text-gray-700 p-2 dark:text-gray-400 dark:hover:text-gray-300"
-                        title="Editar"
-                      >
-                        ✏️
-                      </button>
-                      
-                      <button
-                        onClick={() => handleDelete(habit)}
-                        className="text-red-500 hover:text-red-700 p-2 dark:text-red-400 dark:hover:text-red-300"
-                        title="Eliminar"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      {/* Weekly Tracker */}
+      <WeeklyTracker
+        habits={filteredHabits}
+        programaciones={programaciones || []}
+        logs={logs || []}
+        pauseDays={pauseDays || []}
+        config={config || { ventana_edicion_dias: 7 }}
+      />
 
       {/* Create Habit Modal */}
       <ModalWrapper
@@ -232,7 +266,7 @@ export default function Habits() {
         <HabitForm
           onSubmit={handleCreate}
           onCancel={() => setIsCreating(false)}
-          isPending={createHabit.isPending}
+          isPending={createHabitMutation.isPending}
         />
       </ModalWrapper>
 
@@ -250,14 +284,6 @@ export default function Habits() {
           editingHabit={editingHabit}
         />
       </ModalWrapper>
-
-      {/* History Modal */}
-      {historyHabit && (
-        <HabitHistoryModal
-          habit={historyHabit}
-          onClose={() => setHistoryHabit(null)}
-        />
-      )}
     </div>
   )
 }

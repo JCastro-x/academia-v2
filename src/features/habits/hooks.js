@@ -2,23 +2,41 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getHabits,
   getHabitById,
+  getProgramaciones,
+  getHabitLogs,
+  getPauseDays,
+  getAppConfig,
   createHabit,
   updateHabit,
   deleteHabit,
-  toggleHabitCompletion,
-  calculateStreak,
+  createProgramacion,
+  updateHabitLog,
+  deleteHabitLog,
+  createPauseDay,
+  deletePauseDay,
+  upsertAppConfig,
   habitsQueryKeys,
 } from './api.js'
 
 const isGuestMode = () => localStorage.getItem('academia-guest-mode') === 'true'
 
+// Para guest mode, mantenemos localStorage temporal
 const getGuestHabits = () => {
-  const data = localStorage.getItem('guest-habits')
+  const data = localStorage.getItem('guest-habits-v2')
   return data ? JSON.parse(data) : []
 }
 
 const saveGuestHabits = (habits) => {
-  localStorage.setItem('guest-habits', JSON.stringify(habits))
+  localStorage.setItem('guest-habits-v2', JSON.stringify(habits))
+}
+
+const getGuestProgramaciones = () => {
+  const data = localStorage.getItem('guest-programaciones')
+  return data ? JSON.parse(data) : []
+}
+
+const saveGuestProgramaciones = (programaciones) => {
+  localStorage.setItem('guest-programaciones', JSON.stringify(programaciones))
 }
 
 export function useHabits() {
@@ -47,6 +65,55 @@ export function useHabit(id) {
   })
 }
 
+export function useProgramaciones(habitId = null) {
+  return useQuery({
+    queryKey: [...habitsQueryKeys.programaciones, habitId],
+    queryFn: () => {
+      if (isGuestMode()) {
+        const programaciones = getGuestProgramaciones()
+        if (habitId) {
+          return programaciones.filter(p => p.habit_id === habitId)
+        }
+        return programaciones
+      }
+      return getProgramaciones(habitId)
+    },
+  })
+}
+
+export function useHabitLogs(habitId = null, startDate = null, endDate = null) {
+  return useQuery({
+    queryKey: [...habitsQueryKeys.logs, habitId, startDate, endDate],
+    queryFn: () => {
+      if (isGuestMode()) {
+        const logsKey = 'guest-habit-logs'
+        const logs = JSON.parse(localStorage.getItem(logsKey) || '[]')
+        if (habitId) {
+          return logs.filter(l => l.habit_id === habitId)
+        }
+        return logs
+      }
+      return getHabitLogs(habitId, startDate, endDate)
+    },
+  })
+}
+
+export function usePauseDays(userId = null, startDate = null, endDate = null) {
+  return useQuery({
+    queryKey: [...habitsQueryKeys.pauseDays, userId, startDate, endDate],
+    queryFn: () => getPauseDays(userId, startDate, endDate),
+    enabled: !isGuestMode() && !!userId,
+  })
+}
+
+export function useAppConfig(userId) {
+  return useQuery({
+    queryKey: [...habitsQueryKeys.config, userId],
+    queryFn: () => getAppConfig(userId),
+    enabled: !isGuestMode() && !!userId,
+  })
+}
+
 export function useCreateHabit() {
   const queryClient = useQueryClient()
 
@@ -58,10 +125,22 @@ export function useCreateHabit() {
           ...habit,
           id: `guest-${Date.now()}`,
           user_id: 'guest',
-          racha: 0,
-          historial: [],
+          archivado: false,
+          fecha_archivado: null,
         }
         saveGuestHabits([...habits, newHabit])
+        
+        // Guardar programación en guest mode
+        if (habit.programacion) {
+          const programaciones = getGuestProgramaciones()
+          const newProgramacion = {
+            id: `prog-${Date.now()}`,
+            habit_id: newHabit.id,
+            ...habit.programacion,
+          }
+          saveGuestProgramaciones([...programaciones, newProgramacion])
+        }
+        
         return newHabit
       }
       return createHabit(habit)
@@ -69,6 +148,9 @@ export function useCreateHabit() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: habitsQueryKeys.all,
+      })
+      queryClient.invalidateQueries({
+        queryKey: habitsQueryKeys.programaciones,
       })
     },
   })
@@ -84,19 +166,8 @@ export function useUpdateHabit() {
         const currentHabit = habits.find(h => h.id === id)
         if (!currentHabit) throw new Error('Habit not found')
 
-        // Recalculate streak if dias_semana or frecuencia changes
-        let newStreak = currentHabit.racha
-        if (updates.dias_semana !== undefined || updates.frecuencia !== undefined) {
-          const updatedHabit = {
-            ...currentHabit,
-            dias_semana: updates.dias_semana !== undefined ? updates.dias_semana : currentHabit.dias_semana,
-            frecuencia: updates.frecuencia !== undefined ? updates.frecuencia : currentHabit.frecuencia,
-          }
-          newStreak = calculateStreak(updatedHabit)
-        }
-
         const updatedHabits = habits.map(h =>
-          h.id === id ? { ...h, ...updates, racha: newStreak } : h
+          h.id === id ? { ...h, ...updates } : h
         )
         saveGuestHabits(updatedHabits)
         return updatedHabits.find(h => h.id === id)
@@ -132,42 +203,124 @@ export function useDeleteHabit() {
   })
 }
 
-export function useToggleHabitCompletion() {
+export function useUpdateHabitLog() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, date }) => {
+    mutationFn: async ({ habitId, fecha, estado }) => {
       if (isGuestMode()) {
-        const habits = getGuestHabits()
-        const habit = habits.find(h => h.id === id)
-        if (!habit) throw new Error('Habit not found')
-
-        const history = habit.historial || []
-        const historySet = new Set(history)
-
-        let newHistory
-        if (historySet.has(date)) {
-          // Remove date from history (unmark)
-          newHistory = history.filter(d => d !== date)
-        } else {
-          // Add date to history (mark)
-          newHistory = [...history, date].sort()
+        // Guest mode: mantener logs en localStorage
+        const logsKey = 'guest-habit-logs'
+        const logs = JSON.parse(localStorage.getItem(logsKey) || '[]')
+        
+        const existingIndex = logs.findIndex(l => l.habit_id === habitId && l.fecha === fecha)
+        
+        if (estado === null) {
+          // Borrar
+          const newLogs = logs.filter(l => !(l.habit_id === habitId && l.fecha === fecha))
+          localStorage.setItem(logsKey, JSON.stringify(newLogs))
+          return null
         }
-
-        // Calculate new streak
-        const newStreak = calculateStreak({ ...habit, historial: newHistory })
-
-        const updatedHabits = habits.map(h =>
-          h.id === id ? { ...h, historial: newHistory, racha: newStreak } : h
-        )
-        saveGuestHabits(updatedHabits)
-        return updatedHabits.find(h => h.id === id)
+        
+        const log = {
+          id: `log-${Date.now()}`,
+          habit_id: habitId,
+          fecha,
+          estado,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+        
+        if (existingIndex >= 0) {
+          logs[existingIndex] = log
+        } else {
+          logs.push(log)
+        }
+        
+        localStorage.setItem(logsKey, JSON.stringify(logs))
+        return log
       }
-      return toggleHabitCompletion(id, date)
+      
+      if (estado === null) {
+        return deleteHabitLog(habitId, fecha)
+      }
+      return updateHabitLog(habitId, fecha, estado)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: habitsQueryKeys.all,
+        queryKey: habitsQueryKeys.logs,
+      })
+    },
+  })
+}
+
+export function useCreatePauseDay() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ userId, fecha, motivo }) => {
+      if (isGuestMode()) {
+        const pauseDaysKey = 'guest-pause-days'
+        const pauseDays = JSON.parse(localStorage.getItem(pauseDaysKey) || '[]')
+        
+        const pauseDay = {
+          id: `pause-${Date.now()}`,
+          user_id: userId,
+          fecha,
+          motivo,
+        }
+        
+        pauseDays.push(pauseDay)
+        localStorage.setItem(pauseDaysKey, JSON.stringify(pauseDays))
+        return pauseDay
+      }
+      return createPauseDay(userId, fecha, motivo)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: habitsQueryKeys.pauseDays,
+      })
+    },
+  })
+}
+
+export function useDeletePauseDay() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ userId, fecha }) => {
+      if (isGuestMode()) {
+        const pauseDaysKey = 'guest-pause-days'
+        const pauseDays = JSON.parse(localStorage.getItem(pauseDaysKey) || '[]')
+        const newPauseDays = pauseDays.filter(p => !(p.user_id === userId && p.fecha === fecha))
+        localStorage.setItem(pauseDaysKey, JSON.stringify(newPauseDays))
+        return fecha
+      }
+      return deletePauseDay(userId, fecha)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: habitsQueryKeys.pauseDays,
+      })
+    },
+  })
+}
+
+export function useUpsertAppConfig() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ userId, config }) => {
+      if (isGuestMode()) {
+        const configKey = 'guest-app-config'
+        localStorage.setItem(configKey, JSON.stringify(config))
+        return config
+      }
+      return upsertAppConfig(userId, config)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: habitsQueryKeys.config,
       })
     },
   })
