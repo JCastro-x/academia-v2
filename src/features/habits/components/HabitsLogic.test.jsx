@@ -51,10 +51,13 @@ describe('DayCell Logic Tests - Oct 9, 2026 (Friday)', () => {
   })
 
   it('getEstado para mañana (sáb 10) devuelve futuro', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 9, 10, 0, 0)) // Viernes 9 de octubre de 2026, 10:00
+    
     const estado = getEstado(mockHabit, '2026-10-10', [], [mockProgramacion], [], mockConfig)
-    // Nota: sin vi.useFakeTimers, la fecha es real, así que esto puede no ser futuro
-    // Solo verificamos que devuelve un estado válido
-    expect(['pendiente', 'futuro', 'sin_registro'].includes(estado)).toBe(true)
+    expect(estado).toBe('futuro')
+    
+    vi.useRealTimers()
   })
 
   it('getEstado para hace 8 días (dom 1) devuelve sin_registro (fuera de ventana)', () => {
