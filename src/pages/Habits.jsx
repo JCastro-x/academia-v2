@@ -4,7 +4,7 @@ import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig,
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import { getMondayOfCurrentWeek, addDays } from '../lib/date-utils.js'
-import HabitForm from '../components/HabitForm.jsx'
+import HabitModal from '../components/HabitModal.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 import WeeklyTracker from '../features/habits/components/WeeklyTracker.jsx'
 import HabitsTabs from '../features/habits/components/HabitsTabs.jsx'
@@ -112,9 +112,10 @@ export default function Habits() {
   const { data: pauseDays } = usePauseDays()
   const { data: config } = useAppConfig()
 
-  // Auto-seed: crear hábitos iniciales si no existen
+  // Auto-seed: crear hábitos iniciales si no existen (solo una vez por usuario)
   useEffect(() => {
-    if (!habitsLoading && habits && habits.length === 0) {
+    const seeded = localStorage.getItem('habitos_sembrados')
+    if (!habitsLoading && habits && habits.length === 0 && !seeded) {
       seedInitialHabits()
     }
   }, [habits, habitsLoading])
@@ -146,6 +147,9 @@ export default function Habits() {
         })
         existingNames.add(habit.nombre) // Agregar a set para evitar duplicados en la misma ejecución
       }
+      
+      // Marcar como sembrado después de éxito
+      localStorage.setItem('habitos_sembrados', 'true')
     } catch (error) {
       console.error('Error seeding habits:', error)
     } finally {
@@ -266,24 +270,16 @@ export default function Habits() {
       )}
 
       {/* Modal para crear/editar */}
-      <ModalWrapper
+      <HabitModal
         isOpen={isCreating || editingHabit}
         onClose={() => {
           setIsCreating(false)
           setEditingHabit(null)
         }}
-        title={editingHabit ? 'Editar hábito' : 'Nuevo hábito'}
-      >
-        <HabitForm
-          onSubmit={editingHabit ? handleEdit : handleCreate}
-          onCancel={() => {
-            setIsCreating(false)
-            setEditingHabit(null)
-          }}
-          isPending={createHabit.isPending || updateHabit.isPending}
-          editingHabit={editingHabit}
-        />
-      </ModalWrapper>
+        isPending={createHabit.isPending || updateHabit.isPending}
+        editingHabit={editingHabit}
+        onSubmit={editingHabit ? handleEdit : handleCreate}
+      />
     </div>
   )
 }

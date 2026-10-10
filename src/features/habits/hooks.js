@@ -29,7 +29,7 @@ const generateGuestId = () => {
 }
 
 // Versionado de esquema para localStorage
-const HABITS_SCHEMA_VERSION = 4
+const HABITS_SCHEMA_VERSION = 5
 const HABITS_SCHEMA_KEY = 'guest-habits-schema-version'
 
 // Para guest mode, mantenemos localStorage temporal
@@ -159,6 +159,31 @@ const migrateGuestSchema = () => {
     
     localStorage.setItem(HABITS_SCHEMA_KEY, '4')
   }
+
+  // Migración de versión 4 a 5: reparar hábitos sin programación
+  if (currentVersion < 5) {
+    const habits = getGuestHabits()
+    const programaciones = getGuestProgramaciones()
+    const mondayOfCurrentWeek = getMondayOfCurrentWeek()
+    
+    const habitsWithoutProg = habits.filter(h => !programaciones.some(p => p.habit_id === h.id))
+    
+    if (habitsWithoutProg.length > 0) {
+      const newProgramaciones = habitsWithoutProg.map(h => ({
+        id: crypto.randomUUID(),
+        habit_id: h.id,
+        tipo: 'dias_fijos',
+        dias_semana: [1, 2, 3, 4, 5],
+        permitir_finde_plus: false,
+        tolerar_rojo_aislado: false,
+        vigente_desde: mondayOfCurrentWeek,
+      }))
+      
+      saveGuestProgramaciones([...programaciones, ...newProgramaciones])
+    }
+    
+    localStorage.setItem(HABITS_SCHEMA_KEY, '5')
+  }
 }
 
 // Ejecutar migración al cargar
@@ -169,7 +194,69 @@ export function useHabits() {
     queryKey: habitsQueryKeys.all,
     queryFn: () => {
       if (isGuestMode()) {
-        return getGuestHabits()
+        let habits = getGuestHabits()
+        const programaciones = getGuestProgramaciones()
+        const logs = JSON.parse(localStorage.getItem('guest-habit-logs') || '[]')
+        
+        // Limpiar duplicados por nombre en cada lectura
+        const byName = {}
+        habits.forEach(h => {
+          if (!byName[h.nombre]) {
+            byName[h.nombre] = []
+          }
+          byName[h.nombre].push(h)
+        })
+        
+        const habitsToKeep = []
+        const idsToDelete = []
+        
+        Object.entries(byName).forEach(([nombre, habitList]) => {
+          if (habitList.length > 1) {
+            const logCounts = habitList.map(h => logs.filter(l => l.habit_id === h.id).length)
+            const maxLogs = Math.max(...logCounts)
+            const indexToKeep = logCounts.indexOf(maxLogs)
+            
+            habitList.forEach((h, i) => {
+              if (i === indexToKeep) {
+                habitsToKeep.push(h)
+              } else {
+                idsToDelete.push(h.id)
+              }
+            })
+          } else {
+            habitsToKeep.push(habitList[0])
+          }
+        })
+        
+        // Reparar hábitos sin programación
+        const mondayOfCurrentWeek = getMondayOfCurrentWeek()
+        const habitsWithoutProg = habitsToKeep.filter(h => !programaciones.some(p => p.habit_id === h.id))
+        
+        if (habitsWithoutProg.length > 0) {
+          const newProgramaciones = habitsWithoutProg.map(h => ({
+            id: crypto.randomUUID(),
+            habit_id: h.id,
+            tipo: 'dias_fijos',
+            dias_semana: [1, 2, 3, 4, 5],
+            permitir_finde_plus: false,
+            tolerar_rojo_aislado: false,
+            vigente_desde: mondayOfCurrentWeek,
+          }))
+          
+          saveGuestProgramaciones([...programaciones, ...newProgramaciones])
+        }
+        
+        // Guardar estado limpio si hubo cambios
+        if (idsToDelete.length > 0 || habitsWithoutProg.length > 0) {
+          const filteredLogs = logs.filter(l => !idsToDelete.includes(l.habit_id))
+          localStorage.setItem('guest-habit-logs', JSON.stringify(filteredLogs))
+          saveGuestHabits(habitsToKeep)
+          
+          const filteredProgramaciones = programaciones.filter(p => !idsToDelete.includes(p.habit_id))
+          saveGuestProgramaciones(filteredProgramaciones)
+        }
+        
+        return habitsToKeep
       }
       return getHabits()
     },
@@ -252,23 +339,29 @@ export function useCreateHabit() {
     mutationFn: async (habit) => {
       if (isGuestMode()) {
         const habits = getGuestHabits()
+        const programaciones = getGuestProgramaciones()
+        
+        const newHabitId = generateGuestId()
+        const newProgramacionId = crypto.randomUUID()
+        
         const newHabit = {
           ...habit,
-          id: generateGuestId(),
+          id: newHabitId,
           user_id: 'guest',
           archivado: false,
           fecha_archivado: null,
         }
+        
+        const newProgramacion = habit.programacion ? {
+          id: newProgramacionId,
+          habit_id: newHabitId,
+          ...habit.programacion,
+        } : null
+        
+        // Guardar todo en una sola operación (todo o nada)
         saveGuestHabits([...habits, newHabit])
         
-        // Guardar programación en guest mode
-        if (habit.programacion) {
-          const programaciones = getGuestProgramaciones()
-          const newProgramacion = {
-            id: `prog-${guestIdCounter}-${Date.now()}`,
-            habit_id: newHabit.id,
-            ...habit.programacion,
-          }
+        if (newProgramacion) {
           saveGuestProgramaciones([...programaciones, newProgramacion])
         }
         
