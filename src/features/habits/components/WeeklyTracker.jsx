@@ -4,7 +4,7 @@ import { getTodayDate, addDays, getDayOfWeek } from '../../../lib/date-utils.js'
 import DaysHeader from './DaysHeader.jsx'
 import HabitRow from './HabitRow.jsx'
 
-export default function WeeklyTracker({ habits, programaciones, logs, pauseDays, config }) {
+export default function WeeklyTracker({ habits, programaciones, logs, pauseDays, config, onEditHabit, onArchiveHabit, onTogglePause, onDeleteHabit, userId, showArchived, onToggleShowArchived }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const today = getTodayDate()
     const dayOfWeek = getDayOfWeek(today)
@@ -39,9 +39,9 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
 
   // Agrupar hábitos por momento del día
   const groupedHabits = {
-    manana: habits.filter(h => h.momento_dia === 'manana' && !h.archivado),
-    tarde: habits.filter(h => h.momento_dia === 'tarde' && !h.archivado),
-    noche: habits.filter(h => h.momento_dia === 'noche' && !h.archivado),
+    manana: habits.filter(h => h.momento_dia === 'manana' && (showArchived ? true : !h.archivado)),
+    tarde: habits.filter(h => h.momento_dia === 'tarde' && (showArchived ? true : !h.archivado)),
+    noche: habits.filter(h => h.momento_dia === 'noche' && (showArchived ? true : !h.archivado)),
   }
 
   const momentLabels = {
@@ -79,13 +79,23 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
         </button>
       </div>
 
+      {/* Filtro de archivados */}
+      <div className="mb-4">
+        <button
+          onClick={onToggleShowArchived}
+          className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] hover:text-gray-900 dark:hover:text-[var(--dm-text)]"
+        >
+          {showArchived ? 'Ocultar archivados' : 'Ver archivados'}
+        </button>
+      </div>
+
       {/* Header de días */}
-      <div className="max-w-[720px] mx-auto">
+      <div className="w-full">
         <DaysHeader days={weekDays} />
       </div>
 
       {/* Lista de hábitos agrupados */}
-      <div className="flex-1 overflow-y-auto space-y-4 pb-20 max-w-[720px] mx-auto">
+      <div className="space-y-4 w-full">
         {Object.entries(groupedHabits).map(([momento, habitList]) => {
           if (habitList.length === 0) return null
 
@@ -104,6 +114,11 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
                     logs={logs}
                     pauseDays={pauseDays}
                     config={config}
+                    onEdit={onEditHabit}
+                    onArchive={onArchiveHabit}
+                    onTogglePause={onTogglePause}
+                    onDelete={onDeleteHabit}
+                    userId={userId}
                   />
                 ))}
               </div>
@@ -111,7 +126,7 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
           )
         })}
 
-        {habits.filter(h => !h.archivado).length === 0 && (
+        {Object.values(groupedHabits).every(habitList => habitList.length === 0) && (
           <div className="text-center py-8 text-gray-500 dark:text-[var(--dm-text-muted)]">
             <p>No hay hábitos aún. Crea el primero para empezar.</p>
           </div>

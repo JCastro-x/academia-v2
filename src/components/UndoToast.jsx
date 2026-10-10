@@ -16,7 +16,8 @@ export default function UndoToast() {
   useEffect(() => {
     if (!undoToast) return
 
-    setTimeLeft(5)
+    const durationSeconds = undoToast.durationSeconds ?? 5
+    setTimeLeft(durationSeconds)
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {

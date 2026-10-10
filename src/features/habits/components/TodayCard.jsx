@@ -1,14 +1,44 @@
+import { motion, AnimatePresence } from 'framer-motion'
 import { calculateOverallPercent, compareWithPreviousWeek, countActiveStreaks } from '../stats.js'
+import { getTodayDate, getDayOfWeek, addDays } from '../../../lib/date-utils.js'
 
-export default function TodayCard({ habits, logs, programaciones, pauseDays, config }) {
+export default function TodayCard({ habits, logs, programaciones, pauseDays, config, isWeekComplete }) {
   const overallPercent = calculateOverallPercent(habits, logs, programaciones, pauseDays, config)
   const comparison = compareWithPreviousWeek(habits, logs, programaciones, pauseDays, config)
   const activeStreaks = countActiveStreaks(habits, logs, programaciones, pauseDays, config)
   const totalHabits = habits.filter(h => !h.archivado).length
-  const completedHabits = totalHabits > 0 ? Math.round((overallPercent / 100) * totalHabits) : 0
+  const today = getTodayDate()
+
+  // Contar solo cumplidos (verde) como hábitos completos hoy
+  const completedHabits = habits.filter(h => {
+    if (h.archivado) return false
+    const log = logs.find(l => l.habit_id === h.id && l.fecha === today)
+    return log?.estado === 'cumplido'
+  }).length
 
   return (
-    <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4 mb-4">
+    <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4 mb-4 relative overflow-hidden">
+      <AnimatePresence>
+        {isWeekComplete && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute inset-0 bg-[var(--color-primary)] flex items-center justify-center z-10"
+          >
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-center"
+            >
+              <div className="text-4xl mb-2">🎉</div>
+              <div className="text-2xl font-bold text-[var(--color-primary-fg)]">¡Semana completa!</div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold dark:text-[var(--dm-text)]">Hoy</h3>
         <span className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">{comparison.message}</span>

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useDeleteHabit } from '../features/habits/hooks.js'
+import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useArchiveHabit, useTogglePauseDay, useDeleteHabit } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
-import { getMondayOfCurrentWeek, addDays } from '../lib/date-utils.js'
-import HabitForm from '../components/HabitForm.jsx'
+import { getMondayOfCurrentWeek, addDays, getDayOfWeek, getTodayDate } from '../lib/date-utils.js'
+import HabitModal from '../components/HabitModal.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 import WeeklyTracker from '../features/habits/components/WeeklyTracker.jsx'
 import HabitsTabs from '../features/habits/components/HabitsTabs.jsx'
@@ -93,6 +93,37 @@ const initialHabits = [
       tolerar_rojo_aislado: false,
     },
   },
+  {
+    nombre: 'Demo: Leer 3 libros por mes',
+    momento_dia: 'tarde',
+    programacion: {
+      tipo: 'meta_semanal',
+      meta_semanal: 3,
+      dias_sugeridos: [1, 3, 5],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Demo: Revisar finanzas',
+    momento_dia: 'tarde',
+    programacion: {
+      tipo: 'periodico',
+      periodo_semanas: 2,
+      dias_sugeridos: [6],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Demo: No comer dulces',
+    momento_dia: 'tarde',
+    programacion: {
+      tipo: 'evitar',
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
 ]
 
 export default function Habits() {
@@ -100,10 +131,12 @@ export default function Habits() {
   const [editingHabit, setEditingHabit] = useState(null)
   const [isSeeding, setIsSeeding] = useState(false)
   const [activeTab, setActiveTab] = useState('semana')
-  const [showExampleData, setShowExampleData] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
 
   const createHabitMutation = useCreateHabit()
   const updateHabitMutation = useUpdateHabit()
+  const archiveHabitMutation = useArchiveHabit()
+  const togglePauseDayMutation = useTogglePauseDay()
   const deleteHabitMutation = useDeleteHabit()
 
   const { data: habits, isLoading: habitsLoading } = useHabits()
@@ -112,9 +145,11 @@ export default function Habits() {
   const { data: pauseDays } = usePauseDays()
   const { data: config } = useAppConfig()
 
-  // Auto-seed: crear hábitos iniciales si no existen
+  // Auto-seed: crear hábitos iniciales si no existen (solo una vez por usuario)
   useEffect(() => {
-    if (!habitsLoading && habits && habits.length === 0) {
+    const seeded = localStorage.getItem('habitos_sembrados')
+    const hasActiveHabits = habits && habits.some(h => !h.archivado)
+    if (!habitsLoading && !hasActiveHabits && !seeded) {
       seedInitialHabits()
     }
   }, [habits, habitsLoading])
@@ -126,8 +161,44 @@ export default function Habits() {
     }
   }, [config])
 
+  // Verificar si la semana está completa (solo hábitos de días fijos)
+  const isWeekComplete = () => {
+    if (!habits || !logs || !programaciones) return false
+    const today = getTodayDate()
+    const dayOfWeek = getDayOfWeek(today)
+    const monday = addDays(today, -(dayOfWeek - 1))
+    
+    const diasFijosHabits = habits.filter(h => {
+      if (h.archivado) return false
+      const prog = programaciones.find(p => p.habit_id === h.id)
+      return prog?.tipo === 'dias_fijos'
+    })
+    
+    for (const habit of diasFijosHabits) {
+      const prog = programaciones.find(p => p.habit_id === habit.id)
+      if (!prog) continue
+      
+      for (let i = 0; i < 7; i++) {
+        const fecha = addDays(monday, i)
+        const dayIndex = getDayOfWeek(fecha)
+        
+        // Solo verificar días programados
+        if (!prog.dias_semana.includes(dayIndex)) continue
+        
+        const log = logs.find(l => l.habit_id === habit.id && l.fecha === fecha)
+        if (log?.estado !== 'cumplido') return false
+      }
+    }
+    
+    return true
+  }
+
   const seedInitialHabits = async () => {
     setIsSeeding(true)
+    
+    // Marcar como sembrado al empezar para evitar reintento en bucle
+    localStorage.setItem('habitos_sembrados', 'true')
+    
     try {
       const existingNames = new Set(habits?.filter(h => !h.archivado).map(h => h.nombre) || [])
 
@@ -144,9 +215,12 @@ export default function Habits() {
             vigente_desde: getMondayOfCurrentWeek(),
           },
         })
+        existingNames.add(habit.nombre) // Agregar a set para evitar duplicados en la misma ejecución
       }
     } catch (error) {
       console.error('Error seeding habits:', error)
+      // Si falla, limpiar la bandera para permitir reintento manual
+      localStorage.removeItem('habitos_sembrados')
     } finally {
       setIsSeeding(false)
     }
@@ -154,9 +228,8 @@ export default function Habits() {
 
   const createHabit = useCreateHabit()
   const updateHabit = useUpdateHabit()
-  const deleteHabit = useDeleteHabit()
 
-  const { openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes } = useUIStore()
+  const { openConfirmDialog, showUndoToast, addPendingDelete, removePendingDelete, pendingDeletes, addToast } = useUIStore()
 
   const handleCreate = async (habitData) => {
     try {
@@ -178,28 +251,65 @@ export default function Habits() {
     }
   }
 
-  const handleDelete = (habit) => {
+  const handleArchive = async (habit, archivado) => {
+    try {
+      await archiveHabitMutation.mutateAsync({ id: habit.id, archivado })
+      playSound('save')
+    } catch (error) {
+      console.error('Error archiving habit:', error)
+    }
+  }
+
+  const handleTogglePause = async (fecha) => {
+    try {
+      await togglePauseDayMutation.mutateAsync({ fecha, userId: 'guest' })
+    } catch (error) {
+      console.error('Error toggling pause day:', error)
+    }
+  }
+
+  const handleDeleteHabit = (habit) => {
     openConfirmDialog({
       title: 'Eliminar hábito',
-      message: `¿Estás seguro de eliminar "${habit.nombre}"? Se perderá todo el historial.`,
+      message: `¿Eliminar "${habit.nombre}" y todo su historial?`,
       confirmText: 'Eliminar',
       onConfirm: () => {
-        deleteHabit.mutate(habit.id, {
-          onSuccess: () => {
-            playSound('delete')
-            addPendingDelete(habit)
-            showUndoToast({
-              message: 'Hábito eliminado',
-              onUndo: () => {
-                removePendingDelete(habit.id)
-                // TODO: Restore habit from backup
-              },
-            })
-          },
+        const pendingDeleteId = crypto.randomUUID()
+
+        const habitProgramaciones = (programaciones || []).filter(p => p.habit_id === habit.id)
+        const habitLogs = (logs || []).filter(l => l.habit_id === habit.id)
+
+        const pendingId = addPendingDelete({
+          type: 'habit',
+          itemId: habit.id,
+          pendingId: pendingDeleteId,
+          data: { habit, programaciones: habitProgramaciones, logs: habitLogs }
         })
-      },
+
+        showUndoToast({
+          message: 'Hábito eliminado',
+          durationSeconds: 6,
+          onTimeout: async () => {
+            try {
+              await deleteHabitMutation.mutateAsync(habit.id)
+              removePendingDelete(pendingId)
+            } catch (error) {
+              console.error('Error deleting habit:', error)
+              addToast({ type: 'error', message: 'No se pudo eliminar el hábito' })
+              removePendingDelete(pendingId)
+            }
+          },
+          onUndo: () => {
+            removePendingDelete(pendingId)
+          }
+        })
+      }
     })
   }
+
+  const visibleHabits = (habits || []).filter(
+    habit => !pendingDeletes.some(pending => pending.type === 'habit' && pending.itemId === habit.id)
+  )
 
   if (habitsLoading || isSeeding) {
     return (
@@ -212,7 +322,7 @@ export default function Habits() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-2rem)] pb-8 md:pb-8">
+    <div className="flex flex-col min-h-dvh pb-32 md:pb-12">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Hábitos</h1>
@@ -229,60 +339,57 @@ export default function Habits() {
 
       {/* Contenido */}
       {activeTab === 'semana' ? (
-        <div className="flex-1 overflow-y-auto pb-20">
+        <div className="space-y-4">
           <TodayCard
-            habits={habits || []}
+            habits={visibleHabits}
             logs={logs || []}
             programaciones={programaciones || []}
             pauseDays={pauseDays || []}
             config={config || {}}
+            isWeekComplete={isWeekComplete()}
           />
           <WeeklyTracker
-            habits={habits || []}
+            habits={visibleHabits}
             programaciones={programaciones || []}
             logs={logs || []}
             pauseDays={pauseDays || []}
             config={config || {}}
+            onEditHabit={(habit) => setEditingHabit(habit)}
+            onArchiveHabit={handleArchive}
+            onTogglePause={handleTogglePause}
+            onDeleteHabit={handleDeleteHabit}
+            userId="guest"
+            showArchived={showArchived}
+            onToggleShowArchived={() => setShowArchived(!showArchived)}
           />
           <div className="mt-4 text-center text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
-            {showExampleData
-              ? 'Datos de ejemplo cargados para demostración'
-              : 'Cada día es una oportunidad. ¡Sigue así!'}
+            Cada día es una oportunidad. ¡Sigue así!
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto pb-20">
+        <div className="space-y-6">
           <ProgressView
-            habits={habits || []}
+            habits={visibleHabits}
             logs={logs || []}
             programaciones={programaciones || []}
             pauseDays={pauseDays || []}
             config={config || {}}
-            showExampleData={showExampleData}
-            onToggleExampleData={() => setShowExampleData(!showExampleData)}
           />
         </div>
       )}
 
       {/* Modal para crear/editar */}
-      <ModalWrapper
+      <HabitModal
         isOpen={isCreating || editingHabit}
         onClose={() => {
           setIsCreating(false)
           setEditingHabit(null)
         }}
-        title={editingHabit ? 'Editar hábito' : 'Nuevo hábito'}
-      >
-        <HabitForm
-          onSubmit={editingHabit ? handleEdit : handleCreate}
-          onCancel={() => {
-            setIsCreating(false)
-            setEditingHabit(null)
-          }}
-          isPending={createHabit.isPending || updateHabit.isPending}
-          editingHabit={editingHabit}
-        />
-      </ModalWrapper>
+        isPending={createHabit.isPending || updateHabit.isPending}
+        editingHabit={editingHabit}
+        programaciones={programaciones}
+        onSubmit={editingHabit ? handleEdit : handleCreate}
+      />
     </div>
   )
 }

@@ -1,10 +1,13 @@
-import { getDayOfWeek, isToday, addDays } from '../../../lib/date-utils.js'
+import { getDayOfWeek, isToday } from '../../../lib/date-utils.js'
 
 const dayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
+// Plantilla de grilla compartida con HabitRow
+export const GRID_TEMPLATE = 'minmax(140px, 1.5fr) repeat(7, minmax(0, 1fr)) minmax(90px, auto)'
+
 export default function DaysHeader({ days }) {
   return (
-    <div className="grid grid-cols-9 gap-2 mb-2">
+    <div className="hidden md:grid gap-2 mb-2" style={{ gridTemplateColumns: GRID_TEMPLATE }}>
       <div className="text-xs font-semibold text-gray-600 dark:text-[var(--dm-text-muted)] flex items-center">
         Hábito
       </div>

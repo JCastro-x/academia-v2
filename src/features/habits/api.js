@@ -105,8 +105,27 @@ export function isDayApplicable(habit, fecha, programaciones, pauseDays) {
     case 'periodico':
       const vigencia = prog.vigente_desde
       const semanasDesdeVigencia = Math.floor(daysBetween(vigencia, fecha) / 7)
-      return semanasDesdeVigencia % prog.periodo_semanas === 0
+      const esSemanaActiva = semanasDesdeVigencia % prog.periodo_semanas === 0
+      // Solo marcable en el día sugerido de la semana activa
+      if (!esSemanaActiva) return false
+      if (prog.dias_sugeridos && prog.dias_sugeridos.length > 0) {
+        return prog.dias_sugeridos.includes(dayOfWeek)
+      }
+      return true
   }
+}
+
+export function isDayGrayed(habit, fecha, programaciones, pauseDays) {
+  const prog = getProgramacionVigente(habit, fecha, programaciones)
+  if (!prog) return false
+
+  if (prog.tipo === 'dias_fijos') {
+    const dayOfWeek = getDayOfWeek(fecha)
+    return !prog.dias_semana.includes(dayOfWeek) && 
+           !(prog.permitir_finde_plus && (dayOfWeek === 6 || dayOfWeek === 7))
+  }
+
+  return false
 }
 
 // =====================================================
@@ -119,6 +138,18 @@ export function isWeekendPlus(habit, fecha, programaciones) {
 
   const dayOfWeek = getDayOfWeek(fecha)
   return dayOfWeek === 6 || dayOfWeek === 7 // Sábado o domingo
+}
+
+// =====================================================
+// DÍA SUGERIDO (META SEMANAL / PERIÓDICO)
+// =====================================================
+
+export function isDaySugerido(habit, fecha, programaciones) {
+  const prog = getProgramacionVigente(habit, fecha, programaciones)
+  if (!prog || !prog.dias_sugeridos) return false
+
+  const dayOfWeek = getDayOfWeek(fecha)
+  return prog.dias_sugeridos.includes(dayOfWeek)
 }
 
 // =====================================================
@@ -252,12 +283,19 @@ export async function createHabit(habit) {
   if (error) throw error
 
   // Crear programación inicial (empieza el lunes de la semana actual)
+  // Si falla, hacer rollback borrando el hábito
   if (habit.programacion) {
-    await createProgramacion({
-      habit_id: data.id,
-      ...habit.programacion,
-      vigente_desde: getMondayOfCurrentWeek(), // Lunes de la semana actual
-    })
+    try {
+      await createProgramacion({
+        habit_id: data.id,
+        ...habit.programacion,
+        vigente_desde: getMondayOfCurrentWeek(), // Lunes de la semana actual
+      })
+    } catch (progError) {
+      // Rollback: borrar el hábito si la programación falló
+      await supabase.from('habits').delete().eq('id', data.id)
+      throw progError
+    }
   }
 
   return data
@@ -281,17 +319,67 @@ export async function updateHabit(id, updates) {
 
   // Si hay cambios en programación, crear nueva versión (empieza hoy)
   if (updates.programacion) {
-    await createProgramacion({
-      habit_id: id,
-      ...updates.programacion,
-      vigente_desde: getTodayDate(), // Hoy al editar
-    })
+    const today = getTodayDate()
+    
+    // Verificar si ya existe programación con vigente_desde = hoy para este hábito
+    const existingToday = await supabase
+      .from('programaciones_habito')
+      .select('id')
+      .eq('habit_id', id)
+      .eq('vigente_desde', today)
+      .maybeSingle()
+    
+    try {
+      if (existingToday.data) {
+        // Reemplazar la programación de hoy
+        await supabase
+          .from('programaciones_habito')
+          .update({
+            tipo: updates.programacion.tipo,
+            dias_semana: updates.programacion.dias_semana || [],
+            meta_semanal: updates.programacion.meta_semanal || null,
+            periodo_semanas: updates.programacion.periodo_semanas || null,
+            dias_sugeridos: updates.programacion.dias_sugeridos || [],
+            permitir_finde_plus: updates.programacion.permitir_finde_plus || false,
+            tolerar_rojo_aislado: updates.programacion.tolerar_rojo_aislado || false,
+          })
+          .eq('id', existingToday.data.id)
+      } else {
+        // Crear nueva programación
+        await createProgramacion({
+          habit_id: id,
+          ...updates.programacion,
+          vigente_desde: today,
+        })
+      }
+    } catch (progError) {
+      // Rollback: revertir cambios al hábito si la programación falló
+      // Nota: esto es simplificado, idealmente se debería guardar el estado anterior
+      throw progError
+    }
   }
 
   return data
 }
 
 export async function deleteHabit(id) {
+  // Borrar programaciones
+  const { error: progError } = await supabase
+    .from('programaciones_habito')
+    .delete()
+    .eq('habit_id', id)
+
+  if (progError) throw progError
+
+  // Borrar logs
+  const { error: logsError } = await supabase
+    .from('habit_logs')
+    .delete()
+    .eq('habit_id', id)
+
+  if (logsError) throw logsError
+
+  // Borrar hábito
   const { error } = await supabase
     .from('habits')
     .delete()

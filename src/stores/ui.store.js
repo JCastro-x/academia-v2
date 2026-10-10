@@ -60,9 +60,13 @@ export const useUIStore = create((set) => ({
 
   // Pending deletes (items waiting for undo timeout)
   pendingDeletes: [],
-  addPendingDelete: (item) => set((state) => ({
-    pendingDeletes: [...state.pendingDeletes, { ...item, id: Date.now() }]
-  })),
+  addPendingDelete: (item) => {
+    const id = item.pendingId ?? item.id ?? Date.now()
+    set((state) => ({
+      pendingDeletes: [...state.pendingDeletes, { ...item, id }]
+    }))
+    return id
+  },
   removePendingDelete: (itemId) => set((state) => ({
     pendingDeletes: state.pendingDeletes.filter((item) => item.id !== itemId)
   })),
