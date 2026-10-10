@@ -5,6 +5,16 @@ import { calculateOverallPercent } from '../stats.js'
 export default function ProgressView({ habits, logs, programaciones, pauseDays, config, showExampleData, onToggleExampleData }) {
   const [selectedMonth, setSelectedMonth] = useState(() => getTodayDate().slice(0, 7)) // YYYY-MM
 
+  const clearExampleData = () => {
+    localStorage.removeItem('guest-habit-logs-example')
+    setShowExampleData(false)
+  }
+
+  // Si hay datos de ejemplo, usarlos; si no, usar datos reales o mostrar mensaje
+  const useExample = showExampleData && localStorage.getItem('guest-habit-logs-example')
+  const dataLogs = useExample ? JSON.parse(localStorage.getItem('guest-habit-logs-example') || '[]') : logs || []
+  const dataHabits = useExample ? habits : habits || []
+
   // Datos de ejemplo para las últimas 4 semanas (temporal)
   const mockWeeklyData = [
     { week: '1', percent: 60 },
@@ -38,13 +48,21 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
   return (
     <div className="space-y-6">
       {/* Botón de datos de ejemplo */}
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 flex items-center justify-between">
         <button
           onClick={onToggleExampleData}
           className="text-sm text-yellow-800 dark:text-yellow-200 font-medium"
         >
           {showExampleData ? '✓ Datos de ejemplo activados' : '⚠️ Cargar datos de ejemplo (demo)'}
         </button>
+        {showExampleData && (
+          <button
+            onClick={clearExampleData}
+            className="text-sm text-yellow-800 dark:text-yellow-200 font-medium ml-4"
+          >
+            Quitar datos de ejemplo
+          </button>
+        )}
       </div>
 
       {/* Gráfico de barras por día */}
@@ -53,12 +71,12 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
         <div className="flex items-end justify-between h-32 gap-2">
           {mockDailyData.map((item) => (
             <div key={item.day} className="flex-1 flex flex-col items-center">
+              <div className="text-xs font-medium dark:text-[var(--dm-text)] mb-1">{item.percent}%</div>
               <div
-                className="w-full bg-[var(--color-primary)] rounded-t"
+                className="w-full bg-[var(--color-primary)] rounded-t min-h-[4px]"
                 style={{ height: `${item.percent}%` }}
               />
               <span className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] mt-1">{item.day}</span>
-              <span className="text-xs font-medium dark:text-[var(--dm-text)]">{item.percent}%</span>
             </div>
           ))}
         </div>
@@ -92,7 +110,7 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
             Mes siguiente →
           </button>
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1 mb-2">
           {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, i) => (
             <div key={day} className="text-center">
               <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] mb-1">{day}</div>
@@ -100,19 +118,39 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
                 {Array.from({ length: 5 }).map((_, j) => {
                   const idx = i * 5 + j
                   const data = mockHeatmapData[idx]
-                  if (!data) return <div key={j} className="w-6 h-6 bg-gray-100 dark:bg-[var(--dm-bg)] rounded" />
+                  if (!data) return <div key={j} className="w-7 h-7 bg-gray-100 dark:bg-[var(--dm-bg)] rounded" />
                   const bg = data.percent >= 75 ? 'bg-green-500' : data.percent >= 50 ? 'bg-green-300' : data.percent >= 25 ? 'bg-yellow-300' : 'bg-gray-300'
                   return (
                     <div
                       key={j}
-                      className={`w-6 h-6 ${bg} rounded`}
-                      title={`${data.percent}%`}
-                    />
+                      className={`w-7 h-7 ${bg} rounded flex items-center justify-center text-xs font-medium text-white`}
+                      title={`${data.day}: ${data.percent}%`}
+                    >
+                      {data.day}
+                    </div>
                   )
                 })}
               </div>
             </div>
           ))}
+        </div>
+        <div className="flex items-center justify-center gap-4 text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-gray-300 rounded" />
+            <span>0-25%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-yellow-300 rounded" />
+            <span>25-50%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-green-300 rounded" />
+            <span>50-75%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-green-500 rounded" />
+            <span>75-100%</span>
+          </div>
         </div>
       </div>
 
@@ -122,12 +160,12 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
         <div className="flex items-end justify-between h-32 gap-2">
           {mockWeeklyData.map((item) => (
             <div key={item.week} className="flex-1 flex flex-col items-center">
+              <div className="text-xs font-medium dark:text-[var(--dm-text)] mb-1">{item.percent}%</div>
               <div
-                className="w-full bg-[var(--color-primary)] rounded-t"
+                className="w-full bg-[var(--color-primary)] rounded-t min-h-[4px]"
                 style={{ height: `${item.percent}%` }}
               />
               <span className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] mt-1">S{item.week}</span>
-              <span className="text-xs font-medium dark:text-[var(--dm-text)]">{item.percent}%</span>
             </div>
           ))}
         </div>
@@ -153,14 +191,23 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
       </div>
 
       {/* Insights */}
-      <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
-        <h3 className="text-sm font-semibold dark:text-[var(--dm-text)] mb-4">Insights</h3>
-        <div className="space-y-2 text-sm text-gray-700 dark:text-[var(--dm-text)]">
-          <p>• Mejor día de la semana: <span className="font-semibold">Miércoles</span> (90% cumplimiento)</p>
-          <p>• Hábito más constante: <span className="font-semibold">Journaling corto</span> (100% esta semana)</p>
-          <p>• Tendencia: <span className="text-green-600 dark:text-green-400">↗ Mejorando</span> (+18 pts vs mes anterior)</p>
+      {dataHabits.length === 0 || dataLogs.length === 0 ? (
+        <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
+          <h3 className="text-sm font-semibold dark:text-[var(--dm-text)] mb-4">Insights</h3>
+          <div className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
+            Aún no hay suficientes datos para mostrar insights.
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
+          <h3 className="text-sm font-semibold dark:text-[var(--dm-text)] mb-4">Insights</h3>
+          <div className="space-y-2 text-sm text-gray-700 dark:text-[var(--dm-text)]">
+            <p>• Mejor día de la semana: <span className="font-semibold">Miércoles</span> (90% cumplimiento)</p>
+            <p>• Hábito más constante: <span className="font-semibold">Journaling corto</span> (100% esta semana)</p>
+            <p>• Tendencia: <span className="text-green-600 dark:text-green-400">↗ Mejorando</span> (+18 pts vs mes anterior)</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

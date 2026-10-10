@@ -22,10 +22,10 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="grid gap-2 items-center h-11"
+      className="grid gap-2 items-center min-h-[44px]"
       style={{ gridTemplateColumns: GRID_TEMPLATE }}
     >
-      <div className="text-xs font-medium dark:text-[var(--dm-text)] truncate pr-2" title={habit.nombre}>
+      <div className="text-xs font-medium dark:text-[var(--dm-text)] break-words leading-tight pr-2" title={habit.nombre}>
         {habit.nombre}
       </div>
       {days.map(day => (

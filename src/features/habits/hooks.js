@@ -29,7 +29,7 @@ const generateGuestId = () => {
 }
 
 // Versionado de esquema para localStorage
-const HABITS_SCHEMA_VERSION = 3
+const HABITS_SCHEMA_VERSION = 4
 const HABITS_SCHEMA_KEY = 'guest-habits-schema-version'
 
 // Para guest mode, mantenemos localStorage temporal
@@ -106,6 +106,58 @@ const migrateGuestSchema = () => {
     
     saveGuestProgramaciones(fixedProgramaciones)
     localStorage.setItem(HABITS_SCHEMA_KEY, '3')
+  }
+
+  // Migración de versión 3 a 4: eliminar duplicados por nombre, conservar el con más logs
+  if (currentVersion < 4) {
+    const habits = getGuestHabits()
+    const logs = JSON.parse(localStorage.getItem('guest-habit-logs') || '[]')
+    
+    // Agrupar por nombre
+    const byName = {}
+    habits.forEach(h => {
+      if (!byName[h.nombre]) {
+        byName[h.nombre] = []
+      }
+      byName[h.nombre].push(h)
+    })
+    
+    // Para cada nombre con duplicados, conservar el que tenga más logs
+    const habitsToKeep = []
+    const idsToDelete = []
+    
+    Object.entries(byName).forEach(([nombre, habitList]) => {
+      if (habitList.length > 1) {
+        // Contar logs para cada duplicado
+        const logCounts = habitList.map(h => logs.filter(l => l.habit_id === h.id).length)
+        const maxLogs = Math.max(...logCounts)
+        const indexToKeep = logCounts.indexOf(maxLogs)
+        
+        habitList.forEach((h, i) => {
+          if (i === indexToKeep) {
+            habitsToKeep.push(h)
+          } else {
+            idsToDelete.push(h.id)
+          }
+        })
+      } else {
+        habitsToKeep.push(habitList[0])
+      }
+    })
+    
+    // Eliminar logs de hábitos duplicados
+    const filteredLogs = logs.filter(l => !idsToDelete.includes(l.habit_id))
+    localStorage.setItem('guest-habit-logs', JSON.stringify(filteredLogs))
+    
+    // Guardar hábitos limpios
+    saveGuestHabits(habitsToKeep)
+    
+    // Eliminar programaciones de hábitos duplicados
+    const programaciones = getGuestProgramaciones()
+    const filteredProgramaciones = programaciones.filter(p => !idsToDelete.includes(p.habit_id))
+    saveGuestProgramaciones(filteredProgramaciones)
+    
+    localStorage.setItem(HABITS_SCHEMA_KEY, '4')
   }
 }
 
