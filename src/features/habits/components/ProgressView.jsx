@@ -6,10 +6,10 @@ import { calculateOverallPercent } from '../stats.js'
 export default function ProgressView({ habits, logs, programaciones, pauseDays, config }) {
   const [selectedMonth, setSelectedMonth] = useState(() => getTodayDate().slice(0, 7)) // YYYY-MM
 
-  const hasAnyLog = (logs || []).length > 0
-  const hasMultipleWeeks = hasAnyLog && new Set(dataLogs.map(l => l.fecha.slice(0, 7))).size > 1
   const dataLogs = logs || []
   const dataHabits = habits || []
+  const hasAnyLog = (logs || []).length > 0
+  const hasMultipleWeeks = hasAnyLog && new Set(dataLogs.map(l => l.fecha.slice(0, 7))).size > 1
 
   // Calcular datos reales por día
   const calculateDailyData = () => {
