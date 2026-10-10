@@ -3,12 +3,13 @@ import { motion } from 'framer-motion'
 import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useDeleteHabit } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
-import { getCurrentUser } from '../lib/supabase.js'
-import { supabase } from '../lib/supabase.js'
-import { getTodayDate, getMondayOfCurrentWeek } from '../lib/date-utils.js'
+import { getMondayOfCurrentWeek, addDays } from '../lib/date-utils.js'
 import HabitForm from '../components/HabitForm.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 import WeeklyTracker from '../features/habits/components/WeeklyTracker.jsx'
+import HabitsTabs from '../features/habits/components/HabitsTabs.jsx'
+import TodayCard from '../features/habits/components/TodayCard.jsx'
+import ProgressView from '../features/habits/components/ProgressView.jsx'
 
 const initialHabits = [
   {
@@ -97,75 +98,61 @@ const initialHabits = [
 export default function Habits() {
   const [isCreating, setIsCreating] = useState(false)
   const [editingHabit, setEditingHabit] = useState(null)
-  const [user, setUser] = useState(null)
   const [isSeeding, setIsSeeding] = useState(false)
+  const [activeTab, setActiveTab] = useState('semana')
+  const [showExampleData, setShowExampleData] = useState(false)
 
-  const { data: habits, isLoading } = useHabits()
+  const createHabitMutation = useCreateHabit()
+  const updateHabitMutation = useUpdateHabit()
+  const deleteHabitMutation = useDeleteHabit()
+
+  const { data: habits, isLoading: habitsLoading } = useHabits()
   const { data: programaciones } = useProgramaciones()
   const { data: logs } = useHabitLogs()
-  const { data: pauseDays } = usePauseDays(user?.id)
-  const { data: config } = useAppConfig(user?.id)
+  const { data: pauseDays } = usePauseDays()
+  const { data: config } = useAppConfig()
 
-  const createHabit = useCreateHabit()
-
-  // Cargar usuario al montar
+  // Auto-seed: crear hábitos iniciales si no existen
   useEffect(() => {
-    getCurrentUser().then(setUser).catch(console.error)
-  }, [])
+    if (!habitsLoading && habits && habits.length === 0) {
+      seedInitialHabits()
+    }
+  }, [habits, habitsLoading])
 
-  const handleSeedInitialHabits = async () => {
-    if (!user) return
+  // Config por defecto en guest mode
+  useEffect(() => {
+    if (!config) {
+      localStorage.setItem('guest-app-config', JSON.stringify({ ventana_edicion_dias: 7 }))
+    }
+  }, [config])
+
+  const seedInitialHabits = async () => {
     setIsSeeding(true)
-
     try {
-      // Obtener hábitos activos existentes
-      const { data: existingActiveHabits } = await supabase
-        .from('habits')
-        .select('id, nombre')
-        .eq('user_id', user.id)
-        .eq('archivado', false)
-
-      const existingNames = new Set(existingActiveHabits?.map(h => h.nombre) || [])
-
-      let createdCount = 0
-      let skippedCount = 0
+      const existingNames = new Set(habits?.filter(h => !h.archivado).map(h => h.nombre) || [])
 
       for (const habit of initialHabits) {
         if (existingNames.has(habit.nombre)) {
-          skippedCount++
           continue
         }
 
         await createHabitMutation.mutateAsync({
           ...habit,
-          user_id: user.id,
+          user_id: 'guest',
           programacion: {
             ...habit.programacion,
-            vigente_desde: getMondayOfCurrentWeek(), // Lunes de la semana actual
+            vigente_desde: getMondayOfCurrentWeek(),
           },
         })
-        createdCount++
       }
-
-      // Crear config por defecto
-      await supabase
-        .from('app_config')
-        .upsert({
-          user_id: user.id,
-          ventana_edicion_dias: 7,
-        })
-
-      playSound('save')
-      alert(`Semilla completada: ${createdCount} creados, ${skippedCount} saltados`)
     } catch (error) {
       console.error('Error seeding habits:', error)
-      alert('Error al sembrar hábitos')
     } finally {
       setIsSeeding(false)
     }
   }
 
-  const createHabitMutation = useCreateHabit()
+  const createHabit = useCreateHabit()
   const updateHabit = useUpdateHabit()
   const deleteHabit = useDeleteHabit()
 
@@ -173,7 +160,7 @@ export default function Habits() {
 
   const handleCreate = async (habitData) => {
     try {
-      await createHabitMutation.mutateAsync(habitData)
+      await createHabit.mutateAsync(habitData)
       playSound('save')
       setIsCreating(false)
     } catch (error) {
@@ -197,90 +184,102 @@ export default function Habits() {
       message: `¿Estás seguro de eliminar "${habit.nombre}"? Se perderá todo el historial.`,
       confirmText: 'Eliminar',
       onConfirm: () => {
-        const pendingDeleteId = Date.now()
-        addPendingDelete({ type: 'habit', itemId: habit.id, pendingId: pendingDeleteId })
-        showUndoToast({
-          message: `Hábito "${habit.nombre}" eliminado`,
-          onTimeout: async () => {
-            try {
-              playSound('delete')
-              await deleteHabit.mutateAsync(habit.id)
-              removePendingDelete(pendingDeleteId)
-            } catch (error) {
-              console.error('Error deleting habit:', error)
-              removePendingDelete(pendingDeleteId)
-            }
+        deleteHabit.mutate(habit.id, {
+          onSuccess: () => {
+            playSound('delete')
+            addPendingDelete(habit)
+            showUndoToast({
+              message: 'Hábito eliminado',
+              onUndo: () => {
+                removePendingDelete(habit.id)
+                // TODO: Restore habit from backup
+              },
+            })
           },
-          onUndo: () => {
-            removePendingDelete(pendingDeleteId)
-          }
         })
-      }
+      },
     })
   }
 
-  if (isLoading) return <div>Cargando...</div>
-
-  const filteredHabits = habits?.filter(habit => !pendingDeletes.some(pd => pd.type === 'habit' && pd.itemId === habit.id)) || []
-
-  return (
-    <div className="flex flex-col h-[calc(100vh-2rem)]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Hábitos</h1>
-        <div className="flex gap-2">
-          {habits && habits.filter(h => !h.archivado).length === 0 && (
-            <button
-              onClick={handleSeedInitialHabits}
-              disabled={isSeeding}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
-            >
-              {isSeeding ? 'Sembrando...' : 'Crear hábitos iniciales'}
-            </button>
-          )}
-          <button
-            onClick={() => setIsCreating(true)}
-            className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-4 py-2 rounded-lg hover:opacity-90"
-          >
-            + Hábito
-          </button>
+  if (habitsLoading || isSeeding) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-gray-600 dark:text-[var(--dm-text-muted)]">
+          {isSeeding ? 'Creando hábitos iniciales...' : 'Cargando...'}
         </div>
       </div>
+    )
+  }
 
-      {/* Weekly Tracker */}
-      <WeeklyTracker
-        habits={filteredHabits}
-        programaciones={programaciones || []}
-        logs={logs || []}
-        pauseDays={pauseDays || []}
-        config={config || { ventana_edicion_dias: 7 }}
-      />
+  return (
+    <div className="flex flex-col h-[calc(100dvh-2rem)] pb-8 md:pb-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 shrink-0">
+        <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Hábitos</h1>
+        <button
+          onClick={() => setIsCreating(true)}
+          className="bg-[var(--color-primary)] text-[var(--color-primary-fg)] px-4 py-2 rounded-lg hover:opacity-90"
+        >
+          + Hábito
+        </button>
+      </div>
 
-      {/* Create Habit Modal */}
+      {/* Pestañas */}
+      <HabitsTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Contenido */}
+      {activeTab === 'semana' ? (
+        <div className="flex-1 overflow-y-auto pb-20">
+          <TodayCard
+            habits={habits || []}
+            logs={logs || []}
+            programaciones={programaciones || []}
+            pauseDays={pauseDays || []}
+            config={config || {}}
+          />
+          <WeeklyTracker
+            habits={habits || []}
+            programaciones={programaciones || []}
+            logs={logs || []}
+            pauseDays={pauseDays || []}
+            config={config || {}}
+          />
+          <div className="mt-4 text-center text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
+            {showExampleData
+              ? 'Datos de ejemplo cargados para demostración'
+              : 'Cada día es una oportunidad. ¡Sigue así!'}
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto pb-20">
+          <ProgressView
+            habits={habits || []}
+            logs={logs || []}
+            programaciones={programaciones || []}
+            pauseDays={pauseDays || []}
+            config={config || {}}
+            showExampleData={showExampleData}
+            onToggleExampleData={() => setShowExampleData(!showExampleData)}
+          />
+        </div>
+      )}
+
+      {/* Modal para crear/editar */}
       <ModalWrapper
-        isOpen={isCreating}
-        onClose={() => setIsCreating(false)}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
+        isOpen={isCreating || editingHabit}
+        onClose={() => {
+          setIsCreating(false)
+          setEditingHabit(null)
+        }}
+        title={editingHabit ? 'Editar hábito' : 'Nuevo hábito'}
       >
-        <h3 className="text-lg font-semibold mb-4">Nuevo hábito</h3>
         <HabitForm
-          onSubmit={handleCreate}
-          onCancel={() => setIsCreating(false)}
-          isPending={createHabitMutation.isPending}
-        />
-      </ModalWrapper>
-
-      {/* Edit Habit Modal */}
-      <ModalWrapper
-        isOpen={!!editingHabit}
-        onClose={() => setEditingHabit(null)}
-        className="p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
-      >
-        <h3 className="text-lg font-semibold mb-4">Editar hábito</h3>
-        <HabitForm
-          onSubmit={handleEdit}
-          onCancel={() => setEditingHabit(null)}
-          isPending={updateHabit.isPending}
+          onSubmit={editingHabit ? handleEdit : handleCreate}
+          onCancel={() => {
+            setIsCreating(false)
+            setEditingHabit(null)
+          }}
+          isPending={createHabit.isPending || updateHabit.isPending}
           editingHabit={editingHabit}
         />
       </ModalWrapper>

@@ -11,7 +11,7 @@ export default function DaysHeader({ days }) {
       {days.map(day => (
         <div
           key={day}
-          className={`text-center text-xs font-semibold w-8 flex-shrink-0 ${
+          className={`text-center text-xs font-semibold w-10 flex-shrink-0 ${
             isToday(day)
               ? 'text-[var(--color-primary)] font-bold'
               : 'text-gray-600 dark:text-[var(--dm-text-muted)]'

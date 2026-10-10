@@ -3,11 +3,6 @@ import { motion } from 'framer-motion'
 import { getTodayDate, addDays, getDayOfWeek } from '../../../lib/date-utils.js'
 import DaysHeader from './DaysHeader.jsx'
 import HabitRow from './HabitRow.jsx'
-import {
-  calculateOverallPercent,
-  compareWithPreviousWeek,
-  countActiveStreaks,
-} from '../stats.js'
 
 export default function WeeklyTracker({ habits, programaciones, logs, pauseDays, config }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -42,11 +37,6 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
   }
   const weekRange = `Semana del ${formatDate(weekDays[0])} al ${formatDate(weekDays[6])}`
 
-  // Estadísticas
-  const overallPercent = calculateOverallPercent(habits, logs, programaciones, pauseDays, config)
-  const comparison = compareWithPreviousWeek(habits, logs, programaciones, pauseDays, config)
-  const activeStreaks = countActiveStreaks(habits, logs, programaciones, pauseDays, config)
-
   // Agrupar hábitos por momento del día
   const groupedHabits = {
     manana: habits.filter(h => h.momento_dia === 'manana' && !h.archivado),
@@ -63,7 +53,7 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
   return (
     <div className="flex flex-col h-full">
       {/* Header de navegación */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 shrink-0">
         <button
           onClick={goToPrevWeek}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[var(--dm-surface)] dark:text-[var(--dm-text)]"
@@ -89,29 +79,13 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
         </button>
       </div>
 
-      {/* Tarjeta de estadísticas */}
-      <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-3 mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-semibold dark:text-[var(--dm-text)]">Esta semana</span>
-          <span className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">{comparison.message}</span>
-        </div>
-        <div className="w-full bg-gray-200 dark:bg-[var(--dm-border)] rounded-full h-2 mb-2">
-          <div
-            className="bg-[var(--color-primary)] h-2 rounded-full transition-all"
-            style={{ width: `${overallPercent}%` }}
-          />
-        </div>
-        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-[var(--dm-text-muted)]">
-          <span>{overallPercent}% cumplimiento</span>
-          <span>🔥 {activeStreaks} rachas activas</span>
-        </div>
+      {/* Header de días */}
+      <div className="max-w-[720px] mx-auto">
+        <DaysHeader days={weekDays} />
       </div>
 
-      {/* Header de días */}
-      <DaysHeader days={weekDays} />
-
       {/* Lista de hábitos agrupados */}
-      <div className="flex-1 overflow-y-auto space-y-4">
+      <div className="flex-1 overflow-y-auto space-y-4 pb-20 max-w-[720px] mx-auto">
         {Object.entries(groupedHabits).map(([momento, habitList]) => {
           if (habitList.length === 0) return null
 

@@ -14,37 +14,37 @@ const statuses = ['pendiente', 'cumplido', 'fallado', 'parcial']
 const statusStyles = {
   pendiente: {
     bg: 'bg-transparent',
-    border: 'border-gray-300 dark:border-[var(--dm-border)]',
+    border: 'border-2 border-gray-300 dark:border-[var(--dm-border)]',
     text: '',
     icon: '',
   },
   cumplido: {
     bg: 'bg-green-500',
-    border: 'border-green-500',
+    border: 'border-2 border-green-500',
     text: 'text-white',
     icon: '✓',
   },
   fallado: {
     bg: 'bg-red-500',
-    border: 'border-red-500',
+    border: 'border-2 border-red-500',
     text: 'text-white',
     icon: '✗',
   },
   parcial: {
     bg: 'bg-orange-500',
-    border: 'border-orange-500',
+    border: 'border-2 border-orange-500',
     text: 'text-white',
     icon: '~',
   },
   sin_registro: {
     bg: 'bg-gray-100 dark:bg-[var(--dm-surface)]',
-    border: 'border-transparent',
+    border: 'border-2 border-transparent',
     text: '',
     icon: '',
   },
   futuro: {
     bg: 'bg-gray-50 dark:bg-[var(--dm-bg)]',
-    border: 'border-gray-200 dark:border-[var(--dm-border)]',
+    border: 'border-2 border-gray-200 dark:border-[var(--dm-border)]',
     text: '',
     icon: '',
   },
@@ -113,7 +113,9 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
   // Borde punteado para weekend plus
   const borderClass = weekendPlus
     ? 'border-2 border-dashed'
-    : 'border-2'
+    : applicable
+    ? 'border-2'
+    : 'border-2 border-transparent'
 
   // Tooltip para fuera de ventana
   const tooltip = diasDesdeHoy > ventanaEdicion ? 'Fuera de la ventana de edición' : null
@@ -126,7 +128,7 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
       onClick={handleClick}
       disabled={!canEdit || (!applicable && !weekendPlus)}
       className={`
-        w-8 h-8 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0
+        w-10 h-10 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0
         ${style.bg} ${style.border} ${style.text} ${borderClass}
         ${!canEdit || (!applicable && !weekendPlus) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
         transition-colors

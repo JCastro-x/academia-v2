@@ -18,7 +18,10 @@ import {
   habitsQueryKeys,
 } from './api.js'
 
-const isGuestMode = () => localStorage.getItem('academia-guest-mode') === 'true'
+// CONSTANT: Usar localStorage por defecto (Supabase desactivado por ahora)
+const USAR_SUPABASE_HABITOS = false
+
+const isGuestMode = () => USAR_SUPABASE_HABITOS === false
 
 // Para guest mode, mantenemos localStorage temporal
 const getGuestHabits = () => {
@@ -28,6 +31,12 @@ const getGuestHabits = () => {
 
 const saveGuestHabits = (habits) => {
   localStorage.setItem('guest-habits-v2', JSON.stringify(habits))
+}
+
+let guestIdCounter = 0
+const generateGuestId = () => {
+  guestIdCounter++
+  return `guest-${guestIdCounter}-${Date.now()}`
 }
 
 const getGuestProgramaciones = () => {
@@ -109,8 +118,14 @@ export function usePauseDays(userId = null, startDate = null, endDate = null) {
 export function useAppConfig(userId) {
   return useQuery({
     queryKey: [...habitsQueryKeys.config, userId],
-    queryFn: () => getAppConfig(userId),
-    enabled: !isGuestMode() && !!userId,
+    queryFn: () => {
+      if (isGuestMode()) {
+        const configKey = 'guest-app-config'
+        const config = JSON.parse(localStorage.getItem(configKey) || '{}')
+        return config || { ventana_edicion_dias: 7 }
+      }
+      return getAppConfig(userId)
+    },
   })
 }
 
@@ -123,7 +138,7 @@ export function useCreateHabit() {
         const habits = getGuestHabits()
         const newHabit = {
           ...habit,
-          id: `guest-${Date.now()}`,
+          id: generateGuestId(),
           user_id: 'guest',
           archivado: false,
           fecha_archivado: null,
@@ -134,7 +149,7 @@ export function useCreateHabit() {
         if (habit.programacion) {
           const programaciones = getGuestProgramaciones()
           const newProgramacion = {
-            id: `prog-${Date.now()}`,
+            id: `prog-${guestIdCounter}-${Date.now()}`,
             habit_id: newHabit.id,
             ...habit.programacion,
           }
