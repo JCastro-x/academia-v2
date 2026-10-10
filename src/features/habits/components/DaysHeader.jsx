@@ -7,7 +7,7 @@ export const GRID_TEMPLATE = 'minmax(140px, 1.5fr) repeat(7, minmax(0, 1fr)) min
 
 export default function DaysHeader({ days }) {
   return (
-    <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: GRID_TEMPLATE }}>
+    <div className="hidden md:block grid gap-2 mb-2" style={{ gridTemplateColumns: GRID_TEMPLATE }}>
       <div className="text-xs font-semibold text-gray-600 dark:text-[var(--dm-text-muted)] flex items-center">
         Hábito
       </div>

@@ -195,7 +195,7 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
         disabled={!canEdit || (!applicable && !weekendPlus)}
         aria-label={ariaLabel || fecha}
         className={`
-          w-8 h-8 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0
+          w-8 h-8 md:w-8 md:h-8 min-w-[36px] min-h-[36px] rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0
           ${style.bg} ${style.border} ${style.text} ${borderClass} ${sugeridoClass}
           ${!canEdit || (!applicable && !weekendPlus) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
           transition-colors

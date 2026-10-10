@@ -7,6 +7,7 @@ import { getProgramacionVigente } from '../api.js'
 import { GRID_TEMPLATE } from './DaysHeader.jsx'
 
 const dayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+const dayInitials = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 const monthLabels = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
 const formatAriaLabel = (date) => {
@@ -48,7 +49,86 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
   const today = getTodayDate()
   const isTodayPaused = pauseDays.some(p => p.fecha === today)
 
-  return (
+  // Versión móvil: tarjeta con 3 líneas
+  const mobileView = (
+    <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-3 mb-2">
+      {/* Línea 1: nombre + menú */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium dark:text-[var(--dm-text)] break-words flex-1 pr-2" title={habit.nombre}>
+          {habit.nombre}
+        </span>
+        <div className="relative">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-[var(--dm-text)] text-sm shrink-0"
+            title="Más opciones"
+          >
+            ⋯
+          </button>
+          <AnimatePresence>
+            {showMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="absolute right-0 top-6 bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg shadow-lg py-1 z-10 min-w-[140px]"
+              >
+                <button
+                  onClick={() => { onEdit(habit); setShowMenu(false) }}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => { onTogglePause(today); setShowMenu(false) }}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
+                >
+                  {isTodayPaused ? 'Quitar pausa hoy' : 'Pausar hoy'}
+                </button>
+                <button
+                  onClick={() => { onArchive(habit, !habit.archivado); setShowMenu(false) }}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
+                >
+                  {habit.archivado ? 'Restaurar' : 'Archivar'}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Línea 2: 7 celdas con iniciales */}
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {days.map((day, i) => (
+          <div key={day} className="flex flex-col items-center">
+            <span className="text-[10px] text-gray-500 dark:text-[var(--dm-text-muted)] mb-1">
+              {dayInitials[i]}
+            </span>
+            <DayCell
+              habit={habit}
+              fecha={day}
+              programaciones={programaciones}
+              logs={logs}
+              pauseDays={pauseDays}
+              config={config}
+              isToday={isToday(day)}
+              ariaLabel={formatAriaLabel(day)}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Línea 3: stats */}
+      <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] flex items-center gap-2">
+        <span>🔥 {streak}</span>
+        <span>{weeklyPercent}%</span>
+        {weekCounter && <span className="text-[10px]">{weekCounter}</span>}
+      </div>
+    </div>
+  )
+
+  // Versión escritorio: grid tradicional
+  const desktopView = (
     <motion.div
       layout
       initial={{ opacity: 0, y: 10 }}
@@ -123,5 +203,18 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
         {weekCounter && <span className="text-[10px]">{weekCounter}</span>}
       </div>
     </motion.div>
+  )
+
+  return (
+    <>
+      {/* Móvil */}
+      <div className="md:hidden">
+        {mobileView}
+      </div>
+      {/* Escritorio */}
+      <div className="hidden md:block">
+        {desktopView}
+      </div>
+    </>
   )
 }
