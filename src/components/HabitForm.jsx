@@ -254,22 +254,40 @@ export default function HabitForm({ onSubmit, onCancel, isPending, editingHabit 
       {tipo !== 'evitar' && (
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={permitirFindePlus}
-              onChange={(e) => setPermitirFindePlus(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-            />
-            <span className="text-sm">Sábado y domingo son plus</span>
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={permitirFindePlus}
+                onChange={(e) => setPermitirFindePlus(e.target.checked)}
+                className="sr-only"
+              />
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                permitirFindePlus
+                  ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
+                  : 'border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)]'
+              }`}>
+                {permitirFindePlus && <span className="text-white text-xs">✓</span>}
+              </div>
+            </div>
+            <span className="text-sm dark:text-[var(--dm-text)]">Sábado y domingo son plus</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={tolerarRojoAislado}
-              onChange={(e) => setTolerarRojoAislado(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-            />
-            <span className="text-sm">Tolerar un rojo aislado</span>
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={tolerarRojoAislado}
+                onChange={(e) => setTolerarRojoAislado(e.target.checked)}
+                className="sr-only"
+              />
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                tolerarRojoAislado
+                  ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
+                  : 'border-gray-300 dark:border-[var(--dm-border)] bg-white dark:bg-[var(--dm-surface)]'
+              }`}>
+                {tolerarRojoAislado && <span className="text-white text-xs">✓</span>}
+              </div>
+            </div>
+            <span className="text-sm dark:text-[var(--dm-text)]">Tolerar un rojo aislado</span>
           </label>
         </div>
       )}

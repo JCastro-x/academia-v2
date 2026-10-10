@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useArchiveHabit, useTogglePauseDay } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
-import { getMondayOfCurrentWeek, addDays } from '../lib/date-utils.js'
+import { getMondayOfCurrentWeek, addDays, getDayOfWeek } from '../lib/date-utils.js'
 import HabitModal from '../components/HabitModal.jsx'
 import ModalWrapper from '../components/ModalWrapper.jsx'
 import WeeklyTracker from '../features/habits/components/WeeklyTracker.jsx'
@@ -160,6 +160,38 @@ export default function Habits() {
     }
   }, [config])
 
+  // Verificar si la semana está completa (solo hábitos de días fijos)
+  const isWeekComplete = () => {
+    if (!habits || !logs || !programaciones) return false
+    const today = getTodayDate()
+    const dayOfWeek = getDayOfWeek(today)
+    const monday = addDays(today, -(dayOfWeek - 1))
+    
+    const diasFijosHabits = habits.filter(h => {
+      if (h.archivado) return false
+      const prog = programaciones.find(p => p.habit_id === h.id)
+      return prog?.tipo === 'dias_fijos'
+    })
+    
+    for (const habit of diasFijosHabits) {
+      const prog = programaciones.find(p => p.habit_id === habit.id)
+      if (!prog) continue
+      
+      for (let i = 0; i < 7; i++) {
+        const fecha = addDays(monday, i)
+        const dayIndex = getDayOfWeek(fecha)
+        
+        // Solo verificar días programados
+        if (!prog.dias_semana.includes(dayIndex)) continue
+        
+        const log = logs.find(l => l.habit_id === habit.id && l.fecha === fecha)
+        if (log?.estado !== 'cumplido') return false
+      }
+    }
+    
+    return true
+  }
+
   const seedInitialHabits = async () => {
     setIsSeeding(true)
     
@@ -271,6 +303,7 @@ export default function Habits() {
             programaciones={programaciones || []}
             pauseDays={pauseDays || []}
             config={config || {}}
+            isWeekComplete={isWeekComplete()}
           />
           <WeeklyTracker
             habits={habits || []}
