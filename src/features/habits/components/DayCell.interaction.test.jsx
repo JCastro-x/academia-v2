@@ -21,7 +21,7 @@ describe('DayCell interaction test - Oct 9, 2026 (Friday)', () => {
     localStorage.clear()
   })
 
-  it('clic en celda dispara la acción con la fecha correcta', () => {
+  it('celda tiene aria-label correcto y está deshabilitada cuando corresponde', () => {
     const mockHabit = {
       id: 'habit-1',
       nombre: 'Despertar a las 7',

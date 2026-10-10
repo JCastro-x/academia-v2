@@ -13,4 +13,7 @@ export default defineConfig({
     port: 4173,
     strictPort: true,
   },
+  test: {
+    exclude: ['node_modules', 'dist', 'tests/e2e'],
+  },
 })
