@@ -5,6 +5,13 @@ import { calculateStreak, calculateWeeklyPercent } from '../stats.js'
 import { GRID_TEMPLATE } from './DaysHeader.jsx'
 
 const dayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+const monthLabels = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+const formatAriaLabel = (date) => {
+  const day = date.slice(8)
+  const month = parseInt(date.slice(5, 7)) - 1
+  return `${dayLabels[getDayOfWeek(date) - 1]} ${day} ${monthLabels[month]}`
+}
 
 export default function HabitRow({ habit, days, programaciones, logs, pauseDays, config }) {
   const streak = calculateStreak(habit, logs, programaciones, pauseDays, config)
@@ -31,7 +38,7 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
           pauseDays={pauseDays}
           config={config}
           isToday={isToday(day)}
-          ariaLabel={`${dayLabels[getDayOfWeek(day) - 1]} ${day.slice(5)}`}
+          ariaLabel={formatAriaLabel(day)}
         />
       ))}
       <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] flex items-center gap-1">

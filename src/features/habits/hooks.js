@@ -32,6 +32,25 @@ const generateGuestId = () => {
 const HABITS_SCHEMA_VERSION = 3
 const HABITS_SCHEMA_KEY = 'guest-habits-schema-version'
 
+// Para guest mode, mantenemos localStorage temporal
+const getGuestHabits = () => {
+  const data = localStorage.getItem('guest-habits-v2')
+  return data ? JSON.parse(data) : []
+}
+
+const saveGuestHabits = (habits) => {
+  localStorage.setItem('guest-habits-v2', JSON.stringify(habits))
+}
+
+const getGuestProgramaciones = () => {
+  const data = localStorage.getItem('guest-programaciones')
+  return data ? JSON.parse(data) : []
+}
+
+const saveGuestProgramaciones = (programaciones) => {
+  localStorage.setItem('guest-programaciones', JSON.stringify(programaciones))
+}
+
 const migrateGuestSchema = () => {
   const currentVersion = parseInt(localStorage.getItem(HABITS_SCHEMA_KEY) || '0')
   
@@ -92,25 +111,6 @@ const migrateGuestSchema = () => {
 
 // Ejecutar migración al cargar
 migrateGuestSchema()
-
-// Para guest mode, mantenemos localStorage temporal
-const getGuestHabits = () => {
-  const data = localStorage.getItem('guest-habits-v2')
-  return data ? JSON.parse(data) : []
-}
-
-const saveGuestHabits = (habits) => {
-  localStorage.setItem('guest-habits-v2', JSON.stringify(habits))
-}
-
-const getGuestProgramaciones = () => {
-  const data = localStorage.getItem('guest-programaciones')
-  return data ? JSON.parse(data) : []
-}
-
-const saveGuestProgramaciones = (programaciones) => {
-  localStorage.setItem('guest-programaciones', JSON.stringify(programaciones))
-}
 
 export function useHabits() {
   return useQuery({
