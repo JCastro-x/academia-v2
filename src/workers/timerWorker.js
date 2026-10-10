@@ -4,6 +4,7 @@
 let timerInterval = null
 let endsAt = null
 let lastCountdownSecond = null
+let lastRemainingSecond = null
 
 self.onmessage = (e) => {
   const { type, payload } = e.data
@@ -26,6 +27,7 @@ self.onmessage = (e) => {
 function startTimer(newEndsAt) {
   endsAt = newEndsAt
   lastCountdownSecond = null
+  lastRemainingSecond = null
   
   if (timerInterval) {
     clearInterval(timerInterval)
@@ -56,11 +58,14 @@ function startTimer(newEndsAt) {
       }
     }
 
-    // Enviar actualización de tiempo restante (solo para display)
-    postMessage({ 
-      type: 'TIMER_UPDATE', 
-      payload: { remainingSeconds } 
-    })
+    // The display and persisted store only need updates when the shown second changes.
+    if (remainingSeconds !== lastRemainingSecond) {
+      lastRemainingSecond = remainingSeconds
+      postMessage({
+        type: 'TIMER_UPDATE',
+        payload: { remainingSeconds },
+      })
+    }
   }, 100) // 100ms para mayor precisión, sin throttling en Workers
 }
 
@@ -71,9 +76,11 @@ function stopTimer() {
   }
   endsAt = null
   lastCountdownSecond = null
+  lastRemainingSecond = null
 }
 
 function updateEndsAt(newEndsAt) {
   endsAt = newEndsAt
   lastCountdownSecond = null
+  lastRemainingSecond = null
 }
