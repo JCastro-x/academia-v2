@@ -17,11 +17,81 @@ import {
   upsertAppConfig,
   habitsQueryKeys,
 } from './api.js'
+import { getMondayOfCurrentWeek } from '../../lib/date-utils.js'
 
 // CONSTANT: Usar localStorage por defecto (Supabase desactivado por ahora)
 const USAR_SUPABASE_HABITOS = false
 
 const isGuestMode = () => USAR_SUPABASE_HABITOS === false
+
+const generateGuestId = () => {
+  return crypto.randomUUID()
+}
+
+// Versionado de esquema para localStorage
+const HABITS_SCHEMA_VERSION = 3
+const HABITS_SCHEMA_KEY = 'guest-habits-schema-version'
+
+const migrateGuestSchema = () => {
+  const currentVersion = parseInt(localStorage.getItem(HABITS_SCHEMA_KEY) || '0')
+  
+  if (currentVersion >= HABITS_SCHEMA_VERSION) return
+  
+  // Migración de versión 0 a 1: fix ids duplicados
+  if (currentVersion < 1) {
+    const habits = getGuestHabits()
+    const programaciones = getGuestProgramaciones()
+    
+    const idSet = new Set()
+    let hasDuplicates = false
+    
+    habits.forEach(h => {
+      if (idSet.has(h.id)) {
+        hasDuplicates = true
+      }
+      idSet.add(h.id)
+    })
+    
+    if (hasDuplicates) {
+      const newHabits = habits.map(h => ({
+        ...h,
+        id: idSet.has(h.id) ? generateGuestId() : h.id,
+      }))
+      saveGuestHabits(newHabits)
+      
+      const newProgramaciones = programaciones.map(p => {
+        const newHabit = newHabits.find(h => h.nombre === habits.find(old => old.id === p.habit_id)?.nombre)
+        return newHabit ? { ...p, habit_id: newHabit.id } : p
+      })
+      saveGuestProgramaciones(newProgramaciones)
+    }
+    
+    localStorage.setItem(HABITS_SCHEMA_KEY, '1')
+  }
+  
+  // Migración de versión 1 a 2: limpiar logs con fechas incorrectas (desfase de columnas)
+  if (currentVersion < 2) {
+    localStorage.removeItem('guest-habit-logs')
+    localStorage.setItem(HABITS_SCHEMA_KEY, '2')
+  }
+  
+  // Migración de versión 2 a 3: asegurar programaciones con vigente_desde correcto
+  if (currentVersion < 3) {
+    const programaciones = getGuestProgramaciones()
+    const mondayOfCurrentWeek = getMondayOfCurrentWeek()
+    
+    const fixedProgramaciones = programaciones.map(p => ({
+      ...p,
+      vigente_desde: mondayOfCurrentWeek,
+    }))
+    
+    saveGuestProgramaciones(fixedProgramaciones)
+    localStorage.setItem(HABITS_SCHEMA_KEY, '3')
+  }
+}
+
+// Ejecutar migración al cargar
+migrateGuestSchema()
 
 // Para guest mode, mantenemos localStorage temporal
 const getGuestHabits = () => {
@@ -31,12 +101,6 @@ const getGuestHabits = () => {
 
 const saveGuestHabits = (habits) => {
   localStorage.setItem('guest-habits-v2', JSON.stringify(habits))
-}
-
-let guestIdCounter = 0
-const generateGuestId = () => {
-  guestIdCounter++
-  return `guest-${guestIdCounter}-${Date.now()}`
 }
 
 const getGuestProgramaciones = () => {

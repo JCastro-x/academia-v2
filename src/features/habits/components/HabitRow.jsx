@@ -1,7 +1,10 @@
 import { motion } from 'framer-motion'
 import DayCell from './DayCell.jsx'
-import { isToday } from '../../../lib/date-utils.js'
+import { isToday, getDayOfWeek } from '../../../lib/date-utils.js'
 import { calculateStreak, calculateWeeklyPercent } from '../stats.js'
+import { GRID_TEMPLATE } from './DaysHeader.jsx'
+
+const dayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
 export default function HabitRow({ habit, days, programaciones, logs, pauseDays, config }) {
   const streak = calculateStreak(habit, logs, programaciones, pauseDays, config)
@@ -12,7 +15,8 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="grid grid-cols-9 gap-2 items-center h-11"
+      className="grid gap-2 items-center h-11"
+      style={{ gridTemplateColumns: GRID_TEMPLATE }}
     >
       <div className="text-xs font-medium dark:text-[var(--dm-text)] truncate pr-2" title={habit.nombre}>
         {habit.nombre}
@@ -27,6 +31,7 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
           pauseDays={pauseDays}
           config={config}
           isToday={isToday(day)}
+          ariaLabel={`${dayLabels[getDayOfWeek(day) - 1]} ${day.slice(5)}`}
         />
       ))}
       <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] flex items-center gap-1">

@@ -1,11 +1,19 @@
 import { calculateOverallPercent, compareWithPreviousWeek, countActiveStreaks } from '../stats.js'
+import { getTodayDate } from '../../../lib/date-utils.js'
 
 export default function TodayCard({ habits, logs, programaciones, pauseDays, config }) {
   const overallPercent = calculateOverallPercent(habits, logs, programaciones, pauseDays, config)
   const comparison = compareWithPreviousWeek(habits, logs, programaciones, pauseDays, config)
   const activeStreaks = countActiveStreaks(habits, logs, programaciones, pauseDays, config)
   const totalHabits = habits.filter(h => !h.archivado).length
-  const completedHabits = totalHabits > 0 ? Math.round((overallPercent / 100) * totalHabits) : 0
+  const today = getTodayDate()
+
+  // Contar solo cumplidos (verde) como hábitos completos hoy
+  const completedHabits = habits.filter(h => {
+    if (h.archivado) return false
+    const log = logs.find(l => l.habit_id === h.id && l.fecha === today)
+    return log?.estado === 'cumplido'
+  }).length
 
   return (
     <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4 mb-4">

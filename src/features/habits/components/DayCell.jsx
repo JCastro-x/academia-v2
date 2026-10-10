@@ -56,7 +56,7 @@ const statusStyles = {
   },
 }
 
-export default function DayCell({ habit, fecha, programaciones, logs, pauseDays, config, isToday: isTodayDate }) {
+export default function DayCell({ habit, fecha, programaciones, logs, pauseDays, config, isToday: isTodayDate, ariaLabel }) {
   const updateLog = useUpdateHabitLog()
 
   const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
@@ -127,6 +127,7 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
       whileTap={canEdit && applicable ? { scale: 0.95 } : {}}
       onClick={handleClick}
       disabled={!canEdit || (!applicable && !weekendPlus)}
+      aria-label={ariaLabel || fecha}
       className={`
         w-10 h-10 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0
         ${style.bg} ${style.border} ${style.text} ${borderClass}
@@ -134,7 +135,7 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
         transition-colors
         ${isTodayDate ? 'ring-2 ring-[var(--color-primary)]' : ''}
       `}
-      title={tooltip || (habit.version_minima && estado === 'parcial' ? habit.version_minima : '')}
+      title={tooltip || (habit.version_minima && estado === 'parcial' ? habit.version_minima : ariaLabel || fecha)}
     >
       {style.icon}
     </motion.button>

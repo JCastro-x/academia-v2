@@ -229,7 +229,7 @@ export default function Habits() {
 
       {/* Contenido */}
       {activeTab === 'semana' ? (
-        <div className="flex-1 overflow-y-auto pb-20">
+        <div className="space-y-4">
           <TodayCard
             habits={habits || []}
             logs={logs || []}
@@ -251,7 +251,7 @@ export default function Habits() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto pb-20">
+        <div className="space-y-6">
           <ProgressView
             habits={habits || []}
             logs={logs || []}

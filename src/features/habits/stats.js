@@ -181,6 +181,21 @@ export function compareWithPreviousWeek(habits, logs, programaciones, pauseDays,
 
   const thisWeekPercent = calculateOverallPercent(habits, logs, programaciones, pauseDays, config)
 
+  // Verificar si hay logs de la semana anterior
+  const hasLastWeekData = logs.some(log => {
+    const logDate = log.fecha
+    return logDate >= lastMonday && logDate < addDays(lastMonday, 7)
+  })
+
+  if (!hasLastWeekData) {
+    return {
+      thisWeek: thisWeekPercent,
+      lastWeek: null,
+      diff: null,
+      message: 'Primera semana',
+    }
+  }
+
   // Calcular de la semana anterior (mock por ahora, se necesita logs históricos)
   const lastWeekPercent = 0 // TODO: Implementar con logs históricos
 
