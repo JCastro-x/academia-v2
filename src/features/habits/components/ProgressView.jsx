@@ -100,12 +100,14 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
   // Calcular mapa de calor mensual
   const calculateHeatmapData = () => {
     const year = parseInt(selectedMonth.slice(0, 4))
-    const month = parseInt(selectedMonth.slice(5, 7)) - 1
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    
-    const heatmapData = []
+    const month = parseInt(selectedMonth.slice(5, 7))
+    const daysInMonth = new Date(year, month, 0).getDate()
+    const firstDayOffset = (new Date(year, month - 1, 1).getDay() + 6) % 7
+    const heatmapData = Array(42).fill(null)
+    const today = getTodayDate()
+
     for (let day = 1; day <= daysInMonth; day++) {
-      const fecha = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const fecha = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       
       let total = 0
       let cumplidos = 0
@@ -119,7 +121,9 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
       })
       
       const percent = total > 0 ? Math.round((cumplidos / total) * 100) : 0
-      heatmapData.push({ day, percent })
+      const weekday = (new Date(year, month - 1, day).getDay() + 6) % 7
+      const week = Math.floor((firstDayOffset + day - 1) / 7)
+      heatmapData[weekday * 6 + week] = { day, percent, isToday: fecha === today }
     }
     return heatmapData
   }
@@ -128,7 +132,7 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
 
   const weeklyData = hasMultipleWeeks ? calculateWeeklyTrend() : []
 
-  const heatmapData = hasAnyLog ? calculateHeatmapData() : []
+  const heatmapData = calculateHeatmapData()
 
   const distribution = hasAnyLog ? calculateDistribution() : []
 
@@ -175,10 +179,11 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
 
     // Tendencia vs mes anterior (calculada real)
     const today = getTodayDate()
+    const [year, month] = today.split('-').map(Number)
+    const lastMonth = month === 1
+      ? `${year - 1}-12`
+      : `${year}-${String(month - 1).padStart(2, '0')}`
     const currentMonth = today.slice(0, 7)
-    const lastMonthDate = new Date(today)
-    lastMonthDate.setMonth(lastMonthDate.getMonth() - 1)
-    const lastMonth = lastMonthDate.toISOString().slice(0, 7)
 
     let currentMonthTotal = 0
     let currentMonthCumplidos = 0
@@ -213,6 +218,17 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
   }
 
   const insights = calculateInsights()
+  const currentMonth = getTodayDate().slice(0, 7)
+  const selectedYear = Number(selectedMonth.slice(0, 4))
+  const selectedMonthNumber = Number(selectedMonth.slice(5, 7))
+  const isCurrentOrFutureMonth = selectedMonth >= currentMonth
+
+  const changeMonth = (offset) => {
+    const monthIndex = selectedMonthNumber - 1 + offset
+    const year = selectedYear + Math.floor(monthIndex / 12)
+    const month = ((monthIndex % 12) + 12) % 12 + 1
+    setSelectedMonth(`${year}-${String(month).padStart(2, '0')}`)
+  }
 
   return (
     <div className="space-y-6 pb-32 md:pb-12">
@@ -252,25 +268,18 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
             <h3 className="text-sm font-semibold dark:text-[var(--dm-text)] mb-4">Mapa de calor mensual</h3>
             <div className="flex items-center justify-between mb-4">
               <button
-                onClick={() => {
-                  const date = new Date(selectedMonth + '-01')
-                  date.setMonth(date.getMonth() - 1)
-                  setSelectedMonth(date.toISOString().slice(0, 7))
-                }}
+                onClick={() => changeMonth(-1)}
                 className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]"
               >
                 ← Mes anterior
               </button>
               <span className="text-sm font-medium dark:text-[var(--dm-text)]">
-                {new Date(selectedMonth + '-01').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                {new Date(selectedYear, selectedMonthNumber - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
               </span>
               <button
-                onClick={() => {
-                  const date = new Date(selectedMonth + '-01')
-                  date.setMonth(date.getMonth() + 1)
-                  setSelectedMonth(date.toISOString().slice(0, 7))
-                }}
-                className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]"
+                onClick={() => changeMonth(1)}
+                disabled={isCurrentOrFutureMonth}
+                className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Mes siguiente →
               </button>
@@ -279,16 +288,16 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
               {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, i) => (
                 <div key={day} className="text-center">
                   <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] mb-1">{day}</div>
-                  <div className="grid grid-rows-5 gap-1">
-                    {Array.from({ length: 5 }).map((_, j) => {
-                      const idx = i * 5 + j
+                  <div className="grid grid-rows-6 gap-1">
+                    {Array.from({ length: 6 }).map((_, j) => {
+                      const idx = i * 6 + j
                       const data = heatmapData[idx]
                       if (!data) return <div key={j} className="w-7 h-7 bg-gray-100 dark:bg-[var(--dm-bg)] rounded" />
                       const bg = data.percent >= 75 ? 'bg-green-500' : data.percent >= 50 ? 'bg-green-300' : data.percent >= 25 ? 'bg-yellow-300' : 'bg-gray-300'
                       return (
                         <div
                           key={j}
-                          className={`w-7 h-7 ${bg} rounded flex items-center justify-center text-xs font-medium text-white`}
+                          className={`w-7 h-7 ${bg} rounded flex items-center justify-center text-xs font-medium text-white ${data.isToday ? 'ring-2 ring-[var(--color-accent)] font-bold' : ''}`}
                           title={`${data.day}: ${data.percent}%`}
                         >
                           {data.day}
