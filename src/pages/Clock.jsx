@@ -38,7 +38,7 @@ export default function Clock() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
+      <div className="flex-1 overflow-y-auto pb-[calc(var(--mobile-bottom-bar-height)+env(safe-area-inset-bottom)+1.5rem)] min-[640px]:pb-20 md:pb-0">
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, x: 20 }}

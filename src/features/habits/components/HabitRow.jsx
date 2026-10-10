@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { motion } from 'framer-motion'
 import DayCell from './DayCell.jsx'
 import { isToday, getDayOfWeek, getTodayDate } from '../../../lib/date-utils.js'
 import { calculateStreak, calculateWeeklyPercent } from '../stats.js'
@@ -18,6 +19,10 @@ const formatAriaLabel = (date) => {
 
 export default function HabitRow({ habit, days, programaciones, logs, pauseDays, config, onEdit, onArchive, onTogglePause, onDelete, userId }) {
   const [showMenu, setShowMenu] = useState(false)
+  const [isMobileMenu, setIsMobileMenu] = useState(() => window.innerWidth < 640)
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef(null)
+  const menuRef = useRef(null)
   const streak = calculateStreak(habit, logs, programaciones, pauseDays, config)
   const weeklyPercent = calculateWeeklyPercent(habit, logs, programaciones, pauseDays, config)
   
@@ -49,6 +54,74 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
   const today = getTodayDate()
   const isTodayPaused = pauseDays.some(p => p.fecha === today)
 
+  const toggleMenu = (event) => {
+    if (showMenu) {
+      setShowMenu(false)
+      return
+    }
+    triggerRef.current = event.currentTarget
+    setShowMenu(true)
+  }
+
+  useEffect(() => {
+    const updateLayout = () => setIsMobileMenu(window.innerWidth < 640)
+    window.addEventListener('resize', updateLayout)
+    return () => window.removeEventListener('resize', updateLayout)
+  }, [])
+
+  useEffect(() => {
+    if (!showMenu) return
+
+    const closeOnOutsideClick = (event) => {
+      if (menuRef.current?.contains(event.target) || triggerRef.current?.contains(event.target)) return
+      setShowMenu(false)
+    }
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setShowMenu(false)
+    }
+    document.addEventListener('pointerdown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [showMenu])
+
+  useLayoutEffect(() => {
+    if (!showMenu || isMobileMenu) return
+
+    const updateMenuPosition = () => {
+      const trigger = triggerRef.current
+      const menu = menuRef.current
+      if (!trigger || !menu) return
+      const triggerRect = trigger.getBoundingClientRect()
+      const menuRect = menu.getBoundingClientRect()
+      const gap = 8
+      const left = Math.max(gap, Math.min(triggerRect.right - menuRect.width, window.innerWidth - menuRect.width - gap))
+      const fitsBelow = triggerRect.bottom + menuRect.height + gap <= window.innerHeight
+      const top = fitsBelow
+        ? triggerRect.bottom + gap
+        : Math.max(gap, triggerRect.top - menuRect.height - gap)
+      setMenuPosition({ top, left })
+    }
+
+    updateMenuPosition()
+    window.addEventListener('resize', updateMenuPosition)
+    window.addEventListener('scroll', updateMenuPosition, true)
+    return () => {
+      window.removeEventListener('resize', updateMenuPosition)
+      window.removeEventListener('scroll', updateMenuPosition, true)
+    }
+  }, [showMenu, isMobileMenu])
+
+  const closeMenu = () => setShowMenu(false)
+  const menuActions = [
+    { label: 'Editar', action: () => onEdit(habit) },
+    { label: isTodayPaused ? 'Quitar pausa hoy' : 'Pausar hoy', action: () => onTogglePause(today) },
+    { label: habit.archivado ? 'Restaurar' : 'Archivar', action: () => onArchive(habit, !habit.archivado) },
+    { label: 'Eliminar', danger: true, action: () => onDelete(habit) },
+  ]
+
   // Versión móvil: tarjeta con 3 líneas
   const mobileView = (
     <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-3 mb-2">
@@ -59,50 +132,14 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
         </span>
         <div className="relative">
           <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-[var(--dm-text)] text-sm shrink-0"
+            onClick={toggleMenu}
+            className="flex h-11 w-11 items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-[var(--dm-text)] text-sm shrink-0 sm:h-auto sm:w-auto"
             title="Más opciones"
+            aria-label={`Más opciones para ${habit.nombre}`}
+            aria-expanded={showMenu}
           >
             ⋯
           </button>
-          <AnimatePresence>
-            {showMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute right-0 top-6 bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg shadow-lg py-1 z-10 min-w-[140px]"
-              >
-                <button
-                  onClick={() => { onEdit(habit); setShowMenu(false) }}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => { onTogglePause(today); setShowMenu(false) }}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
-                >
-                  {isTodayPaused ? 'Quitar pausa hoy' : 'Pausar hoy'}
-                </button>
-                <button
-                  onClick={() => { onArchive(habit, !habit.archivado); setShowMenu(false) }}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
-                >
-                  {habit.archivado ? 'Restaurar' : 'Archivar'}
-                </button>
-                <button
-                  onClick={() => {
-                    onDelete(habit)
-                    setShowMenu(false)
-                  }}
-                  className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400"
-                >
-                  Eliminar
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
 
@@ -150,50 +187,14 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
           <span className="flex-1">{habit.nombre}</span>
           <div className="relative">
             <button
-              onClick={() => setShowMenu(!showMenu)}
+              onClick={toggleMenu}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-[var(--dm-text)] text-xs shrink-0"
               title="Más opciones"
+              aria-label={`Más opciones para ${habit.nombre}`}
+              aria-expanded={showMenu}
             >
               ⋯
             </button>
-            <AnimatePresence>
-              {showMenu && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="absolute right-0 top-6 bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg shadow-lg py-1 z-10 min-w-[140px]"
-                >
-                  <button
-                    onClick={() => { onEdit(habit); setShowMenu(false) }}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => { onTogglePause(today); setShowMenu(false) }}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
-                  >
-                    {isTodayPaused ? 'Quitar pausa hoy' : 'Pausar hoy'}
-                  </button>
-                  <button
-                    onClick={() => { onArchive(habit, !habit.archivado); setShowMenu(false) }}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)]"
-                  >
-                    {habit.archivado ? 'Restaurar' : 'Archivar'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      onDelete(habit)
-                      setShowMenu(false)
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400"
-                  >
-                    Eliminar
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
         <div className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] flex items-center gap-1 md:hidden">
@@ -233,6 +234,51 @@ export default function HabitRow({ habit, days, programaciones, logs, pauseDays,
       <div className="hidden md:block">
         {desktopView}
       </div>
+      {showMenu && createPortal(
+        isMobileMenu ? (
+          <div className="fixed inset-0 z-[90] flex items-end bg-black/45" onClick={closeMenu}>
+            <div
+              ref={menuRef}
+              role="menu"
+              aria-label={`Opciones para ${habit.nombre}`}
+              className="w-full rounded-t-2xl border border-gray-200 bg-white pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 shadow-xl dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]"
+              onClick={event => event.stopPropagation()}
+            >
+              <div className="px-5 pb-2 text-base font-semibold dark:text-[var(--dm-text)]">{habit.nombre}</div>
+              {menuActions.map(({ label, action, danger }) => (
+                <button
+                  key={label}
+                  role="menuitem"
+                  onClick={() => { closeMenu(); action() }}
+                  className={`h-12 w-full px-5 text-left text-base dark:text-[var(--dm-text)] ${danger ? 'text-red-600 dark:text-red-400' : ''}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div
+            ref={menuRef}
+            role="menu"
+            aria-label={`Opciones para ${habit.nombre}`}
+            className="fixed z-[90] min-w-[140px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-[var(--dm-border)] dark:bg-[var(--dm-surface)]"
+            style={{ top: menuPosition.top, left: menuPosition.left }}
+          >
+            {menuActions.map(({ label, action, danger }) => (
+              <button
+                key={label}
+                role="menuitem"
+                onClick={() => { closeMenu(); action() }}
+                className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] ${danger ? 'text-red-600 dark:text-red-400' : ''}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        ),
+        document.body
+      )}
     </>
   )
 }

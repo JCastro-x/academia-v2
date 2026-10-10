@@ -330,7 +330,7 @@ export default function Habits() {
   }
 
   return (
-    <div className="flex flex-col min-h-dvh pb-32 md:pb-12">
+    <div className="flex flex-col min-h-dvh pb-0 min-[640px]:pb-32 md:pb-12">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <h1 className="text-2xl font-bold dark:text-[var(--dm-text)]">Hábitos</h1>
