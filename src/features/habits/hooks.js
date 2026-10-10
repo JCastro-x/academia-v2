@@ -33,10 +33,8 @@ const saveGuestHabits = (habits) => {
   localStorage.setItem('guest-habits-v2', JSON.stringify(habits))
 }
 
-let guestIdCounter = 0
 const generateGuestId = () => {
-  guestIdCounter++
-  return `guest-${guestIdCounter}-${Date.now()}`
+  return crypto.randomUUID()
 }
 
 const getGuestProgramaciones = () => {
@@ -47,6 +45,41 @@ const getGuestProgramaciones = () => {
 const saveGuestProgramaciones = (programaciones) => {
   localStorage.setItem('guest-programaciones', JSON.stringify(programaciones))
 }
+
+// Migración para ids duplicados en localStorage
+const migrateGuestData = () => {
+  const habits = getGuestHabits()
+  const programaciones = getGuestProgramaciones()
+  
+  const idSet = new Set()
+  let hasDuplicates = false
+  
+  habits.forEach(h => {
+    if (idSet.has(h.id)) {
+      hasDuplicates = true
+    }
+    idSet.add(h.id)
+  })
+  
+  if (hasDuplicates) {
+    // Regenerar ids duplicados
+    const newHabits = habits.map(h => ({
+      ...h,
+      id: idSet.has(h.id) ? generateGuestId() : h.id,
+    }))
+    saveGuestHabits(newHabits)
+    
+    // Actualizar programaciones con nuevos ids
+    const newProgramaciones = programaciones.map(p => {
+      const newHabit = newHabits.find(h => h.nombre === habits.find(old => old.id === p.habit_id)?.nombre)
+      return newHabit ? { ...p, habit_id: newHabit.id } : p
+    })
+    saveGuestProgramaciones(newProgramaciones)
+  }
+}
+
+// Ejecutar migración al cargar
+migrateGuestData()
 
 export function useHabits() {
   return useQuery({
@@ -149,7 +182,7 @@ export function useCreateHabit() {
         if (habit.programacion) {
           const programaciones = getGuestProgramaciones()
           const newProgramacion = {
-            id: `prog-${guestIdCounter}-${Date.now()}`,
+            id: generateGuestId(),
             habit_id: newHabit.id,
             ...habit.programacion,
           }

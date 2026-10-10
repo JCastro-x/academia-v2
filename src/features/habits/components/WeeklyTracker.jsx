@@ -80,12 +80,12 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
       </div>
 
       {/* Header de días */}
-      <div className="max-w-[720px] mx-auto">
+      <div className="w-full">
         <DaysHeader days={weekDays} />
       </div>
 
       {/* Lista de hábitos agrupados */}
-      <div className="flex-1 overflow-y-auto space-y-4 pb-20 max-w-[720px] mx-auto">
+      <div className="flex-1 overflow-y-auto space-y-4 pb-20 w-full">
         {Object.entries(groupedHabits).map(([momento, habitList]) => {
           if (habitList.length === 0) return null
 
