@@ -9,8 +9,10 @@ import {
 } from '../../../features/habits/api.js'
 import { isFuture, daysBetween, getTodayDate } from '../../../lib/date-utils.js'
 import { playSound } from '../../../lib/sound.js'
+import { useUIStore } from '../../../stores/ui.store.js'
 
 const statuses = ['pendiente', 'cumplido', 'fallado']
+let lastFalladoToastAt = 0
 
 const statusStyles = {
   pendiente: {
@@ -59,6 +61,7 @@ const statusStyles = {
 
 export default function DayCell({ habit, fecha, programaciones, logs, pauseDays, config, isToday: isTodayDate, ariaLabel }) {
   const updateLog = useUpdateHabitLog()
+  const showUndoToast = useUIStore((state) => state.showUndoToast)
   const [longPressTimer, setLongPressTimer] = useState(null)
   const [showTooltip, setShowTooltip] = useState(false)
 
@@ -98,7 +101,11 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
       if (nextStatus === 'cumplido') {
         playSound('task-done')
       } else if (nextStatus === 'fallado') {
-        console.log('Mañana seguís')
+        const now = Date.now()
+        if (now - lastFalladoToastAt >= 3000) {
+          lastFalladoToastAt = now
+          showUndoToast({ message: 'Mañana seguís 💪', durationSeconds: 2 })
+        }
       }
     }
   }
