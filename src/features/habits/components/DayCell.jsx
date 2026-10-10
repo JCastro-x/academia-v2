@@ -96,8 +96,7 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
       if (nextStatus === 'cumplido') {
         playSound('task-done')
       } else if (nextStatus === 'fallado') {
-        // Mensaje neutro al marcar rojo
-        // (se puede mostrar en un toast en el futuro)
+        // Mensaje neutro (puede mostrarse en toast)
       }
     }
   }
@@ -119,9 +118,9 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
     ? 'border-2'
     : 'border-2 border-transparent'
 
-  // Resaltar días sugeridos (meta semanal / periódico)
-  const sugeridoClass = sugerido && applicable
-    ? 'ring-2 ring-[var(--color-primary)] ring-opacity-50'
+  // Resaltar días sugeridos (meta semanal / periódico) con fondo tenue
+  const sugeridoClass = sugerido && applicable && !isTodayDate
+    ? 'bg-[var(--color-primary)] bg-opacity-10'
     : ''
 
   // Tooltip para fuera de ventana
@@ -136,7 +135,7 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
       disabled={!canEdit || (!applicable && !weekendPlus)}
       aria-label={ariaLabel || fecha}
       className={`
-        w-10 h-10 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0
+        w-8 h-8 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0
         ${style.bg} ${style.border} ${style.text} ${borderClass} ${sugeridoClass}
         ${!canEdit || (!applicable && !weekendPlus) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
         transition-colors

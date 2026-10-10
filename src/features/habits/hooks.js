@@ -17,7 +17,7 @@ import {
   upsertAppConfig,
   habitsQueryKeys,
 } from './api.js'
-import { getMondayOfCurrentWeek } from '../../lib/date-utils.js'
+import { getMondayOfCurrentWeek, compareDates, getTodayDate } from '../../lib/date-utils.js'
 
 // CONSTANT: Usar localStorage por defecto (Supabase desactivado por ahora)
 const USAR_SUPABASE_HABITOS = false
@@ -29,7 +29,7 @@ const generateGuestId = () => {
 }
 
 // Versionado de esquema para localStorage
-const HABITS_SCHEMA_VERSION = 5
+const HABITS_SCHEMA_VERSION = 6
 const HABITS_SCHEMA_KEY = 'guest-habits-schema-version'
 
 // Para guest mode, mantenemos localStorage temporal
@@ -224,6 +224,71 @@ const migrateGuestSchema = () => {
     
     localStorage.setItem(HABITS_SCHEMA_KEY, '5')
   }
+
+  // Migración de versión 5 a 6: repetir limpieza para datos que ya pasaron por v5
+  if (currentVersion < 6) {
+    const habits = getGuestHabits()
+    const programaciones = getGuestProgramaciones()
+    const logs = JSON.parse(localStorage.getItem('guest-habit-logs') || '[]')
+    const mondayOfCurrentWeek = getMondayOfCurrentWeek()
+    
+    // Limpiar duplicados por nombre
+    const byName = {}
+    habits.forEach(h => {
+      if (!byName[h.nombre]) {
+        byName[h.nombre] = []
+      }
+      byName[h.nombre].push(h)
+    })
+    
+    const habitsToKeep = []
+    const idsToDelete = []
+    
+    Object.entries(byName).forEach(([nombre, habitList]) => {
+      if (habitList.length > 1) {
+        const logCounts = habitList.map(h => logs.filter(l => l.habit_id === h.id).length)
+        const maxLogs = Math.max(...logCounts)
+        const indexToKeep = logCounts.indexOf(maxLogs)
+        
+        habitList.forEach((h, i) => {
+          if (i === indexToKeep) {
+            habitsToKeep.push(h)
+          } else {
+            idsToDelete.push(h.id)
+          }
+        })
+      } else {
+        habitsToKeep.push(habitList[0])
+      }
+    })
+    
+    // Reparar hábitos sin programación
+    const habitsWithoutProg = habitsToKeep.filter(h => !programaciones.some(p => p.habit_id === h.id))
+    
+    if (habitsWithoutProg.length > 0) {
+      const newProgramaciones = habitsWithoutProg.map(h => ({
+        id: crypto.randomUUID(),
+        habit_id: h.id,
+        tipo: 'dias_fijos',
+        dias_semana: [1, 2, 3, 4, 5],
+        permitir_finde_plus: false,
+        tolerar_rojo_aislado: false,
+        vigente_desde: mondayOfCurrentWeek,
+      }))
+      
+      saveGuestProgramaciones([...programaciones, ...newProgramaciones])
+    }
+    
+    // Guardar estado limpio
+    const filteredLogs = logs.filter(l => !idsToDelete.includes(l.habit_id))
+    localStorage.setItem('guest-habit-logs', JSON.stringify(filteredLogs))
+    saveGuestHabits(habitsToKeep)
+    
+    const filteredProgramaciones = programaciones.filter(p => !idsToDelete.includes(p.habit_id))
+    saveGuestProgramaciones(filteredProgramaciones)
+    
+    localStorage.setItem(HABITS_SCHEMA_KEY, '6')
+  }
 }
 
 // Ejecutar migración al cargar
@@ -367,6 +432,7 @@ export function useUpdateHabit() {
     mutationFn: async ({ id, updates }) => {
       if (isGuestMode()) {
         const habits = getGuestHabits()
+        const programaciones = getGuestProgramaciones()
         const currentHabit = habits.find(h => h.id === id)
         if (!currentHabit) throw new Error('Habit not found')
 
@@ -374,6 +440,34 @@ export function useUpdateHabit() {
           h.id === id ? { ...h, ...updates } : h
         )
         saveGuestHabits(updatedHabits)
+
+        // Manejar programación si se proporciona
+        if (updates.programacion) {
+          const today = getTodayDate()
+          const existingToday = programaciones.find(
+            p => p.habit_id === id && p.vigente_desde === today
+          )
+
+          if (existingToday) {
+            // Reemplazar programación de hoy
+            const updatedProgramaciones = programaciones.map(p =>
+              p.id === existingToday.id
+                ? { ...p, ...updates.programacion }
+                : p
+            )
+            saveGuestProgramaciones(updatedProgramaciones)
+          } else {
+            // Crear nueva programación
+            const newProgramacion = {
+              id: crypto.randomUUID(),
+              habit_id: id,
+              ...updates.programacion,
+              vigente_desde: today,
+            }
+            saveGuestProgramaciones([...programaciones, newProgramacion])
+          }
+        }
+
         return updatedHabits.find(h => h.id === id)
       }
       return updateHabit(id, updates)
@@ -381,6 +475,9 @@ export function useUpdateHabit() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: habitsQueryKeys.all,
+      })
+      queryClient.invalidateQueries({
+        queryKey: habitsQueryKeys.programaciones,
       })
     },
   })

@@ -2,18 +2,12 @@ import { useState } from 'react'
 import { getTodayDate, addDays, getDayOfWeek } from '../../../lib/date-utils.js'
 import { calculateOverallPercent } from '../stats.js'
 
-export default function ProgressView({ habits, logs, programaciones, pauseDays, config, showExampleData, onToggleExampleData }) {
+export default function ProgressView({ habits, logs, programaciones, pauseDays, config }) {
   const [selectedMonth, setSelectedMonth] = useState(() => getTodayDate().slice(0, 7)) // YYYY-MM
 
-  const clearExampleData = () => {
-    localStorage.removeItem('guest-habit-logs-example')
-    setShowExampleData(false)
-  }
-
-  // Si hay datos de ejemplo, usarlos; si no, usar datos reales o mostrar mensaje
-  const useExample = showExampleData && localStorage.getItem('guest-habit-logs-example')
-  const dataLogs = useExample ? JSON.parse(localStorage.getItem('guest-habit-logs-example') || '[]') : logs || []
-  const dataHabits = useExample ? habits : habits || []
+  const hasEnoughData = (logs || []).length >= 7
+  const dataLogs = logs || []
+  const dataHabits = habits || []
 
   // Datos de ejemplo para las últimas 4 semanas (temporal)
   const mockWeeklyData = [

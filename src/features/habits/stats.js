@@ -3,6 +3,7 @@ import {
   isDayApplicable,
   isWeekendPlus,
   getEstadoValor,
+  getProgramacionVigente,
 } from './api.js'
 import {
   addDays,
@@ -12,9 +13,27 @@ import {
 } from '../../lib/date-utils.js'
 
 /**
- * Calcula la racha actual de un hábito (solo dias_fijos y diario por ahora)
+ * Calcula la racha actual de un hábito
  */
 export function calculateStreak(habit, logs, programaciones, pauseDays, config) {
+  const prog = getProgramacionVigente(habit, getTodayDate(), programaciones)
+  if (!prog) return 0
+
+  switch (prog.tipo) {
+    case 'dias_fijos':
+      return calculateStreakDiasFijos(habit, logs, programaciones, pauseDays, config, prog)
+    case 'meta_semanal':
+      return calculateStreakMetaSemanal(habit, logs, programaciones, pauseDays, config, prog)
+    case 'periodico':
+      return calculateStreakPeriodico(habit, logs, programaciones, pauseDays, config, prog)
+    case 'evitar':
+      return calculateStreakEvitar(habit, logs, programaciones, pauseDays, config, prog)
+    default:
+      return 0
+  }
+}
+
+function calculateStreakDiasFijos(habit, logs, programaciones, pauseDays, config, prog) {
   let streak = 0
   let consecutiveReds = 0
   const today = getTodayDate()
@@ -47,14 +66,110 @@ export function calculateStreak(habit, logs, programaciones, pauseDays, config) 
       // Mantiene racha sin sumar
       consecutiveReds = 0
     } else if (estado === 'fallado') {
-      const prog = programaciones.find(p => p.habit_id === habit.id)
-      if (prog?.tolerar_rojo_aislado) {
+      if (prog.tolerar_rojo_aislado) {
         consecutiveReds++
         if (consecutiveReds >= 2) break
       } else {
         break
       }
     }
+  }
+
+  return streak
+}
+
+function calculateStreakMetaSemanal(habit, logs, programaciones, pauseDays, config, prog) {
+  const meta = prog.meta_semanal || 1
+  const today = getTodayDate()
+  const dayOfWeek = getDayOfWeek(today)
+  const monday = addDays(today, -(dayOfWeek - 1))
+  
+  let streak = 0
+  
+  // Revisar semanas hacia atrás
+  for (let week = 0; week < 52; week++) {
+    const weekStart = addDays(monday, -week * 7)
+    const weekEnd = addDays(weekStart, 6)
+    
+    let cumplidos = 0
+    for (let i = 0; i < 7; i++) {
+      const fecha = addDays(weekStart, i)
+      if (!isDayApplicable(habit, fecha, programaciones, pauseDays)) continue
+      
+      const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
+      if (estado === 'cumplido') cumplidos++
+    }
+    
+    if (cumplidos >= meta) {
+      streak++
+    } else if (week === 0) {
+      // Semana en curso: si no llega a meta, no rompe pero no suma
+      continue
+    } else {
+      break
+    }
+  }
+  
+  return streak
+}
+
+function calculateStreakPeriodico(habit, logs, programaciones, pauseDays, config, prog) {
+  const periodo = prog.periodo_semanas || 1
+  const today = getTodayDate()
+  const vigencia = prog.vigente_desde
+  const semanasDesdeVigencia = Math.floor(daysBetween(vigencia, today) / 7)
+  
+  let streak = 0
+  
+  for (let p = 0; p < Math.ceil(semanasDesdeVigencia / periodo); p++) {
+    const periodoIndex = semanasDesdeVigencia - (p * periodo)
+    if (periodoIndex < 0) break
+    
+    const periodoStart = addDays(vigencia, periodoIndex * 7)
+    const periodoEnd = addDays(periodoStart, 6)
+    
+    let cumplido = false
+    for (let i = 0; i < 7; i++) {
+      const fecha = addDays(periodoStart, i)
+      if (!isDayApplicable(habit, fecha, programaciones, pauseDays)) continue
+      
+      const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
+      if (estado === 'cumplido') {
+        cumplido = true
+        break
+      }
+    }
+    
+    if (cumplido) {
+      streak++
+    } else if (p === 0) {
+      continue
+    } else {
+      break
+    }
+  }
+  
+  return streak
+}
+
+function calculateStreakEvitar(habit, logs, programaciones, pauseDays, config, prog) {
+  let streak = 0
+  const today = getTodayDate()
+
+  for (let i = 0; i < 365; i++) {
+    const fecha = addDays(today, -i)
+
+    if (!isDayApplicable(habit, fecha, programaciones, pauseDays)) continue
+
+    const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
+    
+    // Para evitar, cumplido es el default, fallado rompe la racha
+    if (estado === 'fallado') {
+      break
+    } else if (estado === 'cumplido' || estado === 'parcial') {
+      streak++
+    }
+    // pendiente, sin_registro, futuro se saltan
   }
 
   return streak
@@ -123,37 +238,59 @@ export function calculateBestStreak(habit, logs, programaciones, pauseDays, conf
  * Calcula el % de cumplimiento semanal de un hábito
  */
 export function calculateWeeklyPercent(habit, logs, programaciones, pauseDays, config) {
+  const prog = getProgramacionVigente(habit, getTodayDate(), programaciones)
+  if (!prog) return 0
+
   const today = getTodayDate()
   const dayOfWeek = getDayOfWeek(today)
   const monday = addDays(today, -(dayOfWeek - 1))
 
-  let totalDias = 0
-  let totalValor = 0
+  switch (prog.tipo) {
+    case 'meta_semanal':
+      const meta = prog.meta_semanal || 1
+      let cumplidos = 0
+      for (let i = 0; i < 7; i++) {
+        const fecha = addDays(monday, i)
+        if (!isDayApplicable(habit, fecha, programaciones, pauseDays)) continue
+        const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
+        if (estado === 'cumplido') cumplidos++
+      }
+      return Math.round(Math.min(cumplidos / meta, 1) * 100)
 
-  for (let i = 0; i < 7; i++) {
-    const fecha = addDays(monday, i)
+    case 'dias_fijos':
+    case 'periodico':
+    case 'evitar':
+      let totalDias = 0
+      let totalValor = 0
 
-    if (!isDayApplicable(habit, fecha, programaciones, pauseDays)) continue
+      for (let i = 0; i < 7; i++) {
+        const fecha = addDays(monday, i)
 
-    // Weekend plus: no entra al denominador
-    if (isWeekendPlus(habit, fecha, programaciones)) {
-      const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
-      if (estado === 'cumplido') totalValor++
-      continue
-    }
+        if (!isDayApplicable(habit, fecha, programaciones, pauseDays)) continue
 
-    const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
-    const valor = getEstadoValor(estado)
+        // Weekend plus: no entra al denominador
+        if (isWeekendPlus(habit, fecha, programaciones)) {
+          const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
+          if (estado === 'cumplido') totalValor++
+          continue
+        }
 
-    // Excluir pendiente, sin_registro, futuro
-    if (valor === null) continue
+        const estado = getEstado(habit, fecha, logs, programaciones, pauseDays, config)
+        const valor = getEstadoValor(estado)
 
-    totalDias++
-    totalValor += valor
+        // Excluir pendiente, sin_registro, futuro
+        if (valor === null) continue
+
+        totalDias++
+        totalValor += valor
+      }
+
+      if (totalDias === 0) return 0
+      return Math.round((totalValor / totalDias) * 100)
+
+    default:
+      return 0
   }
-
-  if (totalDias === 0) return 0
-  return Math.round((totalValor / totalDias) * 100)
 }
 
 /**

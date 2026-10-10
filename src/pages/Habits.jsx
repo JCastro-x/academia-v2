@@ -93,6 +93,37 @@ const initialHabits = [
       tolerar_rojo_aislado: false,
     },
   },
+  {
+    nombre: 'Demo: Leer 3 libros por mes',
+    momento_dia: 'tarde',
+    programacion: {
+      tipo: 'meta_semanal',
+      meta_semanal: 3,
+      dias_sugeridos: [1, 3, 5],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Demo: Revisar finanzas',
+    momento_dia: 'tarde',
+    programacion: {
+      tipo: 'periodico',
+      periodo_semanas: 2,
+      dias_sugeridos: [6],
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
+  {
+    nombre: 'Demo: No comer dulces',
+    momento_dia: 'tarde',
+    programacion: {
+      tipo: 'evitar',
+      permitir_finde_plus: false,
+      tolerar_rojo_aislado: false,
+    },
+  },
 ]
 
 export default function Habits() {
@@ -100,7 +131,6 @@ export default function Habits() {
   const [editingHabit, setEditingHabit] = useState(null)
   const [isSeeding, setIsSeeding] = useState(false)
   const [activeTab, setActiveTab] = useState('semana')
-  const [showExampleData, setShowExampleData] = useState(false)
 
   const createHabitMutation = useCreateHabit()
   const updateHabitMutation = useUpdateHabit()
@@ -255,9 +285,7 @@ export default function Habits() {
             onEditHabit={(habit) => setEditingHabit(habit)}
           />
           <div className="mt-4 text-center text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
-            {showExampleData
-              ? 'Datos de ejemplo cargados para demostración'
-              : 'Cada día es una oportunidad. ¡Sigue así!'}
+            Cada día es una oportunidad. ¡Sigue así!
           </div>
         </div>
       ) : (
