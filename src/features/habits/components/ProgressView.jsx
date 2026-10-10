@@ -9,55 +9,43 @@ export default function ProgressView({ habits, logs, programaciones, pauseDays, 
   const dataLogs = logs || []
   const dataHabits = habits || []
 
-  // Datos de ejemplo para las últimas 4 semanas (temporal)
-  const mockWeeklyData = [
-    { week: '1', percent: 60 },
-    { week: '2', percent: 75 },
-    { week: '3', percent: 82 },
-    { week: '4', percent: 78 },
-  ]
+  // Datos de ejemplo para las últimas 8 semanas
+  const mockWeeklyData = Array.from({ length: 8 }, (_, i) => ({
+    week: i + 1,
+    percent: hasEnoughData ? 0 : Math.floor(50 + Math.random() * 40),
+  }))
 
   const mockDailyData = [
-    { day: 'Lun', percent: 85 },
-    { day: 'Mar', percent: 70 },
-    { day: 'Mié', percent: 90 },
-    { day: 'Jue', percent: 65 },
-    { day: 'Vie', percent: 80 },
-    { day: 'Sáb', percent: 100 },
-    { day: 'Dom', percent: 75 },
+    { day: 'Lun', percent: hasEnoughData ? 0 : 85 },
+    { day: 'Mar', percent: hasEnoughData ? 0 : 70 },
+    { day: 'Mié', percent: hasEnoughData ? 0 : 90 },
+    { day: 'Jue', percent: hasEnoughData ? 0 : 65 },
+    { day: 'Vie', percent: hasEnoughData ? 0 : 80 },
+    { day: 'Sáb', percent: hasEnoughData ? 0 : 100 },
+    { day: 'Dom', percent: hasEnoughData ? 0 : 75 },
   ]
 
   const mockHeatmapData = Array.from({ length: 30 }, (_, i) => ({
     day: i + 1,
-    percent: Math.floor(Math.random() * 100),
+    percent: hasEnoughData ? 0 : Math.floor(Math.random() * 100),
   }))
 
   const mockDistribution = [
-    { label: 'Cumplido', value: 45, color: 'bg-green-500' },
-    { label: 'Parcial', value: 20, color: 'bg-orange-500' },
-    { label: 'Fallado', value: 15, color: 'bg-red-500' },
-    { label: 'Pendiente', value: 20, color: 'bg-gray-300' },
+    { label: 'Cumplido', value: hasEnoughData ? 0 : 45, color: 'bg-green-500' },
+    { label: 'Parcial', value: hasEnoughData ? 0 : 20, color: 'bg-orange-500' },
+    { label: 'Fallado', value: hasEnoughData ? 0 : 15, color: 'bg-red-500' },
+    { label: 'Pendiente', value: hasEnoughData ? 0 : 20, color: 'bg-gray-300' },
   ]
 
   return (
     <div className="space-y-6">
-      {/* Botón de datos de ejemplo */}
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 flex items-center justify-between">
-        <button
-          onClick={onToggleExampleData}
-          className="text-sm text-yellow-800 dark:text-yellow-200 font-medium"
-        >
-          {showExampleData ? '✓ Datos de ejemplo activados' : '⚠️ Cargar datos de ejemplo (demo)'}
-        </button>
-        {showExampleData && (
-          <button
-            onClick={clearExampleData}
-            className="text-sm text-yellow-800 dark:text-yellow-200 font-medium ml-4"
-          >
-            Quitar datos de ejemplo
-          </button>
-        )}
-      </div>
+      {!hasEnoughData && (
+        <div className="bg-gray-50 dark:bg-[var(--dm-bg)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">
+          <p className="text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
+            Aún no hay suficientes datos para mostrar estadísticas reales.
+          </p>
+        </div>
+      )}
 
       {/* Gráfico de barras por día */}
       <div className="bg-white dark:bg-[var(--dm-surface)] border border-gray-200 dark:border-[var(--dm-border)] rounded-lg p-4">

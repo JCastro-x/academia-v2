@@ -4,7 +4,7 @@ import { getTodayDate, addDays, getDayOfWeek } from '../../../lib/date-utils.js'
 import DaysHeader from './DaysHeader.jsx'
 import HabitRow from './HabitRow.jsx'
 
-export default function WeeklyTracker({ habits, programaciones, logs, pauseDays, config, onEditHabit }) {
+export default function WeeklyTracker({ habits, programaciones, logs, pauseDays, config, onEditHabit, onArchiveHabit, onTogglePause, userId, showArchived, onToggleShowArchived }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const today = getTodayDate()
     const dayOfWeek = getDayOfWeek(today)
@@ -39,9 +39,9 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
 
   // Agrupar hábitos por momento del día
   const groupedHabits = {
-    manana: habits.filter(h => h.momento_dia === 'manana' && !h.archivado),
-    tarde: habits.filter(h => h.momento_dia === 'tarde' && !h.archivado),
-    noche: habits.filter(h => h.momento_dia === 'noche' && !h.archivado),
+    manana: habits.filter(h => h.momento_dia === 'manana' && (showArchived ? true : !h.archivado)),
+    tarde: habits.filter(h => h.momento_dia === 'tarde' && (showArchived ? true : !h.archivado)),
+    noche: habits.filter(h => h.momento_dia === 'noche' && (showArchived ? true : !h.archivado)),
   }
 
   const momentLabels = {
@@ -79,6 +79,16 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
         </button>
       </div>
 
+      {/* Filtro de archivados */}
+      <div className="mb-4">
+        <button
+          onClick={onToggleShowArchived}
+          className="text-xs text-gray-600 dark:text-[var(--dm-text-muted)] hover:text-gray-900 dark:hover:text-[var(--dm-text)]"
+        >
+          {showArchived ? 'Ocultar archivados' : 'Ver archivados'}
+        </button>
+      </div>
+
       {/* Header de días */}
       <div className="w-full">
         <DaysHeader days={weekDays} />
@@ -105,6 +115,9 @@ export default function WeeklyTracker({ habits, programaciones, logs, pauseDays,
                     pauseDays={pauseDays}
                     config={config}
                     onEdit={onEditHabit}
+                    onArchive={onArchiveHabit}
+                    onTogglePause={onTogglePause}
+                    userId={userId}
                   />
                 ))}
               </div>

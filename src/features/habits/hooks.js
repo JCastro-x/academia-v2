@@ -483,6 +483,29 @@ export function useUpdateHabit() {
   })
 }
 
+export function useArchiveHabit() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, archivado }) => {
+      if (isGuestMode()) {
+        const habits = getGuestHabits()
+        const updatedHabits = habits.map(h =>
+          h.id === id ? { ...h, archivado, fecha_archivado: archivado ? getTodayDate() : null } : h
+        )
+        saveGuestHabits(updatedHabits)
+        return updatedHabits.find(h => h.id === id)
+      }
+      return updateHabit(id, { archivado, fecha_archivado: archivado ? getTodayDate() : null })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: habitsQueryKeys.all,
+      })
+    },
+  })
+}
+
 export function useDeleteHabit() {
   const queryClient = useQueryClient()
 
@@ -499,6 +522,40 @@ export function useDeleteHabit() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: habitsQueryKeys.all,
+      })
+    },
+  })
+}
+
+export function useTogglePauseDay() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ fecha, userId }) => {
+      if (isGuestMode()) {
+        const pauseDays = JSON.parse(localStorage.getItem('guest-pause-days') || '[]')
+        const existing = pauseDays.find(p => p.fecha === fecha)
+        let updated
+        if (existing) {
+          updated = pauseDays.filter(p => p.fecha !== fecha)
+        } else {
+          updated = [...pauseDays, { id: crypto.randomUUID(), fecha, user_id: 'guest' }]
+        }
+        localStorage.setItem('guest-pause-days', JSON.stringify(updated))
+        return { fecha, paused: !existing }
+      }
+      const existing = await getPauseDays(userId, fecha, fecha)
+      if (existing.length > 0) {
+        await deletePauseDay(existing[0].id)
+        return { fecha, paused: false }
+      } else {
+        await createPauseDay({ fecha, user_id: userId })
+        return { fecha, paused: true }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: habitsQueryKeys.pauseDays,
       })
     },
   })

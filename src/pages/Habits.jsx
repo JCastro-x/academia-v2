@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useDeleteHabit } from '../features/habits/hooks.js'
+import { useHabits, useProgramaciones, useHabitLogs, usePauseDays, useAppConfig, useCreateHabit, useUpdateHabit, useArchiveHabit, useTogglePauseDay } from '../features/habits/hooks.js'
 import { useUIStore } from '../stores/ui.store.js'
 import { playSound } from '../lib/sound.js'
 import { getMondayOfCurrentWeek, addDays } from '../lib/date-utils.js'
@@ -131,10 +131,12 @@ export default function Habits() {
   const [editingHabit, setEditingHabit] = useState(null)
   const [isSeeding, setIsSeeding] = useState(false)
   const [activeTab, setActiveTab] = useState('semana')
+  const [showArchived, setShowArchived] = useState(false)
 
   const createHabitMutation = useCreateHabit()
   const updateHabitMutation = useUpdateHabit()
-  const deleteHabitMutation = useDeleteHabit()
+  const archiveHabitMutation = useArchiveHabit()
+  const togglePauseDayMutation = useTogglePauseDay()
 
   const { data: habits, isLoading: habitsLoading } = useHabits()
   const { data: programaciones } = useProgramaciones()
@@ -217,27 +219,21 @@ export default function Habits() {
     }
   }
 
-  const handleDelete = (habit) => {
-    openConfirmDialog({
-      title: 'Eliminar hábito',
-      message: `¿Estás seguro de eliminar "${habit.nombre}"? Se perderá todo el historial.`,
-      confirmText: 'Eliminar',
-      onConfirm: () => {
-        deleteHabit.mutate(habit.id, {
-          onSuccess: () => {
-            playSound('delete')
-            addPendingDelete(habit)
-            showUndoToast({
-              message: 'Hábito eliminado',
-              onUndo: () => {
-                removePendingDelete(habit.id)
-                // TODO: Restore habit from backup
-              },
-            })
-          },
-        })
-      },
-    })
+  const handleArchive = async (habit, archivado) => {
+    try {
+      await archiveHabitMutation.mutateAsync({ id: habit.id, archivado })
+      playSound('save')
+    } catch (error) {
+      console.error('Error archiving habit:', error)
+    }
+  }
+
+  const handleTogglePause = async (fecha) => {
+    try {
+      await togglePauseDayMutation.mutateAsync({ fecha, userId: 'guest' })
+    } catch (error) {
+      console.error('Error toggling pause day:', error)
+    }
   }
 
   if (habitsLoading || isSeeding) {
@@ -283,6 +279,11 @@ export default function Habits() {
             pauseDays={pauseDays || []}
             config={config || {}}
             onEditHabit={(habit) => setEditingHabit(habit)}
+            onArchiveHabit={handleArchive}
+            onTogglePause={handleTogglePause}
+            userId="guest"
+            showArchived={showArchived}
+            onToggleShowArchived={() => setShowArchived(!showArchived)}
           />
           <div className="mt-4 text-center text-sm text-gray-600 dark:text-[var(--dm-text-muted)]">
             Cada día es una oportunidad. ¡Sigue así!
@@ -296,8 +297,6 @@ export default function Habits() {
             programaciones={programaciones || []}
             pauseDays={pauseDays || []}
             config={config || {}}
-            showExampleData={showExampleData}
-            onToggleExampleData={() => setShowExampleData(!showExampleData)}
           />
         </div>
       )}

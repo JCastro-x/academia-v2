@@ -96,7 +96,8 @@ export default function DayCell({ habit, fecha, programaciones, logs, pauseDays,
       if (nextStatus === 'cumplido') {
         playSound('task-done')
       } else if (nextStatus === 'fallado') {
-        // Mensaje neutro (puede mostrarse en toast)
+        // Mensaje neutro: mañana seguís
+        console.log('Mañana seguís')
       }
     }
   }
