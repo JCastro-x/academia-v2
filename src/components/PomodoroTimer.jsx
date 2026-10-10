@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useTimerStore } from '../features/pomodoro/timerStore';
-import { useCreatePomodoroSession } from '../features/pomodoro/hooks';
 import { cancelPomodoroNotification, schedulePomodoroNotification } from '../features/pomodoro/api';
-import { initAudio, playSound, startAudioKeepAlive, stopAudioKeepAlive, showNotification, requestNotificationPermission } from '../lib/sound';
+import { requestNotificationPermission } from '../lib/sound';
 import { createAmbientSound, getAmbientSoundNames } from '../lib/ambientSounds';
+import {
+  isPomodoroPictureInPictureSupported,
+  togglePomodoroPictureInPicture,
+} from '../features/pomodoro/PomodoroPictureInPicture';
 
 export default function PomodoroTimer() {
   const {
@@ -14,29 +17,20 @@ export default function PomodoroTimer() {
     pausePomodoro,
     resumePomodoro,
     resetPomodoro,
-    updatePomodoroRemaining,
-    completePomodoroSession,
     setPomodoroConfig,
     skipToNextPhase,
     skipToPreviousPhase,
   } = useTimerStore();
 
-  const createSession = useCreatePomodoroSession();
   const [showConfig, setShowConfig] = useState(false);
   const [configValues, setConfigValues] = useState(pomodoroConfig);
   const [showAmbientSounds, setShowAmbientSounds] = useState(false);
   const [activeAmbientSound, setActiveAmbientSound] = useState(null);
   const [ambientVolume, setAmbientVolume] = useState(0.35);
-  const intervalRef = useRef(null);
   const ambientSoundRef = useRef(null);
-  const timerWorkerRef = useRef(null);
 
   useEffect(() => () => {
     ambientSoundRef.current?.stop();
-    if (timerWorkerRef.current) {
-      timerWorkerRef.current.terminate();
-      timerWorkerRef.current = null;
-    }
   }, []);
 
   const handleAmbientSound = (type) => {
@@ -59,114 +53,6 @@ export default function PomodoroTimer() {
     setAmbientVolume(nextVolume);
     ambientSoundRef.current?.setVolume(nextVolume);
   };
-
-  useEffect(() => {
-    if (pomodoroState.isRunning) startAudioKeepAlive();
-    else stopAudioKeepAlive();
-  }, [pomodoroState.isRunning]);
-
-
-
-
-
-  const finishPomodoro = () => {
-    const currentState = useTimerStore.getState();
-    const current = currentState.pomodoroState;
-    if (!current.isRunning || !current.endsAt || Date.now() < current.endsAt) return false;
-
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    initAudio();
-    
-    // Preparar fallback notification por si el audio falla
-    const phaseName = current.currentPhase === 'trabajo' ? 'Trabajo' : 
-                      current.currentPhase === 'descanso_corto' ? 'Descanso corto' : 'Descanso largo';
-    const nextPhase = current.currentPhase === 'trabajo' ? '¡Hora de descansar!' : '¡Hora de trabajar!';
-    
-    playSound('pomodoro-complete', {
-      title: 'Pomodoro completado',
-      options: {
-        body: `${phaseName} finalizado. ${nextPhase}`,
-        tag: 'pomodoro-complete',
-      }
-    });
-    
-    if (current.currentPhase === 'trabajo') {
-      const durationMin = Math.round(currentState.pomodoroConfig.workDuration);
-      createSession.mutate({
-        id: current.sessionId,
-        started_at: new Date(current.startedAt).toISOString(),
-        ended_at: new Date().toISOString(),
-        duration_min: durationMin,
-        tipo: 'trabajo',
-        task_id: current.linkedTaskId,
-        subject_id: current.linkedSubjectId,
-      });
-    }
-    completePomodoroSession();
-    return true;
-  };
-
-  // Web Worker handles timer in background without throttling
-  useEffect(() => {
-    // Initialize worker
-    if (!timerWorkerRef.current) {
-      timerWorkerRef.current = new Worker(new URL('../workers/timerWorker.js', import.meta.url));
-      
-      timerWorkerRef.current.onmessage = (e) => {
-        const { type, payload } = e.data;
-        
-        switch (type) {
-          case 'TIMER_UPDATE':
-            updatePomodoroRemaining(payload.remainingSeconds);
-            break;
-          case 'COUNTDOWN_SOUND':
-            playSound('countdown');
-            break;
-          case 'TIMER_COMPLETE':
-            finishPomodoro();
-            break;
-          default:
-            console.warn('[PomodoroTimer] Unknown worker message:', type);
-        }
-      };
-    }
-
-    // Start/stop timer based on state
-    if (pomodoroState.isRunning && pomodoroState.endsAt) {
-      timerWorkerRef.current.postMessage({
-        type: 'START_TIMER',
-        payload: { endsAt: pomodoroState.endsAt }
-      });
-    } else {
-      timerWorkerRef.current.postMessage({
-        type: 'STOP_TIMER'
-      });
-    }
-
-    // Cleanup
-    return () => {
-      if (timerWorkerRef.current) {
-        timerWorkerRef.current.postMessage({ type: 'STOP_TIMER' });
-      }
-    };
-  }, [pomodoroState.isRunning, pomodoroState.endsAt, completePomodoroSession, updatePomodoroRemaining]);
-
-  // Recalcular tiempo restante cuando la pestaña vuelve a estar visible (visibilitychange)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && pomodoroState.isRunning && pomodoroState.endsAt) {
-        if (finishPomodoro()) return;
-        const remaining = Math.max(0, Math.ceil((pomodoroState.endsAt - Date.now()) / 1000));
-        updatePomodoroRemaining(remaining);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [pomodoroState.isRunning, pomodoroState.endsAt, updatePomodoroRemaining]);
 
   const getTotalDuration = () => {
     switch (pomodoroState.currentPhase) {
@@ -207,11 +93,9 @@ export default function PomodoroTimer() {
   };
 
   const handleStart = async () => {
-    initAudio();
-    startAudioKeepAlive();
-    // Solicitar permiso para notificaciones del navegador
-    await requestNotificationPermission();
+    const permissionRequest = requestNotificationPermission();
     startPomodoro();
+    await permissionRequest;
     const { pomodoroState: nextState } = useTimerStore.getState();
     const scheduledAt = new Date(nextState.endsAt).toISOString();
     try {
@@ -222,8 +106,6 @@ export default function PomodoroTimer() {
   };
 
   const handleResume = async () => {
-    initAudio();
-    startAudioKeepAlive();
     resumePomodoro();
     const { pomodoroState: nextState } = useTimerStore.getState();
     const scheduledAt = new Date(nextState.endsAt).toISOString();
@@ -347,6 +229,28 @@ export default function PomodoroTimer() {
         >
           🎧 Música
         </button>
+        <span className="relative group">
+          <button
+            type="button"
+            onClick={togglePomodoroPictureInPicture}
+            disabled={!isPomodoroPictureInPictureSupported()}
+            title={isPomodoroPictureInPictureSupported() ? 'Abrir temporizador flotante' : undefined}
+            aria-label="Abrir temporizador flotante"
+            aria-describedby={!isPomodoroPictureInPictureSupported() ? 'pomodoro-pip-unavailable' : undefined}
+            className="px-3 py-3 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[var(--dm-bg)] dark:text-[var(--dm-text)] dark:hover:bg-[var(--dm-border)]"
+          >
+            Flotante
+          </button>
+          {!isPomodoroPictureInPictureSupported() && (
+            <span
+              id="pomodoro-pip-unavailable"
+              role="tooltip"
+              className="pointer-events-none invisible absolute bottom-full left-1/2 z-10 mb-2 w-52 -translate-x-1/2 rounded-lg bg-gray-900 px-3 py-2 text-center text-xs text-white opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+            >
+              Tu navegador no admite Picture-in-Picture.
+            </span>
+          )}
+        </span>
       </div>
 
       {showAmbientSounds && (

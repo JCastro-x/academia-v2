@@ -76,6 +76,16 @@ const playTone = ({
 
 export const initAudio = () => getAudioContext()
 
+export const unlockAudio = () => {
+  const ctx = getAudioContext()
+  if (!ctx || ctx.state === 'running') return Promise.resolve(ctx)
+
+  return ctx.resume().then(() => ctx).catch((error) => {
+    console.warn('[sound] Failed to unlock AudioContext', error)
+    return ctx
+  })
+}
+
 export const startAudioKeepAlive = () => {
   const ctx = getAudioContext()
   if (!ctx || keepAliveSource) return
@@ -134,18 +144,12 @@ export const playSound = (type = 'click', fallbackNotification = null) => {
   if (isMuted) return
 
   const ctx = getAudioContext()
-  let audioContextSuspended = false
-
-  // Verificar estado del AudioContext antes de reproducir
   if (ctx && ctx.state === 'suspended') {
-    audioContextSuspended = true
-    console.warn('[sound] AudioContext is suspended, attempting resume')
     ctx.resume().catch((error) => {
-      console.warn('[sound] Failed to resume AudioContext', error)
+      console.warn('[sound] Failed to resume AudioContext for sound playback', error)
     })
   }
 
-  // Verificar si sigue suspendido después del intento de resume
   if (ctx && ctx.state === 'suspended') {
     console.warn('[sound] AudioContext still suspended after resume attempt, using notification fallback')
     if (fallbackNotification) {
@@ -207,6 +211,29 @@ export const playSound = (type = 'click', fallbackNotification = null) => {
   }
 }
 
+export const playSoundAfterAudioResume = async (type, fallbackNotification = null) => {
+  if (isMuted) return
+
+  const ctx = getAudioContext()
+  if (ctx?.state === 'suspended') {
+    try {
+      await ctx.resume()
+    } catch (error) {
+      console.warn('[sound] Failed to resume AudioContext for sound playback', error)
+    }
+  }
+
+  if (ctx && ctx.state !== 'running') {
+    console.warn('[sound] AudioContext is not running; using notification fallback')
+    if (fallbackNotification) {
+      showNotification(fallbackNotification.title, fallbackNotification.options)
+    }
+    return
+  }
+
+  playSound(type, fallbackNotification)
+}
+
 export const setMuted = (muted) => {
   isMuted = muted
 }
@@ -226,8 +253,13 @@ export const requestNotificationPermission = async () => {
   }
 
   if (Notification.permission !== 'denied') {
-    const permission = await Notification.requestPermission()
-    return permission === 'granted'
+    try {
+      const permission = await Notification.requestPermission()
+      return permission === 'granted'
+    } catch (error) {
+      console.warn('[sound] Failed to request notification permission', error)
+      return false
+    }
   }
 
   return false
